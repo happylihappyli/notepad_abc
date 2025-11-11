@@ -1,0 +1,216 @@
+# -*- coding: utf-8 -*-
+"""
+Notepad++ SCons构建脚本 - 修改版
+使用静态链接运行时库，避免依赖外部DLL
+"""
+
+import os
+import sys
+import time
+from datetime import datetime
+
+# 显示开始时间
+print("开始构建时间:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+# 设置UTF-8编码
+if sys.platform == 'win32':
+    os.system('chcp 65001')
+
+# 获取环境变量
+env = Environment()
+
+# 设置基本环境变量
+env['TARGET_ARCH'] = 'x86_64'  # 默认为64位
+env['MSVC_VERSION'] = '14.3'   # VS2022
+env['MSVS_VERSION'] = '2022'
+
+# 设置项目路径
+project_root = Dir('.').abspath
+src_dir = os.path.join(project_root, 'PowerEditor', 'src')
+scintilla_dir = os.path.join(project_root, 'scintilla')
+lexilla_dir = os.path.join(project_root, 'lexilla')
+bin_dir = os.path.join(project_root, 'bin')
+obj_dir = os.path.join(project_root, 'obj')
+
+# 确保输出目录存在
+if not os.path.exists(bin_dir):
+    os.makedirs(bin_dir)
+if not os.path.exists(obj_dir):
+    os.makedirs(obj_dir)
+
+# 设置构建选项
+def configure_build_options(env, build_type='Release'):
+    """配置构建选项"""
+    # 基本编译器设置
+    env.Append(CCFLAGS=[
+        '/std:c++20',          # C++20标准
+        '/Zc:__cplusplus',     # 正确的__cplusplus宏
+        '/utf-8',              # 设置UTF-8编码
+        '/Zc:strictStrings',   # 严格字符串处理
+        '/w15262',             # 启用特定警告
+        '/MP',                 # 多处理器编译
+        '/GR',                 # 启用RTTI
+        '/EHa',                # 异常处理，支持SEH
+    ])
+    
+    # 预处理器定义
+    defines = [
+        'WIN32',
+        '_WINDOWS',
+        'UNICODE',
+        '_UNICODE',
+        '_WIN32_WINNT=_WIN32_WINNT_WIN7',
+        'NTDDI_VERSION=NTDDI_WIN7',
+        'OEMRESOURCE',
+        'NOMINMAX',
+        '_USE_64BIT_TIME_T',
+        'TIXML_USE_STL',
+        'TIXMLA_USE_STL',
+        '_CRT_NONSTDC_NO_DEPRECATE',
+        '_CRT_SECURE_NO_WARNINGS',
+        '_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES',
+        '_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT',
+    ]
+    
+    # 警告级别设置
+    env.Append(CCFLAGS=['/W4'])  # 高警告级别
+    env.Append(CCFLAGS=['/WX'])  # 将警告视为错误
+    
+    # 禁用特定警告
+    env.Append(CCFLAGS=['/wd4456', '/wd4457', '/wd4459'])
+    
+    # 包含目录
+    include_dirs = [
+        src_dir,
+        os.path.join(src_dir, 'MISC'),
+        os.path.join(src_dir, 'MISC', 'Common'),
+        os.path.join(src_dir, 'MISC', 'Exception'),
+        os.path.join(src_dir, 'MISC', 'PluginsManager'),
+        os.path.join(src_dir, 'MISC', 'Process'),
+        os.path.join(src_dir, 'MISC', 'RegExt'),
+        os.path.join(src_dir, 'MISC', 'md5'),
+        os.path.join(src_dir, 'MISC', 'sha1'),
+        os.path.join(src_dir, 'MISC', 'sha2'),
+        os.path.join(src_dir, 'MISC', 'sha512'),
+        os.path.join(src_dir, 'ScintillaComponent'),
+        os.path.join(src_dir, 'WinControls'),
+        os.path.join(src_dir, 'WinControls', 'AboutDlg'),
+        os.path.join(src_dir, 'WinControls', 'AnsiCharPanel'),
+        os.path.join(src_dir, 'WinControls', 'ClipboardHistory'),
+        os.path.join(src_dir, 'WinControls', 'ColourPicker'),
+        os.path.join(src_dir, 'WinControls', 'ContextMenu'),
+        os.path.join(src_dir, 'WinControls', 'DockingWnd'),
+        os.path.join(src_dir, 'WinControls', 'DocumentMap'),
+        os.path.join(src_dir, 'WinControls', 'FileBrowser'),
+        os.path.join(src_dir, 'WinControls', 'FindCharsInRange'),
+        os.path.join(src_dir, 'WinControls', 'FunctionList'),
+        os.path.join(src_dir, 'WinControls', 'Grid'),
+        os.path.join(src_dir, 'WinControls', 'ImageListSet'),
+        os.path.join(src_dir, 'WinControls', 'OpenSaveFileDialog'),
+        os.path.join(src_dir, 'WinControls', 'PluginsAdmin'),
+        os.path.join(src_dir, 'WinControls', 'Preference'),
+        os.path.join(src_dir, 'WinControls', 'ProjectPanel'),
+        os.path.join(src_dir, 'WinControls', 'ReadDirectoryChanges'),
+        os.path.join(src_dir, 'WinControls', 'shortcut'),
+        os.path.join(src_dir, 'WinControls', 'SplitterContainer'),
+        os.path.join(src_dir, 'WinControls', 'StaticDialog'),
+        os.path.join(src_dir, 'WinControls', 'StaticDialog', 'RunDlg'),
+        os.path.join(src_dir, 'WinControls', 'StatusBar'),
+        os.path.join(src_dir, 'WinControls', 'TabBar'),
+        os.path.join(src_dir, 'WinControls', 'TaskList'),
+        os.path.join(src_dir, 'WinControls', 'ToolBar'),
+        os.path.join(src_dir, 'WinControls', 'ToolTip'),
+        os.path.join(src_dir, 'WinControls', 'TrayIcon'),
+        os.path.join(src_dir, 'WinControls', 'TreeView'),
+        os.path.join(src_dir, 'WinControls', 'VerticalFileSwitcher'),
+        os.path.join(src_dir, 'WinControls', 'WindowsDlg'),
+        os.path.join(src_dir, 'TinyXml'),
+        os.path.join(src_dir, 'TinyXml', 'tinyXmlA'),
+        os.path.join(src_dir, 'uchardet'),
+        os.path.join(src_dir, 'json'),
+        os.path.join(lexilla_dir, 'include'),
+        os.path.join(scintilla_dir, 'include'),
+    ]
+    
+    # 根据构建类型设置选项
+    if build_type == 'Debug':
+        defines.append('_DEBUG')
+        env.Append(CCFLAGS=['/Od', '/Zi'])  # 禁用优化，启用调试信息
+        env.Append(LINKFLAGS=['/DEBUG'])    # 链接调试信息
+        env.Append(CCFLAGS=['/RTC1'])       # 运行时检查
+        env.Append(CPPDEFINES=['_DEBUG'])
+        # 修改：使用静态链接调试运行时库
+        env.Append(CCFLAGS=['/MTd'])        # 多线程静态调试库
+    else:  # Release
+        defines.append('NDEBUG')
+        env.Append(CCFLAGS=['/O2', '/GL'])  # 最大优化，全程序优化
+        env.Append(LINKFLAGS=['/LTCG', '/OPT:REF', '/OPT:ICF'])  # 链接时优化
+        env.Append(CCFLAGS=['/Gw', '/GA'])  # 优化
+        env.Append(CPPDEFINES=['NDEBUG'])
+        # 修改：使用静态链接运行时库
+        env.Append(CCFLAGS=['/MT'])         # 多线程静态库
+    
+    # 应用定义和包含目录
+    env.Append(CPPDEFINES=defines)
+    env.Append(CPPPATH=include_dirs)
+    
+    return env
+
+# 配置链接选项
+def configure_link_options(env):
+    """配置链接选项"""
+    # 链接库
+    libs = [
+        'comctl32.lib',
+        'shlwapi.lib',
+        'shell32.lib',
+        'Dbghelp.lib',
+        'Version.lib',
+        'Crypt32.lib',
+        'wintrust.lib',
+        'Sensapi.lib',
+        'wininet.lib',
+        'imm32.lib',
+        'msimg32.lib',
+        'uxtheme.lib',
+        'dwmapi.lib',
+        'comdlg32.lib',        # 添加COMDLG32库，用于PrintDlgW和ChooseColorW
+        'gdi32.lib',           # 添加GDI32库
+        'user32.lib',          # 添加USER32库
+        'kernel32.lib',        # 添加KERNEL32库
+        'ole32.lib',           # 添加OLE32库
+        'oleaut32.lib',        # 添加OLEAUT32库
+        'advapi32.lib',        # 添加ADVAPI32库
+        'libscintilla.lib',
+        'liblexilla.lib',
+    ]
+    
+    # 库目录
+    lib_dirs = [
+        bin_dir,                    # 添加bin目录，包含libscintilla.lib和liblexilla.lib
+        os.path.join(scintilla_dir, 'bin'),
+        obj_dir,
+    ]
+    
+    # 链接标志
+    linkflags = [
+        '/SUBSYSTEM:WINDOWS',
+        '/VERSION:1.0',
+    ]
+    
+    # 应用链接设置
+    env.Append(LIBS=libs)
+    env.Append(LIBPATH=lib_dirs)
+    env.Append(LINKFLAGS=linkflags)
+    
+    return env
+
+# 导出函数供子脚本使用
+Export('project_root', 'src_dir', 'scintilla_dir', 'lexilla_dir', 'bin_dir', 'obj_dir')
+Export('configure_build_options', 'configure_link_options')
+
+# 构建主程序
+SConscript('SConscript', variant_dir=obj_dir, duplicate=0)
+
+# 显示结束时间
+print("构建脚本准备完毕:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))

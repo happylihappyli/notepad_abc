@@ -1,0 +1,669 @@
+# -*- coding: utf-8 -*-
+"""
+完整的Notepad_abc SCons构建系统
+基于Visual Studio解决方案: E:\GitHub3\notepad_abc\PowerEditor\visual.net\notepadPlus.sln
+支持多平台: ARM64, Win32, x64
+支持构建依赖项目: Lexilla, Scintilla
+"""
+
+import os
+import sys
+import platform
+import time
+import shutil
+from datetime import datetime
+
+# =============================================================================
+# 全局配置
+# =============================================================================
+
+# 项目根目录
+project_root = Dir('.').abspath
+
+# 重要目录路径
+src_dir = os.path.join(project_root, 'PowerEditor', 'src')
+visual_net_dir = os.path.join(project_root, 'PowerEditor', 'visual.net')
+scintilla_dir = os.path.join(project_root, 'scintilla')
+lexilla_dir = os.path.join(project_root, 'lexilla')
+bin_dir = os.path.join(project_root, 'bin')
+obj_dir = os.path.join(project_root, 'obj')
+
+# 确保目录存在
+for directory in [bin_dir, obj_dir]:
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+# =============================================================================
+# 构建环境配置
+# =============================================================================
+
+def configure_environment(build_type='Release', target_arch='x86_64'):
+    """配置SCons构建环境"""
+    
+    # 创建环境
+    env = Environment(
+        ENV = os.environ,
+        TARGET_ARCH = target_arch,
+        MSVC_VERSION = '14.3',  # VS2022
+        MSVS_VERSION = '2022'
+    )
+    
+    # 设置编码为UTF-8
+    env['ENV']['PYTHONIOENCODING'] = 'utf-8'
+    
+    # 配置编译器选项
+    env = configure_compiler_options(env, build_type, target_arch)
+    
+    # 配置链接器选项
+    env = configure_linker_options(env, build_type, target_arch)
+    
+    return env
+
+def configure_compiler_options(env, build_type, target_arch):
+    """配置编译器选项"""
+    
+    # 基本编译器标志
+    cxxflags = [
+        '/std:c++20',           # C++20标准
+        '/MP',                   # 多处理器编译
+        '/W4',                   # 警告级别4
+        '/WX',                   # 将警告视为错误
+        '/Zc:wchar_t',           # wchar_t是本机类型
+        '/Zc:forScope',          # 强制for循环范围
+        '/Zc:inline',            # 移除未引用的函数
+        '/permissive-',          # 严格标准一致性
+        '/utf-8',                # UTF-8编码
+    ]
+    
+    # 根据架构调整
+    if target_arch == 'ARM64':
+        cxxflags.append('/ARM64')
+    elif target_arch == 'Win32':
+        cxxflags.append('/arch:SSE2')
+    elif target_arch == 'x64':
+        cxxflags.append('/favor:AMD64')
+    
+    # 预处理器定义
+    defines = [
+        'WIN32',
+        '_WINDOWS',
+        'UNICODE',
+        '_UNICODE',
+        '_WIN32_WINNT=0x0601',   # Windows 7
+        'WINVER=0x0601',         # Windows 7
+        '_CRT_SECURE_NO_WARNINGS',
+        '_SCL_SECURE_NO_WARNINGS',
+        'NOMINMAX',
+        'STRICT',
+        'TIXML_USE_STL',
+        'NOTEPADPLUS_VERSION="8.6.6"',
+    ]
+    
+    # 根据构建类型添加定义
+    if build_type == 'Debug':
+        defines.extend([
+            'DEBUG',
+            '_DEBUG',
+        ])
+        cxxflags.extend([
+            '/Od',                # 禁用优化
+            '/RTC1',              # 运行时检查
+            '/ZI',                # 编辑并继续调试信息
+            '/JMC',               # 仅我的代码调试
+        ])
+    else:  # Release
+        defines.extend([
+            'NDEBUG',
+        ])
+        cxxflags.extend([
+            '/O2',                # 最大优化速度
+            '/Ob2',               # 内联任何合适的函数
+            '/Oi',                # 生成内部函数
+            '/Ot',                # 偏好快速代码
+            '/GL',                # 全程序优化
+            '/Gy',                # 函数级链接
+        ])
+    
+    env.Append(CCFLAGS=cxxflags)
+    env.Append(CPPDEFINES=defines)
+    
+    # 包含目录
+    include_dirs = [
+        src_dir,
+        os.path.join(src_dir, 'TinyXml'),
+        os.path.join(src_dir, 'TinyXml', 'tinyXmlA'),
+        os.path.join(src_dir, 'uchardet'),
+        os.path.join(scintilla_dir, 'include'),
+        os.path.join(lexilla_dir, 'include'),
+        os.path.join(scintilla_dir, 'src'),
+        os.path.join(lexilla_dir, 'src'),
+    ]
+    
+    # 添加WinControls子目录
+    wincontrols_base = os.path.join(src_dir, 'WinControls')
+    if os.path.exists(wincontrols_base):
+        for item in os.listdir(wincontrols_base):
+            item_path = os.path.join(wincontrols_base, item)
+            if os.path.isdir(item_path):
+                include_dirs.append(item_path)
+    
+    env.Append(CPPPATH=include_dirs)
+    
+    return env
+
+def configure_linker_options(env, build_type, target_arch):
+    """配置链接器选项"""
+    
+    # 基本链接器标志
+    linkflags = [
+        '/MANIFEST',             # 生成清单
+        '/MANIFESTUAC:level=\'asInvoker\' uiAccess=\'false\'',
+        '/DYNAMICBASE',          # ASLR支持
+        '/NXCOMPAT',             # 数据执行保护
+        '/SUBSYSTEM:WINDOWS',    # Windows子系统
+        '/OPT:REF',              # 移除未引用数据
+        '/OPT:ICF',              # 相同COMDAT折叠
+    ]
+    
+    # 根据架构调整
+    if target_arch == 'ARM64':
+        linkflags.append('/MACHINE:ARM64')
+    elif target_arch == 'Win32':
+        linkflags.append('/MACHINE:X86')
+    elif target_arch == 'x64':
+        linkflags.append('/MACHINE:X64')
+    
+    # 根据构建类型配置
+    if build_type == 'Debug':
+        linkflags.extend([
+            '/DEBUG',             # 生成调试信息
+            '/INCREMENTAL',       # 增量链接
+        ])
+    else:  # Release
+        linkflags.extend([
+            '/LTCG',              # 链接时代码生成
+        ])
+    
+    env.Append(LINKFLAGS=linkflags)
+    
+    # 库文件
+    libraries = [
+        'kernel32.lib',
+        'user32.lib',
+        'gdi32.lib',
+        'winspool.lib',
+        'comdlg32.lib',
+        'advapi32.lib',
+        'shell32.lib',
+        'ole32.lib',
+        'oleaut32.lib',
+        'uuid.lib',
+        'odbc32.lib',
+        'odbccp32.lib',
+        'comctl32.lib',
+        'shlwapi.lib',
+        'version.lib',
+        'imm32.lib',
+        'winmm.lib',
+        'usp10.lib',
+        'dwmapi.lib',
+    ]
+    
+    env.Append(LIBS=libraries)
+    
+    # 库目录
+    lib_dirs = [
+        os.path.join(scintilla_dir, 'bin'),
+        os.path.join(lexilla_dir, 'bin'),
+    ]
+    
+    env.Append(LIBPATH=lib_dirs)
+    
+    return env
+
+# =============================================================================
+# 依赖项目构建
+# =============================================================================
+
+def build_scintilla(env, build_type, target_arch):
+    """构建Scintilla库"""
+    
+    print("构建Scintilla库...")
+    
+    # Scintilla源文件
+    scintilla_src_dir = os.path.join(scintilla_dir, 'src')
+    scintilla_sources = []
+    
+    if os.path.exists(scintilla_src_dir):
+        for root, dirs, files in os.walk(scintilla_src_dir):
+            for file in files:
+                if file.endswith('.cxx') or file.endswith('.cpp'):
+                    scintilla_sources.append(os.path.join(root, file))
+    
+    # Windows平台特定文件
+    win32_dir = os.path.join(scintilla_dir, 'win32')
+    if os.path.exists(win32_dir):
+        for root, dirs, files in os.walk(win32_dir):
+            for file in files:
+                if file.endswith('.cxx') or file.endswith('.cpp'):
+                    scintilla_sources.append(os.path.join(root, file))
+    
+    if not scintilla_sources:
+        print("警告: 未找到Scintilla源文件，跳过构建")
+        return None
+    
+    # 构建Scintilla库
+    scintilla_lib = env.StaticLibrary(
+        target='scintilla.lib',
+        source=scintilla_sources
+    )
+    
+    # 复制到bin目录
+    scintilla_bin_dir = os.path.join(scintilla_dir, 'bin')
+    if not os.path.exists(scintilla_bin_dir):
+        os.makedirs(scintilla_bin_dir)
+    
+    env.Install(scintilla_bin_dir, scintilla_lib)
+    
+    print(f"Scintilla库构建完成: {len(scintilla_sources)} 个源文件")
+    return scintilla_lib
+
+def build_lexilla(env, build_type, target_arch):
+    """构建Lexilla库"""
+    
+    print("构建Lexilla库...")
+    
+    # Lexilla源文件
+    lexilla_src_dir = os.path.join(lexilla_dir, 'src')
+    lexilla_sources = []
+    
+    if os.path.exists(lexilla_src_dir):
+        for root, dirs, files in os.walk(lexilla_src_dir):
+            for file in files:
+                if file.endswith('.cxx') or file.endswith('.cpp'):
+                    lexilla_sources.append(os.path.join(root, file))
+    
+    # Lexer文件
+    lexers_dir = os.path.join(lexilla_dir, 'lexers')
+    if os.path.exists(lexers_dir):
+        for root, dirs, files in os.walk(lexers_dir):
+            for file in files:
+                if file.endswith('.cxx') or file.endswith('.cpp'):
+                    lexilla_sources.append(os.path.join(root, file))
+    
+    # Lexilla访问接口
+    access_dir = os.path.join(lexilla_dir, 'access')
+    if os.path.exists(access_dir):
+        for root, dirs, files in os.walk(access_dir):
+            for file in files:
+                if file.endswith('.cxx') or file.endswith('.cpp'):
+                    lexilla_sources.append(os.path.join(root, file))
+    
+    if not lexilla_sources:
+        print("警告: 未找到Lexilla源文件，跳过构建")
+        return None
+    
+    # 构建Lexilla库
+    lexilla_lib = env.StaticLibrary(
+        target='lexilla.lib',
+        source=lexilla_sources
+    )
+    
+    # 复制到bin目录
+    lexilla_bin_dir = os.path.join(lexilla_dir, 'bin')
+    if not os.path.exists(lexilla_bin_dir):
+        os.makedirs(lexilla_bin_dir)
+    
+    env.Install(lexilla_bin_dir, lexilla_lib)
+    
+    print(f"Lexilla库构建完成: {len(lexilla_sources)} 个源文件")
+    return lexilla_lib
+
+# =============================================================================
+# Notepad_abc主程序构建
+# =============================================================================
+
+def get_notepadabc_source_files():
+    """获取Notepad_abc源文件列表"""
+    
+    source_files = []
+    
+    # 主程序源文件
+    main_sources = [
+        'Notepad_plus.cpp',
+        'Notepad_plus_Window.cpp',
+        'NppBigSwitch.cpp',
+        'NppCommands.cpp',
+        'NppNotification.cpp',
+        'NppIO.cpp',
+        'WinMain.cpp',
+        'Parameters.cpp',
+        'NppDarkMode.cpp',
+        'dpiManagerV2.cpp',
+        'Utf8_16.cpp',
+        'EncodingMapper.cpp',
+        'lastRecentFileList.cpp',
+        'lesDlgs.cpp',
+        'localization.cpp',
+    ]
+    
+    # TinyXml源文件
+    tinyxml_sources = [
+        'TinyXml/tinyxml.cpp',
+        'TinyXml/tinyxmlerror.cpp',
+        'TinyXml/tinyxmlparser.cpp',
+        'TinyXml/tinystr.cpp',
+        'TinyXml/tinyXmlA/tinystrA.cpp',
+        'TinyXml/tinyXmlA/tinyxmlA.cpp',
+        'TinyXml/tinyXmlA/tinyxmlerrorA.cpp',
+        'TinyXml/tinyXmlA/tinyxmlparserA.cpp',
+    ]
+    
+    # MISC模块源文件
+    misc_sources = [
+        'MISC/Common/Common.cpp',
+        'MISC/Common/FileInterface.cpp',
+        'MISC/Common/SortLocale.cpp',
+        'MISC/Exception/MiniDumper.cpp',
+        'MISC/Exception/Win32Exception.cpp',
+        'MISC/PluginsManager/PluginsManager.cpp',
+        'MISC/Process/Processus.cpp',
+        'MISC/RegExt/regExtDlg.cpp',
+        'MISC/md5/md5Dlgs.cpp',
+        'MISC/sha1/sha1.cpp',
+        'MISC/sha1/calc_sha1.cpp',
+        'MISC/sha2/sha-256.cpp',
+        'MISC/sha512/sha512.cpp',
+        'MISC/Common/verifySignedfile.cpp',
+    ]
+    
+    # Scintilla组件源文件
+    scintilla_sources = [
+        'ScintillaComponent/ScintillaEditView.cpp',
+        'ScintillaComponent/ScintillaCtrls.cpp',
+        'ScintillaComponent/AutoCompletion.cpp',
+        'ScintillaComponent/Buffer.cpp',
+        'ScintillaComponent/DocTabView.cpp',
+        'ScintillaComponent/FindReplaceDlg.cpp',
+        'ScintillaComponent/FunctionCallTip.cpp',
+        'ScintillaComponent/GoToLineDlg.cpp',
+        'ScintillaComponent/Printer.cpp',
+        'ScintillaComponent/SmartHighlighter.cpp',
+        'ScintillaComponent/UserDefineDialog.cpp',
+        'ScintillaComponent/columnEditor.cpp',
+        'ScintillaComponent/xmlMatchedTagsHighlighter.cpp',
+    ]
+    
+    # uchardet源文件
+    uchardet_sources = [
+        'uchardet/uchardet.cpp',
+        'uchardet/CharDistribution.cpp',
+        'uchardet/JpCntx.cpp',
+        'uchardet/nsBig5Prober.cpp',
+        'uchardet/nsCharSetProber.cpp',
+        'uchardet/nsEscCharsetProber.cpp',
+        'uchardet/nsEscSM.cpp',
+        'uchardet/nsEUCJPProber.cpp',
+        'uchardet/nsEUCKRProber.cpp',
+        'uchardet/nsEUCTWProber.cpp',
+        'uchardet/nsGB2312Prober.cpp',
+        'uchardet/nsHebrewProber.cpp',
+        'uchardet/nsLatin1Prober.cpp',
+        'uchardet/nsMBCSGroupProber.cpp',
+        'uchardet/nsMBCSSM.cpp',
+        'uchardet/nsSBCSGroupProber.cpp',
+        'uchardet/nsSBCharSetProber.cpp',
+        'uchardet/nsSJISProber.cpp',
+        'uchardet/nsUniversalDetector.cpp',
+        'uchardet/nsUTF8Prober.cpp',
+        'uchardet/LangBulgarianModel.cpp',
+        'uchardet/LangCyrillicModel.cpp',
+        'uchardet/LangGreekModel.cpp',
+        'uchardet/LangHebrewModel.cpp',
+        'uchardet/LangHungarianModel.cpp',
+        'uchardet/LangThaiModel.cpp',
+    ]
+    
+    # 合并所有源文件
+    all_sources = (main_sources + tinyxml_sources + misc_sources + 
+                   scintilla_sources + uchardet_sources)
+    
+    # 转换为完整路径并验证存在
+    for source in all_sources:
+        full_path = os.path.join(src_dir, source.replace('/', os.sep))
+        if os.path.exists(full_path):
+            source_files.append(full_path)
+        else:
+            print(f"警告: 找不到源文件: {full_path}")
+    
+    # 递归收集WinControls目录下的所有.cpp文件
+    wincontrols_base = os.path.join(src_dir, 'WinControls')
+    if os.path.exists(wincontrols_base):
+        for root, dirs, files in os.walk(wincontrols_base):
+            for file in files:
+                if file.endswith('.cpp'):
+                    full_path = os.path.join(root, file)
+                    if os.path.exists(full_path):
+                        source_files.append(full_path)
+    
+    return source_files
+
+def get_notepadabc_resource_files():
+    """获取Notepad_abc资源文件列表"""
+    
+    resource_files = [
+        'md5Dlgs.rc',
+        'FindReplaceDlg.rc',
+        'GoToLineDlg.rc',
+        'RunDlg.rc',
+        'StaticDialog.rc',
+        'shortcut.rc',
+        'preference.rc',
+        'localization.rc',
+        'NativeLangSpeaker.rc',
+        'tabBar.rc',
+        'TaskListDlg.rc',
+        'DockingGUIWidget.rc',
+        'ansiCharPanel.rc',
+        'clipboardHistoryPanel.rc',
+        'documentMap.rc',
+        'fileBrowser.rc',
+        'functionListPanel.rc',
+        'projectPanel.rc',
+        'projectPanel2.rc',
+        'verticalFileSwitcher.rc',
+        'FindCharsInRange.rc',
+        'PluginsAdmin.rc',
+        'ColourPicker.rc',
+        'WindowsDlg.rc',
+        'xmlMatchedTagsHighlight.rc',
+        'missedpluginsAlert.rc',
+        'doxygen.rc',
+        'debugger.rc',
+        'Notepad_plus.rc',
+    ]
+    
+    # 转换为完整路径并验证存在
+    rc_files = []
+    for rc_file in resource_files:
+        full_path = os.path.join(src_dir, rc_file)
+        if os.path.exists(full_path):
+            rc_files.append(full_path)
+        else:
+            print(f"警告: 找不到资源文件: {full_path}")
+    
+    return rc_files
+
+def build_notepadabc(env, build_type, target_arch, scintilla_lib, lexilla_lib):
+    """构建Notepad_abc主程序"""
+    
+    print("构建Notepad_abc主程序...")
+    
+    # 获取源文件和资源文件
+    source_files = get_notepadabc_source_files()
+    rc_files = get_notepadabc_resource_files()
+    
+    # 编译资源文件
+    rc_objects = []
+    for rc_file in rc_files:
+        rc_obj = env.RES(rc_file)
+        rc_objects.append(rc_obj)
+    
+    # 添加依赖库
+    if scintilla_lib:
+        env.Append(LIBS=['scintilla.lib'])
+    if lexilla_lib:
+        env.Append(LIBS=['lexilla.lib'])
+    
+    # 设置目标文件名
+    target_name = 'notepad_abc.exe'
+    
+    # 构建程序
+    program = env.Program(
+        target=target_name,
+        source=source_files + rc_objects
+    )
+    
+    # 复制到bin目录
+    env.Install(bin_dir, program)
+    
+    print(f"Notepad_abc主程序构建完成: {len(source_files)} 个源文件, {len(rc_files)} 个资源文件")
+    return program
+
+# =============================================================================
+# 构建前/后操作
+# =============================================================================
+
+def pre_build_actions():
+    """构建前操作"""
+    
+    print("执行构建前操作...")
+    
+    # 执行版本头文件生成脚本
+    version_script = os.path.join(src_dir, 'NppLibsVersionH-generator.bat')
+    if os.path.exists(version_script):
+        print("生成版本头文件...")
+        try:
+            os.system(f'cd "{src_dir}" && "{version_script}"')
+        except Exception as e:
+            print(f"版本头文件生成失败: {e}")
+    else:
+        print(f"警告: 找不到版本生成脚本: {version_script}")
+
+def post_build_actions(build_type, target_arch):
+    """构建后操作"""
+    
+    print("执行构建后操作...")
+    
+    # 配置文件列表
+    config_files = [
+        'config.xml',
+        'langs.xml',
+        'stylers.xml',
+        'shortcuts.xml',
+        'contextMenu.xml',
+        'doxygen.xml',
+        'functionList.xml',
+        'print.xml',
+        'nativeLang.xml',
+    ]
+    
+    config_dirs = [
+        'autoCompletion',
+        'APIs',
+    ]
+    
+    # 复制配置文件
+    for config_file in config_files:
+        src_path = os.path.join(src_dir, config_file)
+        if os.path.exists(src_path):
+            dest_path = os.path.join(bin_dir, config_file)
+            shutil.copy2(src_path, dest_path)
+            print(f"复制配置文件: {config_file}")
+    
+    # 复制配置目录
+    for config_dir in config_dirs:
+        src_path = os.path.join(src_dir, config_dir)
+        if os.path.exists(src_path):
+            dest_path = os.path.join(bin_dir, config_dir)
+            if os.path.exists(dest_path):
+                shutil.rmtree(dest_path)
+            shutil.copytree(src_path, dest_path)
+            print(f"复制配置目录: {config_dir}")
+
+# =============================================================================
+# 主构建函数
+# =============================================================================
+
+def main():
+    """主构建函数"""
+    
+    print("=" * 70)
+    print("Notepad_abc完整构建系统")
+    print("基于Visual Studio解决方案")
+    print("=" * 70)
+    
+    # 获取构建参数
+    build_type = ARGUMENTS.get('build', 'Release')
+    target_arch = ARGUMENTS.get('arch', 'x64')
+    
+    # 验证参数
+    valid_build_types = ['Debug', 'Release']
+    valid_archs = ['ARM64', 'Win32', 'x64']
+    
+    if build_type not in valid_build_types:
+        print(f"警告: 无效的构建类型 '{build_type}'，使用默认值 'Release'")
+        build_type = 'Release'
+    
+    if target_arch not in valid_archs:
+        print(f"警告: 无效的架构 '{target_arch}'，使用默认值 'x64'")
+        target_arch = 'x64'
+    
+    print(f"构建配置:")
+    print(f"  项目根目录: {project_root}")
+    print(f"  构建类型: {build_type}")
+    print(f"  目标架构: {target_arch}")
+    print(f"  源文件目录: {src_dir}")
+    print(f"  输出目录: {bin_dir}")
+    
+    # 构建前操作
+    pre_build_actions()
+    
+    # 配置环境
+    env = configure_environment(build_type, target_arch)
+    
+    # 构建依赖库
+    scintilla_lib = build_scintilla(env, build_type, target_arch)
+    lexilla_lib = build_lexilla(env, build_type, target_arch)
+    
+    # 构建主程序
+    start_time = time.time()
+    program = build_notepadabc(env, build_type, target_arch, scintilla_lib, lexilla_lib)
+    
+    # 构建后操作
+    post_build_actions(build_type, target_arch)
+    
+    # 计算构建时间
+    build_time = time.time() - start_time
+    
+    # 打印构建信息
+    print("\n" + "=" * 70)
+    print("构建完成!")
+    print(f"构建类型: {build_type}")
+    print(f"目标架构: {target_arch}")
+    print(f"构建时间: {build_time:.2f} 秒")
+    print(f"输出目录: {bin_dir}")
+    print(f"构建时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 70)
+    
+    return program
+
+# =============================================================================
+# 执行构建
+# =============================================================================
+
+if __name__ == '__main__':
+    main()
+
+# 默认目标
+Default(main())

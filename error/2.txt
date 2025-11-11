@@ -1,0 +1,13 @@
+文档列表功能没有了
+启动，和点击文档列表的时候都提示错误
+提示对话框内容如下：
+
+In StaticDialog::create()
+CreateDialogParam() return NULL 
+GetLastError() 找不到映像文件不包含资源区域
+
+
+
+CreateDialogParam() return NULL GetLastError（） 找不到映像文件中指定的资源名
+
+IconList::addIcon: LoadIcon() function return null. ignore the error?
