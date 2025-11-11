@@ -32,3 +32,4 @@
 *.app
 /PowerEditor/visual.net/x64
 /PowerEditor/visual.net/.vs
+bin/npp_debug.log
