@@ -532,3 +532,32 @@ std::vector<BufferViewInfo> VerticalFileSwitcherListView::getSelectedFiles(bool 
 
 	return files;
 }
+
+// 更新字体
+void VerticalFileSwitcherListView::updateFont()
+{
+	// 删除旧的字体
+	if (_hFont != nullptr) {
+		DeleteObject(_hFont);
+		_hFont = nullptr;
+	}
+
+	// 创建新字体
+	LOGFONT lf = {};
+	lf.lfHeight = -MulDiv(_fontSize, GetDeviceCaps(GetDC(_hSelf), LOGPIXELSY), 72);
+	lf.lfWeight = FW_NORMAL;
+	lf.lfCharSet = DEFAULT_CHARSET;
+	lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+	lf.lfQuality = DEFAULT_QUALITY;
+	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+	wcscpy_s(lf.lfFaceName, L"MS Sans Serif");
+
+	_hFont = CreateFontIndirect(&lf);
+	
+	// 设置新字体
+	if (_hFont != nullptr) {
+		SendMessage(_hSelf, WM_SETFONT, reinterpret_cast<WPARAM>(_hFont), TRUE);
+		redraw(true);
+	}
+}

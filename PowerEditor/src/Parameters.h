@@ -982,6 +982,7 @@ struct NppGUI final
 	bool _fileSwitcherWithoutPathColumn = true;
 	int _fileSwitcherPathWidth = 50;
 	bool _fileSwitcherDisableListViewGroups = false;
+	int _fileSwitcherFontSize = 8; // VerticalFileSwitcher字体大小配置
 	bool isSnapshotMode() const {return _isSnapshotMode && _rememberLastSession && !_isCmdlineNosessionActivated;};
 	bool _isSnapshotMode = true;
 	size_t _snapshotBackupTiming = 7000;

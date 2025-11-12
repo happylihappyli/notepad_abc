@@ -36,6 +36,12 @@ using namespace std;
 #define CLMNPATH_ID    2
 #define SEP_POS        3
 #define LVGROUPS_ID    4
+#define FONTSIZE_ID    5
+#define FONTSIZE_6     6
+#define FONTSIZE_8     7
+#define FONTSIZE_10    8
+#define FONTSIZE_12    9
+#define FONTSIZE_14    10
 
 COLORREF VerticalFileSwitcher::_bgColor = 0xFFFFFF;
 
@@ -331,6 +337,71 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			HWND hListView = ::GetDlgItem(_hSelf, IDC_LIST_DOCLIST);
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取ListView控件句柄: %p, _hSelf: %p", hListView, _hSelf);
 			
+			// 初始化字体大小下拉框
+		_hFontSizeCombo = ::GetDlgItem(_hSelf, IDC_FONTSIZE_COMBO);
+		if (_hFontSizeCombo)
+		{
+			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取字体大小下拉框句柄: %p", _hFontSizeCombo);
+			
+			// 创建字体大小标签
+			_hFontSizeLabel = ::CreateWindowEx(
+				0, 
+				L"STATIC", 
+				L"字体大小:", 
+				WS_CHILD | WS_VISIBLE | SS_LEFT,
+				5, 5, 60, 20, 
+				_hSelf, 
+				(HMENU)IDC_FONTSIZE_STATIC, 
+				_hInst, 
+				NULL
+			);
+			
+			if (_hFontSizeLabel)
+			{
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 字体大小标签创建成功，句柄: %p", _hFontSizeLabel);
+				// 设置字体
+				HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
+				if (hFont)
+				{
+					::SendMessage(_hFontSizeLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+				}
+			}
+			else
+			{
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法创建字体大小标签！");
+			}
+				
+				// 添加字体大小选项到下拉框
+				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"6");
+				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"8");
+				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"10");
+				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"12");
+				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"14");
+				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"16");
+				
+				// 加载当前字体大小配置并设置下拉框选中项
+				NppParameters& nppParams = NppParameters::getInstance();
+				int fontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
+				wchar_t fontSizeStr[10];
+				swprintf(fontSizeStr, 10, L"%d", fontSize);
+				
+				// 查找并选中当前字体大小
+				int index = ::SendMessage(_hFontSizeCombo, CB_FINDSTRINGEXACT, -1, (LPARAM)fontSizeStr);
+				if (index != CB_ERR)
+				{
+					::SendMessage(_hFontSizeCombo, CB_SETCURSEL, index, 0);
+				}
+				else
+				{
+					// 如果找不到，默认选中10号字体
+					::SendMessage(_hFontSizeCombo, CB_SETCURSEL, 2, 0);
+				}
+			}
+			else
+			{
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_FONTSIZE_COMBO控件句柄！");
+			}
+			
 			if (hListView)
 			{
 				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - ListView控件有效，开始初始化");
@@ -359,6 +430,11 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				
 				// 设置图像列表
 				ListView_SetImageList(hListView, _hImaLst, LVSIL_SMALL);
+				
+				// 加载字体大小配置
+				NppParameters& nppParams = NppParameters::getInstance();
+				int fontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
+				_fileListView.setFontSize(fontSize);
 				
 				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 准备调用_fileListView.initList()");
 				// 初始化列表和显示
@@ -584,9 +660,25 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
         case WM_SIZE:
         {
-			int width = LOWORD(lParam);
+		int width = LOWORD(lParam);
             int height = HIWORD(lParam);
-			::MoveWindow(_fileListView.getHSelf(), 0, 0, width, height, TRUE);
+			
+			// 调整控件位置和大小
+			if (_hFontSizeCombo && _hFontSizeLabel)
+			{
+				// 字体大小标签位置（增加宽度以完整显示文本）
+				::MoveWindow(_hFontSizeLabel, 5, 5, 80, 20, TRUE);
+				// 字体大小下拉框位置
+				::MoveWindow(_hFontSizeCombo, 90, 5, 80, 200, TRUE);
+				// 列表视图位置（在字体下拉框下方）
+				::MoveWindow(_fileListView.getHSelf(), 0, 30, width, height - 30, TRUE);
+			}
+			else
+			{
+				// 如果没有字体下拉框，使用原来的布局
+				::MoveWindow(_fileListView.getHSelf(), 0, 0, width, height, TRUE);
+			}
+			
 			_fileListView.resizeColumns(width);
             break;
         }
@@ -605,7 +697,34 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
 		case WM_COMMAND:
 		{
-			popupMenuCmd(LOWORD(wParam));
+			// 处理字体下拉框选择变化
+			if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_FONTSIZE_COMBO)
+			{
+				// 获取选中的字体大小
+				int selectedIndex = ::SendMessage(_hFontSizeCombo, CB_GETCURSEL, 0, 0);
+				if (selectedIndex != CB_ERR)
+				{
+					wchar_t fontSizeStr[10];
+					::SendMessage(_hFontSizeCombo, CB_GETLBTEXT, selectedIndex, (LPARAM)fontSizeStr);
+					
+					// 转换为整数
+					int fontSize = _wtoi(fontSizeStr);
+					if (fontSize > 0)
+					{
+						// 设置字体大小
+						setFontSize(fontSize);
+						
+						// 保存配置
+						NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = fontSize;
+						
+						debugLog(L"VerticalFileSwitcher::WM_COMMAND - 字体大小已更改为: %d", fontSize);
+					}
+				}
+			}
+			else
+			{
+				popupMenuCmd(LOWORD(wParam));
+			}
 			break;
 		}
 
@@ -636,6 +755,16 @@ void VerticalFileSwitcher::initPopupMenus()
 	::InsertMenu(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
 	::InsertMenu(_hGlobalMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
 	::InsertMenu(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
+	
+	// 添加字体大小菜单
+	HMENU hFontSizeMenu = ::CreatePopupMenu();
+	wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
+	::InsertMenu(hFontSizeMenu, FONTSIZE_6, MF_BYCOMMAND | MF_STRING, FONTSIZE_6, L"6");
+	::InsertMenu(hFontSizeMenu, FONTSIZE_8, MF_BYCOMMAND | MF_STRING, FONTSIZE_8, L"8");
+	::InsertMenu(hFontSizeMenu, FONTSIZE_10, MF_BYCOMMAND | MF_STRING, FONTSIZE_10, L"10");
+	::InsertMenu(hFontSizeMenu, FONTSIZE_12, MF_BYCOMMAND | MF_STRING, FONTSIZE_12, L"12");
+	::InsertMenu(hFontSizeMenu, FONTSIZE_14, MF_BYCOMMAND | MF_STRING, FONTSIZE_14, L"14");
+	::InsertMenu(_hGlobalMenu, FONTSIZE_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hFontSizeMenu), fontSizeStr.c_str());
 
 	bool isExtColumn = nppGUI._fileSwitcherWithoutExtColumn;
 	::CheckMenuItem(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
@@ -673,6 +802,28 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			reload();
 		}
 		break;
+		
+		// 字体大小菜单处理
+		case FONTSIZE_6:
+			setFontSize(6);
+			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 6;
+			break;
+		case FONTSIZE_8:
+			setFontSize(8);
+			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 8;
+			break;
+		case FONTSIZE_10:
+			setFontSize(10);
+			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 10;
+			break;
+		case FONTSIZE_12:
+			setFontSize(12);
+			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 12;
+			break;
+		case FONTSIZE_14:
+			setFontSize(14);
+			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 14;
+			break;
 	}
 }
 

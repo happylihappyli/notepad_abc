@@ -25,11 +25,12 @@
 #define SORT_DIRECTION_UP     0
 #define SORT_DIRECTION_DOWN   1
 
-#define FS_ROOTNODE					"DocList"
-#define FS_CLMNNAME					"ColumnName"
-#define FS_CLMNEXT					"ColumnExt"
-#define FS_CLMNPATH					"ColumnPath"
-#define FS_LVGROUPS					"ListGroups"
+#define FS_ROOTNODE				"DocList"
+#define FS_CLMNNAME				"ColumnName"
+#define FS_CLMNEXT				"ColumnExt"
+#define FS_CLMNPATH				"ColumnPath"
+#define FS_LVGROUPS				"ListGroups"
+#define FS_FONTSIZE				"FontSize"
 
 
 class VerticalFileSwitcherListView : public Window
@@ -83,8 +84,22 @@ public:
 		redraw(true);
     };
 
+	// 设置字体大小
+	void setFontSize(int fontSize) {
+		_fontSize = fontSize;
+		updateFont();
+	};
+
+	// 获取当前字体大小
+	int getFontSize() const { return _fontSize; };
+
+	// 更新字体
+	void updateFont();
+
 protected:
 	HIMAGELIST _hImaLst = nullptr;
+	HFONT _hFont = nullptr; // 字体句柄
+	int _fontSize = 8; // 字体大小
 
 public:
 	// 直接设置窗口句柄，不创建新窗口

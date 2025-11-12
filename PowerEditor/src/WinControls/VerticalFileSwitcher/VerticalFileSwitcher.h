@@ -42,6 +42,8 @@ private:
 	WNDPROC _defaultWindowProc = nullptr;
 	HMENU _hGlobalMenu = NULL;
 	VerticalFileSwitcherListView _fileListView;
+	HWND _hFontSizeCombo = nullptr; // 字体大小下拉框句柄
+	HWND _hFontSizeLabel = nullptr; // 字体大小标签句柄
 
 	static COLORREF _bgColor;
 	static const UINT_PTR _fileSwitcherNotifySubclassID = 42;
@@ -99,6 +101,16 @@ public:
 	virtual void setForegroundColor(COLORREF fgColour) override {
 		_fileListView.setForegroundColor(fgColour);
     }
+
+	// 设置字体大小
+	void setFontSize(int fontSize) {
+		_fileListView.setFontSize(fontSize);
+	}
+
+	// 获取当前字体大小
+	int getFontSize() const {
+		return _fileListView.getFontSize();
+	}
 
 	// 以下方法需要保持公共访问权限，因为被外部调用
 	void closeItem(BufferID bufferID, int iView) {

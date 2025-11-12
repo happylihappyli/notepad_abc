@@ -33,3 +33,5 @@
 /PowerEditor/visual.net/x64
 /PowerEditor/visual.net/.vs
 bin/npp_debug.log
+notepadPlus.pdb
+PowerEditor/src/WinControls/VerticalFileSwitcher/VerticalFileSwitcher.res
