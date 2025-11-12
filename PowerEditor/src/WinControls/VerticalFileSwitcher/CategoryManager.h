@@ -173,6 +173,19 @@ public:
     bool removeFileCategory(const std::wstring& filePath);
     
     /**
+     * @brief 添加文件到分类（根据分类名称）
+     * @param filePath 文件路径
+     * @param categoryName 分类名称
+     */
+    bool addFileToCategory(const std::wstring& filePath, const std::wstring& categoryName);
+    
+    /**
+     * @brief 从分类中移除文件（根据分类名称）
+     * @param filePath 文件路径
+     */
+    bool removeFileFromCategory(const std::wstring& filePath);
+    
+    /**
      * @brief 获取指定分类下的所有文件路径
      * @param categoryId 分类ID
      */

@@ -258,6 +258,28 @@ std::vector<std::wstring> CategoryManager::getFilesByCategory(const std::wstring
 }
 
 /**
+ * @brief 添加文件到分类（根据分类名称）
+ */
+bool CategoryManager::addFileToCategory(const std::wstring& filePath, const std::wstring& categoryName) {
+    // 根据分类名称查找分类ID
+    FileCategory* category = getCategoryByName(categoryName);
+    if (!category) {
+        return false; // 分类不存在
+    }
+    
+    // 使用现有的setFileCategory方法
+    return setFileCategory(filePath, category->id);
+}
+
+/**
+ * @brief 从分类中移除文件（根据分类名称）
+ */
+bool CategoryManager::removeFileFromCategory(const std::wstring& filePath) {
+    // 使用现有的removeFileCategory方法
+    return removeFileCategory(filePath);
+}
+
+/**
  * @brief 创建默认分类
  */
 void CategoryManager::createDefaultCategories() {

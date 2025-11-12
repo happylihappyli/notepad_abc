@@ -24,4 +24,16 @@
 #define	IDC_CATEGORY_STATIC (IDD_DOCLIST + 4)
 #define	IDC_CATEGORY_COMBO  (IDD_DOCLIST + 5)
 
+// 分类菜单ID范围
+#define	CATEGORY_MENU_START  (IDD_DOCLIST + 100)
+#define	CATEGORY_MENU_END    (CATEGORY_MENU_START + 50)
+#define	CATEGORY_MENU_ID     (IDD_DOCLIST + 99)
+
+// 字体大小菜单ID
+#define	FONTSIZE_6           (IDD_DOCLIST + 200)
+#define	FONTSIZE_8           (IDD_DOCLIST + 201)
+#define	FONTSIZE_10          (IDD_DOCLIST + 202)
+#define	FONTSIZE_12          (IDD_DOCLIST + 203)
+#define	FONTSIZE_14          (IDD_DOCLIST + 204)
+
 

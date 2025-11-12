@@ -48,6 +48,8 @@ private:
 	HWND _hCategoryCombo = nullptr; // 分类选择下拉框句柄
 	HWND _hCategoryLabel = nullptr; // 分类标签句柄
 	CategoryManager _categoryManager; // 分类管理器
+	std::vector<HWND> _categoryButtons; // 分类按钮句柄数组
+	HWND _currentCategoryButton = nullptr; // 当前选中的分类按钮
 
 	static COLORREF _bgColor;
 	static const UINT_PTR _fileSwitcherNotifySubclassID = 42;
@@ -110,6 +112,15 @@ public:
 	void setFontSize(int fontSize) {
 		_fileListView.setFontSize(fontSize);
 	}
+
+	// 创建分类按钮栏
+	void createCategoryButtons();
+	
+	// 处理分类按钮点击
+	void onCategoryButtonClick(HWND hButton);
+	
+	// 更新分类按钮状态
+	void updateCategoryButtonState(HWND selectedButton);
 
 	// 获取当前字体大小
 	int getFontSize() const {

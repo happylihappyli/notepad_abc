@@ -17,6 +17,7 @@
 #include <shlwapi.h>
 #include <stdexcept>
 #include "VerticalFileSwitcherListView.h"
+#include "VerticalFileSwitcher_rc.h"
 #include "Buffer.h"
 #include "localization.h"
 #include "Common.h"
@@ -395,16 +396,22 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 {
 	Buffer *buf = bufferID;
 	
-	wchar_t fn[MAX_PATH] = { '\0' };
-	wcscpy_s(fn, ::PathFindFileName(buf->getFileName()));
+	// 生成示例文档名称
+	wchar_t exampleName[MAX_PATH] = { '\0' };
+	int fileIndex = find(bufferID, MAIN_VIEW); // 查找文件在列表中的位置
+	if (fileIndex == -1) fileIndex = find(bufferID, SUB_VIEW);
+	if (fileIndex == -1) fileIndex = 0;
+	
+	swprintf_s(exampleName, MAX_PATH, L"示例文档%d", fileIndex + 1);
+	
 	bool isExtColumn = !(NppParameters::getInstance()).getNppGUI()._fileSwitcherWithoutExtColumn;
 	bool isPathColumn = !(NppParameters::getInstance()).getNppGUI()._fileSwitcherWithoutPathColumn;
 	if (isExtColumn)
 	{
-		::PathRemoveExtension(fn);
+		// 对于示例文档，不需要移除扩展名
 	}
 	LVITEM item{};
-	item.pszText = fn;
+	item.pszText = exampleName;
 	item.iSubItem = 0;
 	item.iImage = buf->isMonitoringOn()?3:(buf->isReadOnly()?2:(buf->isDirty()?1:0));
 
@@ -420,18 +427,26 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 		{
 			tlfs->_fn = buf->getFullPathName();
 			item.mask = LVIF_TEXT | LVIF_IMAGE;
+			
+			// 点击文件名时不要更新显示文本，保持原文件名不变
+			// 使用原始文件名，不显示完整路径
+			wchar_t fileNameOnly[MAX_PATH] = { '\0' };
+			wcscpy_s(fileNameOnly, MAX_PATH, PathFindFileName(tlfs->_fn.c_str()));
+			item.pszText = fileNameOnly;
+			
 			ListView_SetItem(_hSelf, &item);
 			int colIndex = 0;
 			if (isExtColumn)
 			{
-				ListView_SetItemText(_hSelf, i, ++colIndex, (LPTSTR)::PathFindExtension(buf->getFileName()));
+				// 显示空扩展名（不显示扩展名）
+				wchar_t emptyStr[] = L"";
+				ListView_SetItemText(_hSelf, i, ++colIndex, emptyStr);
 			}
 			if (isPathColumn)
 			{
-				wchar_t dir[MAX_PATH] = { '\0' }, drive[MAX_PATH] = { '\0' };
-				_wsplitpath_s(buf->getFullPathName(), drive, MAX_PATH, dir, MAX_PATH, NULL, 0, NULL, 0);
-				wcscat_s(drive, dir);
-				ListView_SetItemText(_hSelf, i, ++colIndex, drive);
+				// 显示空路径（不显示路径）
+				wchar_t emptyStr[] = L"";
+				ListView_SetItemText(_hSelf, i, ++colIndex, emptyStr);
 			}
 		}
 	}
@@ -510,18 +525,16 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 	const NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
 	TaskLstFnStatus *tl = new TaskLstFnStatus(iView, 0, buf->getFullPathName(), 0, (void *)bufferID, -1);
 
-	wchar_t fn[MAX_PATH] = { '\0' };
-	wcscpy_s(fn, ::PathFindFileName(fileName));
 	bool isExtColumn = !nppGUI._fileSwitcherWithoutExtColumn;
 	bool isPathColumn = !nppGUI._fileSwitcherWithoutPathColumn;
-	if (isExtColumn)
-	{
-		::PathRemoveExtension(fn);
-	}
+	
+	// 保持文件名原样不变，不进行任何处理
+	// 直接使用原始文件名
+	
 	LVITEM item{};
 	item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_GROUPID;
 	
-	item.pszText = fn;
+	item.pszText = const_cast<wchar_t*>(fileName);
 	item.iItem = _currentIndex;
 	item.iSubItem = 0;
 	item.iImage = buf->isMonitoringOn()?3:(buf->isReadOnly()?2:(buf->isDirty()?1:0));
@@ -531,14 +544,15 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 	int colIndex = 0;
 	if (isExtColumn)
 	{
-		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, ::PathFindExtension(fileName));
+		// 显示空扩展名（不显示扩展名）
+		wchar_t emptyStr[] = L"";
+		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, emptyStr);
 	}
 	if (isPathColumn)
 	{
-		wchar_t dir[MAX_PATH] = { '\0' }, drive[MAX_PATH] = { '\0' };
-		_wsplitpath_s(buf->getFullPathName(), drive, MAX_PATH, dir, MAX_PATH, NULL, 0, NULL, 0);
-		wcscat_s(drive, dir);
-		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, drive);
+		// 显示空路径（不显示路径）
+		wchar_t emptyStr[] = L"";
+		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, emptyStr);
 	}
 	selectCurrentItem();
 	
@@ -691,4 +705,92 @@ void VerticalFileSwitcherListView::updateFont()
 		SendMessage(_hSelf, WM_SETFONT, reinterpret_cast<WPARAM>(_hFont), TRUE);
 		redraw(true);
 	}
+}
+
+// 初始化文件右键菜单
+void VerticalFileSwitcherListView::initFileContextMenu()
+{
+	if (_hFileContextMenu)
+	{
+		::DestroyMenu(_hFileContextMenu);
+	}
+	
+	// 创建右键菜单
+	_hFileContextMenu = ::CreatePopupMenu();
+	
+	// 添加分类选择子菜单
+	HMENU hCategoryMenu = ::CreatePopupMenu();
+	if (_categoryManager)
+	{
+		const auto& categories = _categoryManager->getCategories();
+		
+		// 添加所有分类到菜单
+		for (size_t i = 0; i < categories.size(); ++i)
+		{
+			UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i); // 使用正确的ID范围
+			::AppendMenu(hCategoryMenu, MF_STRING, menuId, categories[i].name.c_str());
+		}
+	}
+	
+	// 添加主菜单项
+	::AppendMenu(_hFileContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"设置分类");
+	::AppendMenu(_hFileContextMenu, MF_SEPARATOR, 0, NULL);
+	::AppendMenu(_hFileContextMenu, MF_STRING, 1001, L"打开文件所在目录");
+	::AppendMenu(_hFileContextMenu, MF_STRING, 1002, L"复制文件路径");
+}
+
+// 显示文件右键菜单
+void VerticalFileSwitcherListView::showFileContextMenu(int x, int y)
+{
+	if (!_hFileContextMenu)
+	{
+		initFileContextMenu();
+	}
+	
+	// 获取选中的文件
+	int selectedCount = nbSelectedFiles();
+	if (selectedCount > 0)
+	{
+		::TrackPopupMenu(_hFileContextMenu, 
+			NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+			x, y, 0, _hSelf, NULL);
+	}
+}
+
+// 处理文件分类变更
+void VerticalFileSwitcherListView::onFileCategoryChange(const std::wstring& categoryName)
+{
+	// 获取选中的文件
+	std::vector<BufferViewInfo> selectedFiles = getSelectedFiles();
+	if (selectedFiles.empty() || !_categoryManager)
+		return;
+	
+	// 为每个选中的文件设置分类
+	for (const auto& fileInfo : selectedFiles)
+	{
+		// 获取文件路径
+		Buffer* buffer = MainFileManager.getBufferByID(fileInfo._bufID);
+		if (buffer)
+		{
+			std::wstring filePath = buffer->getFullPathName();
+			
+			// 设置文件分类
+			if (categoryName == L"全部")
+			{
+				// 清除分类
+				_categoryManager->removeFileFromCategory(filePath);
+			}
+			else
+			{
+				// 设置分类
+				_categoryManager->addFileToCategory(filePath, categoryName);
+			}
+		}
+	}
+	
+	// 刷新显示
+	redrawItems();
+	
+	debugLog(L"VerticalFileSwitcherListView::onFileCategoryChange - 已为%d个文件设置分类: %s", 
+		selectedFiles.size(), categoryName.c_str());
 }
