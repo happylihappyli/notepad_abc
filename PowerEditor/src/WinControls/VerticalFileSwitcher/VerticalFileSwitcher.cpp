@@ -337,6 +337,76 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			HWND hListView = ::GetDlgItem(_hSelf, IDC_LIST_DOCLIST);
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取ListView控件句柄: %p, _hSelf: %p", hListView, _hSelf);
 			
+			// 初始化分类管理器
+		_categoryManager.initialize(L"categories.json");
+		
+		// 设置分类管理器指针到列表视图
+		_fileListView.setCategoryManager(&_categoryManager);
+		
+		// 初始化分类选择下拉框
+		_hCategoryCombo = ::CreateWindowEx(
+			0,
+			L"COMBOBOX",
+			L"",
+			WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP,
+			0, 0, 0, 0, // 位置和大小将在WM_SIZE中设置
+			_hSelf,
+			(HMENU)IDC_CATEGORY_COMBO,
+			_hInst,
+			NULL
+		);
+		
+		if (_hCategoryCombo)
+		{
+			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类下拉框创建成功，句柄: %p", _hCategoryCombo);
+			
+			// 创建分类标签
+			_hCategoryLabel = ::CreateWindowEx(
+				0, 
+				L"STATIC", 
+				L"分类:", 
+				WS_CHILD | WS_VISIBLE | SS_LEFT,
+				0, 0, 0, 0, // 位置和大小将在WM_SIZE中设置
+				_hSelf, 
+				(HMENU)IDC_CATEGORY_STATIC, 
+				_hInst, 
+				NULL
+			);
+			
+			if (_hCategoryLabel)
+			{
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类标签创建成功，句柄: %p", _hCategoryLabel);
+				// 设置字体
+				HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
+				if (hFont)
+				{
+					::SendMessage(_hCategoryLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+					::SendMessage(_hCategoryCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+				}
+				
+				// 添加分类选项到下拉框
+				const auto& categories = _categoryManager.getCategories();
+				for (const auto& category : categories)
+				{
+					::SendMessage(_hCategoryCombo, CB_ADDSTRING, 0, (LPARAM)category.name.c_str());
+				}
+				
+				// 默认选中第一个分类
+				if (!categories.empty())
+				{
+					::SendMessage(_hCategoryCombo, CB_SETCURSEL, 0, 0);
+				}
+			}
+			else
+			{
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法创建分类标签！");
+			}
+		}
+		else
+		{
+			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法创建分类下拉框！");
+		}
+			
 			// 初始化字体大小下拉框
 		_hFontSizeCombo = ::GetDlgItem(_hSelf, IDC_FONTSIZE_COMBO);
 		if (_hFontSizeCombo)
@@ -664,20 +734,30 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
             int height = HIWORD(lParam);
 			
 			// 调整控件位置和大小
-			if (_hFontSizeCombo && _hFontSizeLabel)
-			{
-				// 字体大小标签位置（增加宽度以完整显示文本）
-				::MoveWindow(_hFontSizeLabel, 5, 5, 80, 20, TRUE);
-				// 字体大小下拉框位置
-				::MoveWindow(_hFontSizeCombo, 90, 5, 80, 200, TRUE);
-				// 列表视图位置（在字体下拉框下方）
-				::MoveWindow(_fileListView.getHSelf(), 0, 30, width, height - 30, TRUE);
-			}
-			else
-			{
-				// 如果没有字体下拉框，使用原来的布局
-				::MoveWindow(_fileListView.getHSelf(), 0, 0, width, height, TRUE);
-			}
+		int currentY = 5; // 起始Y坐标
+		
+		// 如果有分类控件，先布局分类控件
+		if (_hCategoryCombo && _hCategoryLabel)
+		{
+			// 分类标签位置
+			::MoveWindow(_hCategoryLabel, 5, currentY, 30, 20, TRUE);
+			// 分类下拉框位置
+			::MoveWindow(_hCategoryCombo, 40, currentY, 80, 200, TRUE);
+			currentY += 25; // 增加Y坐标，为下一个控件留出空间
+		}
+		
+		// 如果有字体大小控件，布局字体大小控件
+		if (_hFontSizeCombo && _hFontSizeLabel)
+		{
+			// 字体大小标签位置
+			::MoveWindow(_hFontSizeLabel, 5, currentY, 40, 20, TRUE);
+			// 字体大小下拉框位置
+			::MoveWindow(_hFontSizeCombo, 50, currentY, 40, 80, TRUE);
+			currentY += 25; // 增加Y坐标，为列表视图留出空间
+		}
+		
+		// 列表视图位置（在所有控件下方）
+		::MoveWindow(_fileListView.getHSelf(), 0, currentY, width, height - currentY, TRUE);
 			
 			_fileListView.resizeColumns(width);
             break;
@@ -697,8 +777,36 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
 		case WM_COMMAND:
 		{
+			// 处理分类下拉框选择变化
+			if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_CATEGORY_COMBO)
+			{
+				// 获取选中的分类
+				int selectedIndex = ::SendMessage(_hCategoryCombo, CB_GETCURSEL, 0, 0);
+				if (selectedIndex != CB_ERR)
+				{
+					const auto& categories = _categoryManager.getCategories();
+					if (selectedIndex >= 0 && selectedIndex < static_cast<int>(categories.size()))
+					{
+						const auto& selectedCategory = categories[selectedIndex];
+						
+						// 根据选中的分类过滤文件列表
+						if (selectedCategory.name == L"全部")
+						{
+							// 选择"全部"分类，清除过滤
+							_fileListView.clearCategoryFilter();
+						}
+						else
+						{
+							// 设置当前分类进行过滤
+							_fileListView.setCurrentCategory(selectedCategory.name);
+						}
+						
+						debugLog(L"VerticalFileSwitcher::WM_COMMAND - 分类已更改为: %s", selectedCategory.name.c_str());
+					}
+				}
+			}
 			// 处理字体下拉框选择变化
-			if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_FONTSIZE_COMBO)
+			else if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_FONTSIZE_COMBO)
 			{
 				// 获取选中的字体大小
 				int selectedIndex = ::SendMessage(_hFontSizeCombo, CB_GETCURSEL, 0, 0);

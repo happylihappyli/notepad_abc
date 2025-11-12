@@ -1,0 +1,308 @@
+// 分类管理器实现文件
+
+#include "CategoryManager.h"
+#include <fstream>
+#include <algorithm>
+#include <filesystem>
+#include <windows.h>
+#include "Parameters.h"
+
+namespace fs = std::filesystem;
+
+CategoryManager::CategoryManager() {
+    // 默认配置文件路径
+    m_configPath = L"categories.json";
+}
+
+/**
+ * @brief 初始化分类管理器
+ */
+void CategoryManager::initialize(const std::wstring& configPath) {
+    if (!configPath.empty()) {
+        m_configPath = configPath;
+    }
+    
+    // 确保配置目录存在
+    ensureConfigDirectory();
+    
+    // 加载配置，如果失败则创建默认分类
+    if (!loadConfig()) {
+        createDefaultCategories();
+        saveConfig();
+    }
+}
+
+/**
+ * @brief 加载分类配置
+ */
+bool CategoryManager::loadConfig() {
+    try {
+        std::ifstream file(m_configPath);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        json config;
+        file >> config;
+        
+        // 清空现有数据
+        m_categories.clear();
+        m_fileMappings.clear();
+        
+        // 加载分类
+        if (config.contains("categories")) {
+            for (const auto& catJson : config["categories"]) {
+                FileCategory category;
+                category.fromJson(catJson);
+                m_categories.push_back(category);
+            }
+        }
+        
+        // 加载文件映射
+        if (config.contains("fileMappings")) {
+            for (const auto& mappingJson : config["fileMappings"]) {
+                FileCategoryMapping mapping;
+                mapping.fromJson(mappingJson);
+                m_fileMappings.push_back(mapping);
+            }
+        }
+        
+        return true;
+    }
+    catch (const std::exception& e) {
+        // 加载失败，返回false
+        return false;
+    }
+}
+
+/**
+ * @brief 保存分类配置
+ */
+bool CategoryManager::saveConfig() {
+    try {
+        json config;
+        
+        // 保存分类
+        json categoriesArray = json::array();
+        for (const auto& category : m_categories) {
+            categoriesArray.push_back(category.toJson());
+        }
+        config["categories"] = categoriesArray;
+        
+        // 保存文件映射
+        json mappingsArray = json::array();
+        for (const auto& mapping : m_fileMappings) {
+            mappingsArray.push_back(mapping.toJson());
+        }
+        config["fileMappings"] = mappingsArray;
+        
+        std::ofstream file(m_configPath);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        file << config.dump(4); // 缩进4个空格，便于阅读
+        return true;
+    }
+    catch (const std::exception& e) {
+        return false;
+    }
+}
+
+/**
+ * @brief 添加新分类
+ */
+bool CategoryManager::addCategory(const FileCategory& category) {
+    // 检查是否已存在同名分类
+    for (const auto& existingCat : m_categories) {
+        if (existingCat.name == category.name) {
+            return false; // 分类已存在
+        }
+    }
+    
+    m_categories.push_back(category);
+    return saveConfig();
+}
+
+/**
+ * @brief 删除分类
+ */
+bool CategoryManager::removeCategory(const std::wstring& categoryId) {
+    // 移除分类
+    auto it = std::remove_if(m_categories.begin(), m_categories.end(),
+        [&categoryId](const FileCategory& cat) {
+            return cat.id == categoryId;
+        });
+    
+    if (it != m_categories.end()) {
+        m_categories.erase(it, m_categories.end());
+        
+        // 移除相关的文件映射
+        m_fileMappings.erase(
+            std::remove_if(m_fileMappings.begin(), m_fileMappings.end(),
+                [&categoryId](const FileCategoryMapping& mapping) {
+                    return mapping.categoryId == categoryId;
+                }),
+            m_fileMappings.end()
+        );
+        
+        return saveConfig();
+    }
+    
+    return false;
+}
+
+/**
+ * @brief 更新分类信息
+ */
+bool CategoryManager::updateCategory(const FileCategory& category) {
+    for (auto& existingCat : m_categories) {
+        if (existingCat.id == category.id) {
+            existingCat = category;
+            return saveConfig();
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief 根据ID获取分类
+ */
+FileCategory* CategoryManager::getCategoryById(const std::wstring& categoryId) {
+    for (auto& category : m_categories) {
+        if (category.id == categoryId) {
+            return &category;
+        }
+    }
+    return nullptr;
+}
+
+/**
+ * @brief 根据名称获取分类
+ */
+FileCategory* CategoryManager::getCategoryByName(const std::wstring& name) {
+    for (auto& category : m_categories) {
+        if (category.name == name) {
+            return &category;
+        }
+    }
+    return nullptr;
+}
+
+/**
+ * @brief 设置文件的分类
+ */
+bool CategoryManager::setFileCategory(const std::wstring& filePath, const std::wstring& categoryId) {
+    std::wstring normalizedPath = normalizePath(filePath);
+    
+    // 检查分类是否存在
+    if (!getCategoryById(categoryId)) {
+        return false;
+    }
+    
+    // 移除现有的映射
+    removeFileCategory(normalizedPath);
+    
+    // 添加新的映射
+    m_fileMappings.push_back(FileCategoryMapping(normalizedPath, categoryId));
+    return saveConfig();
+}
+
+/**
+ * @brief 获取文件的分类
+ */
+std::wstring CategoryManager::getFileCategory(const std::wstring& filePath) const {
+    std::wstring normalizedPath = normalizePath(filePath);
+    
+    for (const auto& mapping : m_fileMappings) {
+        if (mapping.filePath == normalizedPath) {
+            return mapping.categoryId;
+        }
+    }
+    
+    return getDefaultCategoryId(); // 返回默认分类
+}
+
+/**
+ * @brief 移除文件的分类
+ */
+bool CategoryManager::removeFileCategory(const std::wstring& filePath) {
+    std::wstring normalizedPath = normalizePath(filePath);
+    
+    auto it = std::remove_if(m_fileMappings.begin(), m_fileMappings.end(),
+        [&normalizedPath](const FileCategoryMapping& mapping) {
+            return mapping.filePath == normalizedPath;
+        });
+    
+    if (it != m_fileMappings.end()) {
+        m_fileMappings.erase(it, m_fileMappings.end());
+        return saveConfig();
+    }
+    
+    return false;
+}
+
+/**
+ * @brief 获取指定分类下的所有文件路径
+ */
+std::vector<std::wstring> CategoryManager::getFilesByCategory(const std::wstring& categoryId) const {
+    std::vector<std::wstring> files;
+    
+    for (const auto& mapping : m_fileMappings) {
+        if (mapping.categoryId == categoryId) {
+            files.push_back(mapping.filePath);
+        }
+    }
+    
+    return files;
+}
+
+/**
+ * @brief 创建默认分类
+ */
+void CategoryManager::createDefaultCategories() {
+    m_categories.clear();
+    
+    // 创建默认分类
+    m_categories.push_back(FileCategory(getDefaultCategoryName(), L"未分类的文件", 0));
+    m_categories.push_back(FileCategory(L"编程", L"编程相关的文件", 1));
+    m_categories.push_back(FileCategory(L"工作", L"工作相关的文件", 2));
+    m_categories.push_back(FileCategory(L"生活", L"生活相关的文件", 3));
+    m_categories.push_back(FileCategory(L"学习", L"学习相关的文件", 4));
+    
+    // 设置默认分类的ID
+    m_categories[0].id = getDefaultCategoryId();
+}
+
+/**
+ * @brief 确保配置文件目录存在
+ */
+bool CategoryManager::ensureConfigDirectory() const {
+    try {
+        fs::path configPath(m_configPath);
+        fs::path configDir = configPath.parent_path();
+        
+        if (!configDir.empty() && !fs::exists(configDir)) {
+            return fs::create_directories(configDir);
+        }
+        return true;
+    }
+    catch (const std::exception& e) {
+        return false;
+    }
+}
+
+/**
+ * @brief 从文件路径生成标准化的路径
+ */
+std::wstring CategoryManager::normalizePath(const std::wstring& path) const {
+    try {
+        fs::path normalized(path);
+        normalized = fs::absolute(normalized);
+        normalized = normalized.lexically_normal();
+        return normalized.wstring();
+    }
+    catch (const std::exception& e) {
+        return path; // 如果标准化失败，返回原路径
+    }
+}

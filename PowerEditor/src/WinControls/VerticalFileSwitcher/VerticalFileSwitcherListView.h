@@ -20,6 +20,7 @@
 #include "Window.h"
 #include "TaskListDlg.h"
 #include "Buffer.h"
+#include "CategoryManager.h"
 
 #define SORT_DIRECTION_NONE     -1
 #define SORT_DIRECTION_UP     0
@@ -96,10 +97,18 @@ public:
 	// 更新字体
 	void updateFont();
 
+	// 分类过滤相关方法
+	void setCategoryManager(CategoryManager* categoryManager) { _categoryManager = categoryManager; }
+	void setCurrentCategory(const std::wstring& categoryName) { _currentCategory = categoryName; reload(); }
+	const std::wstring& getCurrentCategory() const { return _currentCategory; }
+	void clearCategoryFilter() { _currentCategory.clear(); reload(); }
+
 protected:
 	HIMAGELIST _hImaLst = nullptr;
 	HFONT _hFont = nullptr; // 字体句柄
 	int _fontSize = 8; // 字体大小
+	CategoryManager* _categoryManager = nullptr; // 分类管理器指针
+	std::wstring _currentCategory; // 当前选中的分类
 
 public:
 	// 直接设置窗口句柄，不创建新窗口

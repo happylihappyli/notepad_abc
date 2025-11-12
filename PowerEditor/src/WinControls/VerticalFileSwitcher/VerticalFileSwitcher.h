@@ -20,6 +20,7 @@
 #include "DockingDlgInterface.h"
 #include "VerticalFileSwitcher_rc.h"
 #include "VerticalFileSwitcherListView.h"
+#include "CategoryManager.h"
 
 #define FS_PROJECTPANELTITLE		L"Document List"
 
@@ -44,6 +45,9 @@ private:
 	VerticalFileSwitcherListView _fileListView;
 	HWND _hFontSizeCombo = nullptr; // 字体大小下拉框句柄
 	HWND _hFontSizeLabel = nullptr; // 字体大小标签句柄
+	HWND _hCategoryCombo = nullptr; // 分类选择下拉框句柄
+	HWND _hCategoryLabel = nullptr; // 分类标签句柄
+	CategoryManager _categoryManager; // 分类管理器
 
 	static COLORREF _bgColor;
 	static const UINT_PTR _fileSwitcherNotifySubclassID = 42;

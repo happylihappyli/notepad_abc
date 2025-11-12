@@ -186,6 +186,7 @@ src_files = [
     os.path.join(src_dir, 'WinControls', 'TreeView', 'TreeView.cpp'),
     os.path.join(src_dir, 'WinControls', 'VerticalFileSwitcher', 'VerticalFileSwitcherListView.cpp'),
     os.path.join(src_dir, 'WinControls', 'VerticalFileSwitcher', 'VerticalFileSwitcher.cpp'),
+    os.path.join(src_dir, 'WinControls', 'VerticalFileSwitcher', 'CategoryManager.cpp'),
     os.path.join(src_dir, 'WinControls', 'WindowsDlg', 'WindowsDlg.cpp'),
     os.path.join(src_dir, 'WinControls', 'WindowsDlg', 'SizeableDlg.cpp'),
     os.path.join(src_dir, 'WinControls', 'WindowsDlg', 'WinMgr.cpp'),

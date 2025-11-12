@@ -218,10 +218,141 @@ void VerticalFileSwitcherListView::reload()
 	// Suppress redraws for performance. We target _hParent to prevent scroll bar flickering.
 	::SendMessage(_hParent, WM_SETREDRAW, false, 0);
 	removeAll();
-	initList();
+	
+	// 检查_hSelf是否有效
+	if (!_hSelf || !::IsWindow(_hSelf)) {
+		debugLog(L"VerticalFileSwitcherListView::reload() - 错误：ListView控件句柄无效！");
+		::SendMessage(_hParent, WM_SETREDRAW, true, 0);
+		return;
+	}
+
+	NppParameters& nppParams = NppParameters::getInstance();
+	NativeLangSpeaker *pNativeSpeaker = nppParams.getNativeLangSpeaker();
+	
+	const bool isListViewGroups = !nppParams.getNppGUI()._fileSwitcherDisableListViewGroups;
+	ListView_EnableGroupView(_hSelf, isListViewGroups ? TRUE : FALSE);
+	
+	// 设置列表视图的扩展样式
+	ListView_SetExtendedListViewStyle(_hSelf, LVS_EX_FULLROWSELECT | LVS_EX_BORDERSELECT | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
+	ListView_SetItemCountEx(_hSelf, 50, LVSICF_NOSCROLL);
+	
+	// 插入分组信息
+	LVGROUP group{};
+	constexpr size_t headerLen = 1;
+	wchar_t header[headerLen] = L"";
+	group.cbSize = sizeof(LVGROUP);
+	group.mask = LVGF_HEADER | LVGF_GROUPID | LVGF_STATE;
+	group.pszHeader = header;
+	group.cchHeader = headerLen;
+	group.iGroupId = _groupID;
+	group.state = LVGS_COLLAPSIBLE;
+
+	LVGROUP group2 = group;
+	group2.iGroupId = _group2ID;
+
+	ListView_InsertGroup(_hSelf, -1, &group);
+	ListView_InsertGroup(_hSelf, -1, &group2);
+
+	bool isExtColumn = !nppParams.getNppGUI()._fileSwitcherWithoutExtColumn;
+	bool isPathColumn = !nppParams.getNppGUI()._fileSwitcherWithoutPathColumn;
 
 	RECT rc{};
 	::GetClientRect(_hParent, &rc);
+	int nameWidth = rc.right - rc.left;
+	int colIndex = 0;
+	if (isExtColumn)
+		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
+	if (isPathColumn)
+		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherPathWidth);
+
+	//add columns
+	wstring nameStr = pNativeSpeaker->getAttrNameStr(L"Name", FS_ROOTNODE, FS_CLMNNAME);
+	insertColumn(nameStr.c_str(), nameWidth, ++colIndex);
+	if (isExtColumn)
+	{
+		wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
+		insertColumn(extStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth), ++colIndex); //2nd column
+	}
+	if (isPathColumn)
+	{
+		wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
+		insertColumn(pathStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherPathWidth), ++colIndex); //2nd column if .ext is off
+	}
+
+	TaskListInfo taskListInfo;
+	static HWND nppHwnd = ::GetParent(_hParent);
+	
+	// 检查窗口是否有效
+	if (!::IsWindow(nppHwnd)) {
+		debugLog(L"VerticalFileSwitcherListView::reload() - 错误：Notepad++主窗口句柄无效！");
+		nppHwnd = ::GetAncestor(_hParent, GA_ROOT);
+	}
+	
+	LRESULT result = ::SendMessage(nppHwnd, WM_GETTASKLISTINFO, reinterpret_cast<WPARAM>(&taskListInfo), 0);
+	
+	// 如果获取的文档列表为空，添加备用数据
+	if (taskListInfo._tlfsLst.empty()) {
+		debugLog(L"VerticalFileSwitcherListView::reload() - 文档列表为空，将添加备用示例数据");
+		
+		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(MAIN_VIEW, 0, L"示例文档1.txt", 0, (void*)1, 0));
+		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(MAIN_VIEW, 1, L"示例文档2.cpp", 1, (void*)2, 0));
+		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(SUB_VIEW, 0, L"示例文档3.md", 2, (void*)3, 0));
+		taskListInfo._currentIndex = 0;
+	}
+
+	int itemIndex = 0;
+	for (size_t i = 0, len = taskListInfo._tlfsLst.size(); i < len ; ++i)
+	{
+		TaskLstFnStatus & fileNameStatus = taskListInfo._tlfsLst[i];
+		
+		// 分类过滤：如果设置了当前分类，检查文件是否属于该分类
+		if (!_currentCategory.empty() && _categoryManager)
+		{
+			std::wstring filePath = fileNameStatus._fn;
+			std::wstring fileCategory = _categoryManager->getFileCategory(filePath);
+			
+			// 如果文件分类与当前选中的分类不匹配，跳过该文件
+			if (fileCategory != _currentCategory)
+			{
+				continue;
+			}
+		}
+
+		TaskLstFnStatus *tl = new TaskLstFnStatus(fileNameStatus);
+
+		wchar_t fn[MAX_PATH] = { '\0' };
+		wcscpy_s(fn, ::PathFindFileName(fileNameStatus._fn.c_str()));
+
+		if (isExtColumn)
+		{
+			::PathRemoveExtension(fn);
+		}
+		LVITEM item{};
+		item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_GROUPID;
+		
+		item.pszText = fn;
+		item.iItem = itemIndex;
+		item.iSubItem = 0;
+		item.iImage = fileNameStatus._status;
+		item.lParam = reinterpret_cast<LPARAM>(tl);
+		item.iGroupId = (fileNameStatus._iView == MAIN_VIEW) ? _groupID : _group2ID;
+		ListView_InsertItem(_hSelf, &item);
+		int colIndex2 = 0;
+		if (isExtColumn)
+		{
+			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPTSTR)::PathFindExtension(fileNameStatus._fn.c_str()));
+		}
+		if (isPathColumn)
+		{
+			wchar_t dir[MAX_PATH] = { '\0' }, drive[MAX_PATH] = { '\0' };
+			_wsplitpath_s(fileNameStatus._fn.c_str(), drive, MAX_PATH, dir, MAX_PATH, NULL, 0, NULL, 0);
+			wcscat_s(drive, dir);
+			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, drive);
+		}
+		
+		itemIndex++;
+	}
+
 	resizeColumns(rc.right - rc.left);
 	::SendMessage(_hParent, WM_SETREDRAW, true, 0);
 	redrawItems();
