@@ -970,7 +970,7 @@ struct NppGUI final
 	std::wstring _themeName;
 	MultiInstSetting _multiInstSetting = monoInst;
 	bool _clipboardHistoryPanelKeepState = false;
-	bool _docListKeepState = false;
+	bool _docListKeepState = true;
 	bool _charPanelKeepState = false;
 	bool _fileBrowserKeepState = false;
 	bool _projectPanelKeepState = false;

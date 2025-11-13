@@ -29,11 +29,20 @@
 #define	CATEGORY_MENU_END    (CATEGORY_MENU_START + 50)
 #define	CATEGORY_MENU_ID     (IDD_DOCLIST + 99)
 
+// 分类按钮ID范围
+#define	CATEGORY_BUTTON_START  (IDD_DOCLIST + 150)
+#define	CATEGORY_BUTTON_END    (CATEGORY_BUTTON_START + 50)
+
 // 字体大小菜单ID
 #define	FONTSIZE_6           (IDD_DOCLIST + 200)
 #define	FONTSIZE_8           (IDD_DOCLIST + 201)
 #define	FONTSIZE_10          (IDD_DOCLIST + 202)
 #define	FONTSIZE_12          (IDD_DOCLIST + 203)
 #define	FONTSIZE_14          (IDD_DOCLIST + 204)
+
+// 标签颜色菜单ID
+#define	TAB_COLOR_MENU_START  (IDD_DOCLIST + 250)
+#define	TAB_COLOR_MENU_END    (TAB_COLOR_MENU_START + 10)
+#define	TAB_COLOR_MENU_ID     (IDD_DOCLIST + 249)
 
 

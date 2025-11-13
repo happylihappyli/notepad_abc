@@ -772,6 +772,10 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 			}
 			//break;
 			sender->resetDraggingPoint();
+			
+			// 当tab拖动完成后，通知文件列表更新顺序
+			::SendMessage(_pPublicInterface->getHSelf(), NPPM_INTERNAL_DOCORDERCHANGED, 0, reinterpret_cast<LPARAM>(notification->nmhdr.hwndFrom));
+			
 			return TRUE;
 		}
 

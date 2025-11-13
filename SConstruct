@@ -189,8 +189,7 @@ def configure_link_options(env):
         'uuid.lib',               # UUID库（添加缺失的依赖）
         'odbc32.lib',             # ODBC库（添加缺失的依赖）
         'odbccp32.lib',           # ODBC安装程序库（添加缺失的依赖）
-        # 尝试使用Windows SDK中的COM支持而不是Visual Studio的COM支持库
-        # 'comsupp.lib',            # COM支持库（发布版本）
+        'comsuppw.lib',           # COM支持库（关键：解决GetErrorInfo等符号）
         'libscintilla.lib',       # Scintilla库
         'liblexilla.lib',         # Lexilla库
     ]
@@ -225,9 +224,6 @@ def configure_link_options(env):
         '/IMPLIB:notepad_abc.lib',   # 导入库
         '/MACHINE:X64',              # 目标机器架构
         '/CETCOMPAT:NO',             # CET兼容性
-        # 添加链接器选项，禁用自动链接COM支持库
-        '/NODEFAULTLIB:comsuppw.lib',  # 禁用自动链接comsuppw.lib
-        '/NODEFAULTLIB:comsupp.lib',    # 禁用自动链接comsupp.lib
     ]
     
     # 应用链接设置

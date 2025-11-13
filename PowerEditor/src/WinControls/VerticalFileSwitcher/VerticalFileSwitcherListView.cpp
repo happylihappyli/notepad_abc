@@ -22,6 +22,7 @@
 #include "localization.h"
 #include "Common.h"
 #include "Notepad_plus.h"
+#include "menuCmdID.h"
 
 using namespace std;
 
@@ -108,8 +109,9 @@ void VerticalFileSwitcherListView::initList()
 	ListView_InsertGroup(_hSelf, -1, &group);
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
-	bool isExtColumn = !nppParams.getNppGUI()._fileSwitcherWithoutExtColumn;
-	bool isPathColumn = !nppParams.getNppGUI()._fileSwitcherWithoutPathColumn;
+	// 强制只显示文件名和扩展名两列，忽略路径列配置
+	bool isExtColumn = true;  // 总是显示扩展名列
+	bool isPathColumn = false; // 从不显示路径列
 
 	RECT rc{};
 	::GetClientRect(_hParent, &rc);
@@ -117,8 +119,6 @@ void VerticalFileSwitcherListView::initList()
 	int colIndex = 0;
 	if (isExtColumn)
 		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
-	if (isPathColumn)
-		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherPathWidth);
 
 	//add columns
 	wstring nameStr = pNativeSpeaker->getAttrNameStr(L"Name", FS_ROOTNODE, FS_CLMNNAME);
@@ -128,11 +128,7 @@ void VerticalFileSwitcherListView::initList()
 		wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
 		insertColumn(extStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth), ++colIndex); //2nd column
 	}
-	if (isPathColumn)
-	{
-		wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
-		insertColumn(pathStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherPathWidth), ++colIndex); //2nd column if .ext is off
-	}
+	// 注释掉路径列的添加，确保只显示两列
 
 	TaskListInfo taskListInfo;
 	static HWND nppHwnd = ::GetParent(_hParent);
@@ -201,13 +197,7 @@ void VerticalFileSwitcherListView::initList()
 		{
 			ListView_SetItemText(_hSelf, i, ++colIndex2, ::PathFindExtension(fileNameStatus._fn.c_str()));
 		}
-		if (isPathColumn)
-		{
-			wchar_t dir[MAX_PATH] = { '\0' }, drive[MAX_PATH] = { '\0' };
-			_wsplitpath_s(fileNameStatus._fn.c_str(), drive, MAX_PATH, dir, MAX_PATH, NULL, 0, NULL, 0);
-			wcscat_s(drive, dir);
-			ListView_SetItemText(_hSelf, i, ++colIndex2, drive);
-		}
+		// 注释掉路径列的数据设置，确保只显示两列
 	}
 	_currentIndex = taskListInfo._currentIndex;
 	selectCurrentItem();
@@ -218,7 +208,6 @@ void VerticalFileSwitcherListView::reload()
 {
 	// Suppress redraws for performance. We target _hParent to prevent scroll bar flickering.
 	::SendMessage(_hParent, WM_SETREDRAW, false, 0);
-	removeAll();
 	
 	// 检查_hSelf是否有效
 	if (!_hSelf || !::IsWindow(_hSelf)) {
@@ -254,8 +243,16 @@ void VerticalFileSwitcherListView::reload()
 	ListView_InsertGroup(_hSelf, -1, &group);
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
-	bool isExtColumn = !nppParams.getNppGUI()._fileSwitcherWithoutExtColumn;
-	bool isPathColumn = !nppParams.getNppGUI()._fileSwitcherWithoutPathColumn;
+	// 强制只显示文件名和扩展名两列，忽略路径列配置
+	bool isExtColumn = true;  // 总是显示扩展名列
+	bool isPathColumn = false; // 从不显示路径列
+
+	// 先删除所有现有的列，避免重复添加
+	int columnCount = Header_GetItemCount(ListView_GetHeader(_hSelf));
+	for (int i = columnCount - 1; i >= 0; i--)
+	{
+		ListView_DeleteColumn(_hSelf, i);
+	}
 
 	RECT rc{};
 	::GetClientRect(_hParent, &rc);
@@ -263,8 +260,6 @@ void VerticalFileSwitcherListView::reload()
 	int colIndex = 0;
 	if (isExtColumn)
 		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
-	if (isPathColumn)
-		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherPathWidth);
 
 	//add columns
 	wstring nameStr = pNativeSpeaker->getAttrNameStr(L"Name", FS_ROOTNODE, FS_CLMNNAME);
@@ -274,11 +269,7 @@ void VerticalFileSwitcherListView::reload()
 		wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
 		insertColumn(extStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth), ++colIndex); //2nd column
 	}
-	if (isPathColumn)
-	{
-		wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
-		insertColumn(pathStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherPathWidth), ++colIndex); //2nd column if .ext is off
-	}
+	// 注释掉路径列的添加，确保只显示两列
 
 	TaskListInfo taskListInfo;
 	static HWND nppHwnd = ::GetParent(_hParent);
@@ -291,14 +282,12 @@ void VerticalFileSwitcherListView::reload()
 	
 	LRESULT result = ::SendMessage(nppHwnd, WM_GETTASKLISTINFO, reinterpret_cast<WPARAM>(&taskListInfo), 0);
 	
-	// 如果获取的文档列表为空，添加备用数据
+	// 如果获取的文档列表为空，直接返回，不添加示例数据
 	if (taskListInfo._tlfsLst.empty()) {
-		debugLog(L"VerticalFileSwitcherListView::reload() - 文档列表为空，将添加备用示例数据");
-		
-		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(MAIN_VIEW, 0, L"示例文档1.txt", 0, (void*)1, 0));
-		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(MAIN_VIEW, 1, L"示例文档2.cpp", 1, (void*)2, 0));
-		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(SUB_VIEW, 0, L"示例文档3.md", 2, (void*)3, 0));
-		taskListInfo._currentIndex = 0;
+		debugLog(L"VerticalFileSwitcherListView::reload() - 文档列表为空，跳过加载");
+		// 注意：这里不调用removeAll()，避免字体大小改变时清空列表
+		::SendMessage(_hParent, WM_SETREDRAW, true, 0);
+		return;
 	}
 
 	int itemIndex = 0;
@@ -310,13 +299,41 @@ void VerticalFileSwitcherListView::reload()
 		if (!_currentCategory.empty() && _categoryManager)
 		{
 			std::wstring filePath = fileNameStatus._fn;
-			std::wstring fileCategory = _categoryManager->getFileCategory(filePath);
 			
-			// 如果文件分类与当前选中的分类不匹配，跳过该文件
-			if (fileCategory != _currentCategory)
+			// 如果当前分类是"全部"，显示所有文件
+			if (_currentCategory == L"全部")
 			{
-				continue;
+				// 不跳过任何文件，显示全部
 			}
+			else
+			{
+				std::wstring fileCategoryId = _categoryManager->getFileCategory(filePath);
+				
+				// 根据分类ID获取分类名称
+				FileCategory* fileCategory = _categoryManager->getCategoryById(fileCategoryId);
+				std::wstring fileCategoryName = fileCategory ? fileCategory->name : _categoryManager->getDefaultCategoryName();
+				
+				// 如果文件分类名称与当前选中的分类名称不匹配，跳过该文件
+				if (fileCategoryName != _currentCategory)
+				{
+					// 调试信息：显示过滤的文件
+					debugLog(L"VerticalFileSwitcherListView::initList - 过滤文件: %s, 文件分类: %s, 当前分类: %s", 
+						filePath.c_str(), fileCategoryName.c_str(), _currentCategory.c_str());
+					continue;
+				}
+				else
+				{
+					// 调试信息：显示保留的文件
+					debugLog(L"VerticalFileSwitcherListView::initList - 保留文件: %s, 文件分类: %s, 当前分类: %s", 
+						filePath.c_str(), fileCategoryName.c_str(), _currentCategory.c_str());
+				}
+			}
+		}
+		else
+		{
+			// 调试信息：分类过滤未启用
+			debugLog(L"VerticalFileSwitcherListView::initList - 分类过滤未启用: _currentCategory=%s, _categoryManager=%p", 
+				_currentCategory.c_str(), _categoryManager);
 		}
 
 		TaskLstFnStatus *tl = new TaskLstFnStatus(fileNameStatus);
@@ -343,13 +360,7 @@ void VerticalFileSwitcherListView::reload()
 		{
 			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPTSTR)::PathFindExtension(fileNameStatus._fn.c_str()));
 		}
-		if (isPathColumn)
-		{
-			wchar_t dir[MAX_PATH] = { '\0' }, drive[MAX_PATH] = { '\0' };
-			_wsplitpath_s(fileNameStatus._fn.c_str(), drive, MAX_PATH, dir, MAX_PATH, NULL, 0, NULL, 0);
-			wcscat_s(drive, dir);
-			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, drive);
-		}
+		// 注释掉路径列的数据设置，确保只显示两列
 		
 		itemIndex++;
 	}
@@ -626,11 +637,11 @@ void VerticalFileSwitcherListView::insertColumn(const wchar_t *name, int width, 
 void VerticalFileSwitcherListView::resizeColumns(int totalWidth)
 {
 	NppParameters& nppParams = NppParameters::getInstance();
-	bool isExtColumn = !nppParams.getNppGUI()._fileSwitcherWithoutExtColumn;
-	bool isPathColumn = !nppParams.getNppGUI()._fileSwitcherWithoutPathColumn;
+	// 强制只显示文件名和扩展名两列，忽略路径列配置
+	bool isExtColumn = true;  // 总是显示扩展名列
+	bool isPathColumn = false; // 从不显示路径列
 
 	const int extWidthDyn = nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
-	const int pathWidthDyn = nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherPathWidth);
 	int totalColWidthDynExceptName = 0;
 	int colIndex = 0;
 
@@ -639,11 +650,7 @@ void VerticalFileSwitcherListView::resizeColumns(int totalWidth)
 		totalColWidthDynExceptName += extWidthDyn;
 		ListView_SetColumnWidth(_hSelf, ++colIndex, extWidthDyn);
 	}
-	if (isPathColumn)
-	{
-		totalColWidthDynExceptName += pathWidthDyn;
-		ListView_SetColumnWidth(_hSelf, ++colIndex, pathWidthDyn);
-	}
+	// 注释掉路径列的宽度调整，确保只显示两列
 
 	const auto style = ::GetWindowLongPtr(_hSelf, GWL_STYLE);
 	if ((style & WS_VSCROLL) == WS_VSCROLL)
@@ -732,8 +739,19 @@ void VerticalFileSwitcherListView::initFileContextMenu()
 		}
 	}
 	
+	// 添加标签颜色选择子菜单
+	HMENU hTabColorMenu = ::CreatePopupMenu();
+	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_1, L"应用颜色 1");
+	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_2, L"应用颜色 2");
+	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_3, L"应用颜色 3");
+	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_4, L"应用颜色 4");
+	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_5, L"应用颜色 5");
+	::AppendMenu(hTabColorMenu, MF_SEPARATOR, 0, NULL);
+	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_NONE, L"移除颜色");
+	
 	// 添加主菜单项
 	::AppendMenu(_hFileContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"设置分类");
+	::AppendMenu(_hFileContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"标签颜色");
 	::AppendMenu(_hFileContextMenu, MF_SEPARATOR, 0, NULL);
 	::AppendMenu(_hFileContextMenu, MF_STRING, 1001, L"打开文件所在目录");
 	::AppendMenu(_hFileContextMenu, MF_STRING, 1002, L"复制文件路径");

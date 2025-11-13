@@ -22,13 +22,26 @@ void CategoryManager::initialize(const std::wstring& configPath) {
         m_configPath = configPath;
     }
     
+    // 调试信息：开始初始化
+    std::wstring debugMsg = L"CategoryManager: 开始初始化，配置文件路径: " + m_configPath + L"\n";
+    OutputDebugStringW(debugMsg.c_str());
+    
     // 确保配置目录存在
-    ensureConfigDirectory();
+    bool dirResult = ensureConfigDirectory();
+    debugMsg = L"CategoryManager: ensureConfigDirectory 返回结果: " + std::to_wstring(dirResult) + L"\n";
+    OutputDebugStringW(debugMsg.c_str());
     
     // 加载配置，如果失败则创建默认分类
     if (!loadConfig()) {
+        OutputDebugStringW(L"CategoryManager: 配置加载失败，创建默认分类\n");
         createDefaultCategories();
-        saveConfig();
+        if (saveConfig()) {
+            OutputDebugStringW(L"CategoryManager: 默认分类保存成功\n");
+        } else {
+            OutputDebugStringW(L"CategoryManager: 默认分类保存失败\n");
+        }
+    } else {
+        OutputDebugStringW(L"CategoryManager: 配置加载成功\n");
     }
 }
 
@@ -41,6 +54,14 @@ bool CategoryManager::loadConfig() {
         if (!file.is_open()) {
             return false;
         }
+        
+        // 检查文件是否为空
+        file.seekg(0, std::ios::end);
+        if (file.tellg() == 0) {
+            file.close();
+            return false; // 文件为空，加载失败
+        }
+        file.seekg(0, std::ios::beg); // 重置文件指针
         
         json config;
         file >> config;
@@ -80,6 +101,13 @@ bool CategoryManager::loadConfig() {
  */
 bool CategoryManager::saveConfig() {
     try {
+        // 确保配置目录存在
+        if (!ensureConfigDirectory()) {
+            // 调试信息：目录创建失败
+            OutputDebugStringW(L"CategoryManager: 配置目录创建失败\n");
+            return false;
+        }
+        
         json config;
         
         // 保存分类
@@ -96,15 +124,26 @@ bool CategoryManager::saveConfig() {
         }
         config["fileMappings"] = mappingsArray;
         
-        std::ofstream file(m_configPath);
+        // 使用trunc模式打开文件，确保覆盖现有内容
+        std::ofstream file(m_configPath, std::ios::trunc);
         if (!file.is_open()) {
+            // 调试信息：文件打开失败
+            std::wstring debugMsg = L"CategoryManager: 无法打开配置文件: " + m_configPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
             return false;
         }
         
         file << config.dump(4); // 缩进4个空格，便于阅读
+        file.close(); // 确保文件正确关闭
+        
+        // 调试信息：保存成功
+        OutputDebugStringW(L"CategoryManager: 配置文件保存成功\n");
         return true;
     }
     catch (const std::exception& e) {
+        // 调试信息：异常信息
+        std::string errorMsg = "CategoryManager: 保存配置时发生异常: " + std::string(e.what()) + "\n";
+        OutputDebugStringA(errorMsg.c_str());
         return false;
     }
 }
@@ -285,15 +324,26 @@ bool CategoryManager::removeFileFromCategory(const std::wstring& filePath) {
 void CategoryManager::createDefaultCategories() {
     m_categories.clear();
     
-    // 创建默认分类
-    m_categories.push_back(FileCategory(getDefaultCategoryName(), L"未分类的文件", 0));
-    m_categories.push_back(FileCategory(L"编程", L"编程相关的文件", 1));
-    m_categories.push_back(FileCategory(L"工作", L"工作相关的文件", 2));
-    m_categories.push_back(FileCategory(L"生活", L"生活相关的文件", 3));
-    m_categories.push_back(FileCategory(L"学习", L"学习相关的文件", 4));
+    // 创建默认分类，使用固定的分类ID
+    FileCategory defaultCategory(getDefaultCategoryName(), L"未分类的文件", 0);
+    defaultCategory.id = getDefaultCategoryId();
+    m_categories.push_back(defaultCategory);
     
-    // 设置默认分类的ID
-    m_categories[0].id = getDefaultCategoryId();
+    FileCategory programmingCategory(L"编程", L"编程相关的文件", 1);
+    programmingCategory.id = L"programming";
+    m_categories.push_back(programmingCategory);
+    
+    FileCategory workCategory(L"工作", L"工作相关的文件", 2);
+    workCategory.id = L"work";
+    m_categories.push_back(workCategory);
+    
+    FileCategory lifeCategory(L"生活", L"生活相关的文件", 3);
+    lifeCategory.id = L"life";
+    m_categories.push_back(lifeCategory);
+    
+    FileCategory studyCategory(L"学习", L"学习相关的文件", 4);
+    studyCategory.id = L"study";
+    m_categories.push_back(studyCategory);
 }
 
 /**
@@ -302,14 +352,59 @@ void CategoryManager::createDefaultCategories() {
 bool CategoryManager::ensureConfigDirectory() const {
     try {
         fs::path configPath(m_configPath);
+        
+        // 调试信息：显示原始配置路径
+        std::wstring debugMsg = L"CategoryManager: 原始配置路径: " + m_configPath + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
+        // 将相对路径转换为绝对路径
+        if (configPath.is_relative()) {
+            configPath = fs::absolute(configPath);
+            debugMsg = L"CategoryManager: 转换为绝对路径: " + configPath.wstring() + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+        }
+        
         fs::path configDir = configPath.parent_path();
         
-        if (!configDir.empty() && !fs::exists(configDir)) {
-            return fs::create_directories(configDir);
+        // 调试信息：显示配置路径和目录信息
+        debugMsg = L"CategoryManager: 配置路径: " + configPath.wstring() + L", 配置目录: " + configDir.wstring() + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
+        // 检查配置目录是否为空
+        if (configDir.empty()) {
+            OutputDebugStringW(L"CategoryManager: 配置文件在当前目录，不需要创建目录\n");
+            return true;
         }
+        
+        // 检查目录是否等于当前工作目录
+        fs::path currentDir = fs::current_path();
+        debugMsg = L"CategoryManager: 当前工作目录: " + currentDir.wstring() + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
+        // 检查目录是否等于当前工作目录
+        if (configDir == currentDir) {
+            OutputDebugStringW(L"CategoryManager: 配置目录等于当前工作目录，不需要创建目录\n");
+            return true;
+        }
+        
+        // 如果目录不存在，则创建目录
+        if (!fs::exists(configDir)) {
+            OutputDebugStringW(L"CategoryManager: 配置目录不存在，正在创建目录\n");
+            bool result = fs::create_directories(configDir);
+            if (result) {
+                OutputDebugStringW(L"CategoryManager: 配置目录创建成功\n");
+            } else {
+                OutputDebugStringW(L"CategoryManager: 配置目录创建失败\n");
+            }
+            return result;
+        }
+        
+        OutputDebugStringW(L"CategoryManager: 配置目录已存在\n");
         return true;
     }
     catch (const std::exception& e) {
+        std::string errorMsg = "CategoryManager: ensureConfigDirectory异常: " + std::string(e.what()) + "\n";
+        OutputDebugStringA(errorMsg.c_str());
         return false;
     }
 }

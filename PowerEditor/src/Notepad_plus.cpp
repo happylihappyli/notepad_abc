@@ -835,6 +835,14 @@ LRESULT Notepad_plus::init(HWND hwnd)
 
 				showPanel = ((!isInternalFunc && nppGUI._pluginPanelKeepState) || showInternalPanel);
 			}
+			else
+			{
+				// 对于正常启动，也检查文档列表的保持状态
+				if (isInternalFunc && pdi._internalID == IDM_VIEW_DOCLIST && nppGUI._docListKeepState)
+				{
+					showPanel = true;
+				}
+			}
 
 			if (pdi._isVisible && showPanel)
 			{
@@ -849,6 +857,27 @@ LRESULT Notepad_plus::init(HWND hwnd)
 		{
 			ContainerTabInfo & cti = dmd._containerTabInfo[i];
 			_dockingManager.setActiveTab(cti._cont, cti._activeTab);
+		}
+	}
+
+	// 如果配置了文档列表保持状态，自动创建VerticalFileSwitcher
+	if (nppGUI._docListKeepState)
+	{
+		// 检查是否在内部函数ID列表中包含了文档列表
+		bool shouldLaunchDocList = false;
+		for (size_t i = 0, len = _internalFuncIDs.size(); i < len; ++i)
+		{
+			if (_internalFuncIDs[i] == IDM_VIEW_DOCLIST)
+			{
+				shouldLaunchDocList = true;
+				break;
+			}
+		}
+		
+		if (shouldLaunchDocList)
+		{
+			debugLog(L"Notepad_plus::init() - 自动启动文档列表面板（_docListKeepState=true）\n");
+			launchDocumentListPanel();
 		}
 	}
 

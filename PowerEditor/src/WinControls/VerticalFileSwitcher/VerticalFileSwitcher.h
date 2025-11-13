@@ -154,9 +154,8 @@ public:
 	}
 
 	void updateTabOrder() {
-		if (_lastSortingDirection == SORT_DIRECTION_NONE) {
-			_fileListView.reload();
-		}
+		// 当tab顺序改变时，总是重新加载文件列表以反映新的tab顺序
+		_fileListView.reload();
 	}
 
 	int nbSelectedFiles() const {

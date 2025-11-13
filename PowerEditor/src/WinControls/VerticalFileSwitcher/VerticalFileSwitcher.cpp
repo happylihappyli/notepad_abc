@@ -333,7 +333,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取ListView控件句柄: %p, _hSelf: %p", hListView, _hSelf);
 			
 			// 初始化分类管理器
-		_categoryManager.initialize(L"categories.json");
+    _categoryManager.initialize(L"bin/categories.json");
 		
 		// 设置分类管理器指针到列表视图
 		_fileListView.setCategoryManager(&_categoryManager);
@@ -720,14 +720,25 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			// 如果点击位置在文件列表区域内，显示文件右键菜单
 			if (PtInRect(&listRect, pt))
 			{
-				_fileListView.showFileContextMenu(pt.x, pt.y);
+				// 确保有选中的文件时才显示右键菜单
+				if (_fileListView.nbSelectedFiles() > 0)
+				{
+					_fileListView.showFileContextMenu(pt.x, pt.y);
+				}
+				else
+				{
+					// 如果没有选中文件，显示全局菜单
+					::TrackPopupMenu(_hGlobalMenu, 
+						NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+						GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, _hSelf, NULL);
+				}
 			}
-			else if (nbSelectedFiles() == 0 || colHeaderRClick)
+			else
 			{
+				// 在其他区域右键，显示全局菜单
 				::TrackPopupMenu(_hGlobalMenu, 
 					NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
 					GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, _hSelf, NULL);
-				colHeaderRClick = false;
 			}
 			return TRUE;
 		}
@@ -735,32 +746,28 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 		case WM_COMMAND:
 		{
 			// 处理分类按钮点击
-			if (LOWORD(wParam) >= CATEGORY_MENU_START && LOWORD(wParam) <= CATEGORY_MENU_END)
+			if (LOWORD(wParam) >= CATEGORY_BUTTON_START && LOWORD(wParam) <= CATEGORY_BUTTON_END)
 			{
-				// 检查是否为文件右键菜单的分类选择（通过检查是否有选中的文件）
-				int selectedCount = _fileListView.nbSelectedFiles();
-				if (selectedCount > 0)
+				// 分类按钮点击 - 过滤整个文件列表
+				int buttonIndex = LOWORD(wParam) - CATEGORY_BUTTON_START;
+				if (buttonIndex >= 0 && buttonIndex < static_cast<int>(_categoryButtons.size()))
 				{
-					// 文件右键菜单的分类选择
-					int categoryIndex = LOWORD(wParam) - CATEGORY_MENU_START;
-					const auto& categories = _categoryManager.getCategories();
-					
-					if (categoryIndex >= 0 && categoryIndex < static_cast<int>(categories.size()))
-					{
-						const auto& selectedCategory = categories[categoryIndex];
-						_fileListView.onFileCategoryChange(selectedCategory.name);
-						
-						debugLog(L"VerticalFileSwitcher::WM_COMMAND - 文件分类已更改为: %s", selectedCategory.name.c_str());
-					}
+					onCategoryButtonClick(_categoryButtons[buttonIndex]);
 				}
-				else
+			}
+			// 处理文件右键菜单的分类选择
+			else if (LOWORD(wParam) >= CATEGORY_MENU_START && LOWORD(wParam) <= CATEGORY_MENU_END)
+			{
+				// 文件右键菜单的分类选择 - 设置单个文件的分类
+				int categoryIndex = LOWORD(wParam) - CATEGORY_MENU_START;
+				const auto& categories = _categoryManager.getCategories();
+				
+				if (categoryIndex >= 0 && categoryIndex < static_cast<int>(categories.size()))
 				{
-					// 分类按钮点击
-					int buttonIndex = LOWORD(wParam) - CATEGORY_MENU_START;
-					if (buttonIndex >= 0 && buttonIndex < static_cast<int>(_categoryButtons.size()))
-					{
-						onCategoryButtonClick(_categoryButtons[buttonIndex]);
-					}
+					const auto& selectedCategory = categories[categoryIndex];
+					_fileListView.onFileCategoryChange(selectedCategory.name);
+					
+					debugLog(L"VerticalFileSwitcher::WM_COMMAND - 文件分类已更改为: %s", selectedCategory.name.c_str());
 				}
 			}
 			// 处理字体下拉框选择变化
@@ -779,6 +786,9 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					{
 						// 设置字体大小
 						setFontSize(fontSize);
+						
+						// 重新加载文件列表以确保字体大小改变后列表内容正确显示
+						_fileListView.reload();
 						
 						// 保存配置
 						NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = fontSize;
@@ -840,7 +850,7 @@ void VerticalFileSwitcher::createCategoryButtons()
 			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 			x, startY, buttonWidth, buttonHeight,
 			_hSelf,
-			(HMENU)(CATEGORY_MENU_START + i), // 使用分类菜单ID
+			(HMENU)(CATEGORY_BUTTON_START + i), // 使用分类按钮ID
 			_hInst,
 			NULL
 		);
@@ -1007,28 +1017,30 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 		case FONTSIZE_6:
 			setFontSize(6);
 			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 6;
-			_fileListView.refreshDisplay(); // 只刷新显示，不重新加载数据
+			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
 			break;
 		case FONTSIZE_8:
 			setFontSize(8);
 			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 8;
-			_fileListView.refreshDisplay(); // 只刷新显示，不重新加载数据
+			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
 			break;
 		case FONTSIZE_10:
 			setFontSize(10);
 			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 10;
-			_fileListView.refreshDisplay(); // 只刷新显示，不重新加载数据
+			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
 			break;
 		case FONTSIZE_12:
 			setFontSize(12);
 			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 12;
-			_fileListView.refreshDisplay(); // 只刷新显示，不重新加载数据
+			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
 			break;
 		case FONTSIZE_14:
 			setFontSize(14);
 			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 14;
-			_fileListView.refreshDisplay(); // 只刷新显示，不重新加载数据
+			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
 			break;
+		
+
 	}
 }
 
