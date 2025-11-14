@@ -105,10 +105,13 @@ public:
 	void refreshDisplay() { redrawItems(); } // 只刷新显示，不重新加载数据
 	
 	// 右键菜单相关方法
-	void initFileContextMenu();
-	void showFileContextMenu(int x, int y);
+	void initContextMenu(HMENU hGlobalMenu);  // 修改：使用全局菜单初始化
+	void showContextMenu(int x, int y);       // 修改：统一的右键菜单显示方法
 	void onFileCategoryChange(const std::wstring& categoryName);
 	void onTabColorChange(int colorIndex);
+
+	// 添加设置Notepad++主窗口句柄的方法
+	void setNppMainWnd(HWND nppMainWnd) { _nppMainWnd = nppMainWnd; }
 
 protected:
 	HIMAGELIST _hImaLst = nullptr;
@@ -116,7 +119,8 @@ protected:
 	int _fontSize = 8; // 字体大小
 	CategoryManager* _categoryManager = nullptr; // 分类管理器指针
 	std::wstring _currentCategory; // 当前选中的分类
-	HMENU _hFileContextMenu = nullptr; // 文件右键菜单句柄
+	HMENU _hContextMenu = nullptr; // 统一的右键菜单句柄
+	HWND _nppMainWnd = nullptr; // Notepad++主窗口句柄
 
 public:
 	// 直接设置窗口句柄，不创建新窗口

@@ -32,108 +32,44 @@ struct sortCompareData {
 
 LRESULT run_listViewProc(WNDPROC oldEditProc, HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-class VerticalFileSwitcher : public DockingDlgInterface
-{
-private:
-	// 私有成员变量
-	bool colHeaderRClick = false;
-	int _lastSortingColumn = 0;
-	int _lastSortingDirection = SORT_DIRECTION_NONE;
-	HIMAGELIST _hImaLst = nullptr;
-	WNDPROC _defaultWindowProc = nullptr;
-	HMENU _hGlobalMenu = NULL;
-	VerticalFileSwitcherListView _fileListView;
-	HWND _hFontSizeCombo = nullptr; // 字体大小下拉框句柄
-	HWND _hFontSizeLabel = nullptr; // 字体大小标签句柄
-	HWND _hCategoryCombo = nullptr; // 分类选择下拉框句柄
-	HWND _hCategoryLabel = nullptr; // 分类标签句柄
-	CategoryManager _categoryManager; // 分类管理器
-	std::vector<HWND> _categoryButtons; // 分类按钮句柄数组
-	HWND _currentCategoryButton = nullptr; // 当前选中的分类按钮
-
-	static COLORREF _bgColor;
-	static const UINT_PTR _fileSwitcherNotifySubclassID = 42;
-
+class VerticalFileSwitcher : public DockingDlgInterface {
 public:
-	// 将_defaultListViewProc移到public部分，以便在静态方法中访问
-	WNDPROC _defaultListViewProc = nullptr; // 保存列表视图的原始窗口过程
+	VerticalFileSwitcher(): DockingDlgInterface(IDD_DOCLIST) {_fileListView.setCategoryManager(&_categoryManager);};
 
-	// 使用IDD_DOCLIST作为资源ID
-	VerticalFileSwitcher(): DockingDlgInterface(IDD_DOCLIST) {};
-
-	void init(HINSTANCE hInst, HWND hPere, HIMAGELIST hImaLst) {
-		DockingDlgInterface::init(hInst, hPere);
+	void init(HINSTANCE hInst, HWND parent, HIMAGELIST hImaLst) {
+		_hInst = hInst;
+		_hParent = parent;  // 保存Notepad++主窗口句柄
 		_hImaLst = hImaLst;
 	};
+	
+	// 添加一个方法来获取Notepad++主窗口句柄
+	HWND getNppMainWnd() const { return _hParent; }
 
-	// 重写create方法，使用资源文件创建对话框
-	virtual void create(tTbData* data, bool isRTL = false) override;
+	void create(tTbData* data, bool isRTL = false);
+	void create(tTbData* data, std::array<int, 3> iconIDs, bool isRTL = false);
+	void destroy() override {
+		_fileListView.destroy();
+	};
 
-	virtual void create(tTbData* data, std::array<int, 3> iconIDs, bool isRTL = false) override;
-
-	virtual void display(bool toShow = true) const override;
-
-	// 颜色设置方法需要保持公共访问权限
-	virtual void setBackgroundColor(COLORREF bgColour) override {
+	void setBackgroundColor(COLORREF bgColour) {
 		_fileListView.setBackgroundColor(bgColour);
-		
-		auto r = GetRValue(bgColour);
-		auto g = GetGValue(bgColour);
-		auto b = GetBValue(bgColour);
-
-		constexpr int luminenceIncrementBy = 333; // 33.3 %
-
-		// main color is blue
-		// but difference must be high
-		// can have similar blue color as header
-		constexpr int difference = 12;
-		const auto bAdjusted = static_cast<BYTE>(std::max<int>(0, static_cast<int>(b) - difference));
-		if (bAdjusted > r && bAdjusted > g)
-		{
-			// using values from NppDarkMode.cpp
-			// from double calculatePerceivedLighness(COLORREF c)
-			// double luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-			// values multiplied by 1024 and then shift result by 10 - "fake" divide by 1024
-			// for performance
-			const auto grayscale = static_cast<BYTE>((r * 218 + g * 732 + b * 74) >> 10);
-			_bgColor = ::ColorAdjustLuma(RGB(grayscale, grayscale, grayscale), luminenceIncrementBy, TRUE);
-		}
-		else
-		{
-			_bgColor = ::ColorAdjustLuma(bgColour, luminenceIncrementBy, TRUE);
-		}
-	}
-
-	virtual void setForegroundColor(COLORREF fgColour) override {
+	};
+	void setForegroundColor(COLORREF fgColour) {
 		_fileListView.setForegroundColor(fgColour);
-    }
+	};
 
-	// 设置字体大小
 	void setFontSize(int fontSize) {
 		_fileListView.setFontSize(fontSize);
 	}
 
-	// 创建分类按钮栏
 	void createCategoryButtons();
-	
-	// 处理分类按钮点击
 	void onCategoryButtonClick(HWND hButton);
-	
-	// 更新分类按钮状态
 	void updateCategoryButtonState(HWND selectedButton);
-	
-	// 处理分类下拉框变化
-	void onCategoryComboChange(int categoryIndex);
-	
-	// 更新分类下拉框显示当前选中文件的分类
-	void updateCategoryComboForSelectedFile();
 
-	// 获取当前字体大小
 	int getFontSize() const {
 		return _fileListView.getFontSize();
 	}
 
-	// 以下方法需要保持公共访问权限，因为被外部调用
 	void closeItem(BufferID bufferID, int iView) {
 		_fileListView.closeItem(bufferID, iView);
 	}
@@ -182,12 +118,13 @@ public:
 
 	void startColumnSort();
 
+	// 添加display方法的声明
+	void display(bool toShow = true) const override;
+
 private:
-	// 注册自定义窗口类
 	bool registerWindowClass(HINSTANCE hInst);
 
 protected:
-	// 窗口过程
 	static LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 		// 处理WM_NCCREATE消息，这是创建窗口时收到的第一个消息
 		if (message == WM_NCCREATE) {
@@ -255,7 +192,9 @@ protected:
 	void updateHeaderArrow();
 
 	intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
+
 	void initPopupMenus();
+	void initFileListContextMenu();  // 新增：初始化文件列表右键菜单
 	void popupMenuCmd(int cmdID);
 
 	static LRESULT CALLBACK listViewStaticProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -268,4 +207,25 @@ private:
 	static LRESULT listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK FileSwitcherNotifySubclass(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 	void autoSubclassWindowNotify(HWND hParent);
+
+	bool colHeaderRClick = false;
+	int _lastSortingColumn = 0;
+	int _lastSortingDirection = SORT_DIRECTION_NONE;
+	HIMAGELIST _hImaLst = nullptr;
+	WNDPROC _defaultWindowProc = nullptr;
+	HMENU _hGlobalMenu = NULL;
+	HMENU _hFileListMenu = NULL;  // 新增：文件列表右键菜单
+	VerticalFileSwitcherListView _fileListView;
+	HWND _hFontSizeCombo = nullptr; // 字体大小下拉框句柄
+	HWND _hFontSizeLabel = nullptr; // 字体大小标签句柄
+	CategoryManager _categoryManager; // 分类管理器
+	std::vector<HWND> _categoryButtons; // 分类按钮句柄数组
+	HWND _currentCategoryButton = nullptr; // 当前选中的分类按钮
+
+	static COLORREF _bgColor;
+	static const UINT_PTR _fileSwitcherNotifySubclassID = 42;
+
+	// 将_defaultListViewProc移到public部分，以便在静态方法中访问
+	WNDPROC _defaultListViewProc = nullptr; // 保存列表视图的原始窗口过程
+
 };

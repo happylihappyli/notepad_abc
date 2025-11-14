@@ -60,6 +60,7 @@ def configure_build_options(env, build_type='Release'):
         '/GR',                 # 启用RTTI
         '/EHa',                # 异常处理，支持SEH
         '/W4',                 # 高警告级别，与Visual Studio一致
+        '/FS',                 # 解决PDB文件冲突问题
     ])
     
     # 预处理器定义 - 基于CMakeLists.txt

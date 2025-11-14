@@ -333,9 +333,9 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取ListView控件句柄: %p, _hSelf: %p", hListView, _hSelf);
 			
 			// 初始化分类管理器
-	debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 开始初始化分类管理器，配置文件路径: ..\\bin\\categories.json");
-	_categoryManager.initialize(L"..\\bin\\categories.json");
-	debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类管理器初始化完成");
+			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 开始初始化分类管理器，配置文件路径: ..\\bin\\categories.json");
+			_categoryManager.initialize(L"..\\bin\\categories.json");
+			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类管理器初始化完成");
 		
 		// 设置分类管理器指针到列表视图
 		_fileListView.setCategoryManager(&_categoryManager);
@@ -345,7 +345,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 		createCategoryButtons();
 		
 		// 初始化字体大小下拉框
-		_hFontSizeCombo = ::GetDlgItem(_hSelf, IDC_FONTSIZE_COMBO);
+		_hFontSizeCombo = ::GetDlgItem(_hSelf, IDC_FONTSIZE_COMBO_VFS);
 		if (_hFontSizeCombo)
 		{
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取字体大小下拉框句柄: %p", _hFontSizeCombo);
@@ -358,7 +358,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				WS_CHILD | WS_VISIBLE | SS_LEFT,
 				5, 5, 60, 20, 
 				_hSelf, 
-				(HMENU)IDC_FONTSIZE_STATIC, 
+				(HMENU)IDC_FONTSIZE_STATIC_VFS, 
 				_hInst, 
 				NULL
 			);
@@ -384,7 +384,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"10");
 				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"12");
 				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"14");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"16");
+				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"16");  // 添加16号字体
 				
 				// 加载当前字体大小配置并设置下拉框选中项
 				NppParameters& nppParams = NppParameters::getInstance();
@@ -406,7 +406,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			}
 			else
 			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_FONTSIZE_COMBO控件句柄！");
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_FONTSIZE_COMBO_VFS控件句柄！");
 			}
 			
 			if (hListView)
@@ -419,6 +419,8 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 设置_fileListView的句柄和图像列表");
 				// 先调用init方法设置父窗口句柄
 				_fileListView.init(_hInst, _hParent, _hImaLst);
+				// 设置Notepad++主窗口句柄
+				_fileListView.setNppMainWnd(_hParent);
 				// 然后设置列表视图控件句柄
 				_fileListView.setHSelf(hListView);
 			}
@@ -542,7 +544,6 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
 
 					activateDoc(tlfs);
-					updateCategoryComboForSelectedFile(); // 更新分类下拉框显示当前文件的分类
 					return TRUE;
 				}
 
@@ -554,6 +555,12 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					if (lpnmitem->hdr.hwndFrom != _fileListView.getHSelf())
 					{
 						colHeaderRClick = true;
+						// 在列表视图头部右键，显示不包含文档分类的菜单
+						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
+						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
+						::TrackPopupMenu(_hGlobalMenu, 
+							NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+							pt.x, pt.y, 0, _hSelf, NULL);
 						return TRUE;
 					}
 
@@ -572,17 +579,16 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 						TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
 
 						activateDoc(tlfs);
-						updateCategoryComboForSelectedFile(); // 更新分类下拉框显示当前文件的分类
 					}
 
 					if (nbSelectedFiles() >= 1)
 					{
-						// Redirect NM_RCLICK message to Notepad_plus handle
-						NMHDR nmhdr{};
-						nmhdr.code = reinterpret_cast<LPNMHDR>(lParam)->code; //NM_RCLICK
-						nmhdr.hwndFrom = _hSelf;
-						nmhdr.idFrom = ::GetDlgCtrlID(nmhdr.hwndFrom);
-						::SendMessage(_hParent, WM_NOTIFY, nmhdr.idFrom, reinterpret_cast<LPARAM>(&nmhdr));
+						// 在文件列表上右键，显示包含文档分类的菜单
+						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
+						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
+						::TrackPopupMenu(_hFileListMenu, 
+							NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+							pt.x, pt.y, 0, _hSelf, NULL);
 					}
 					return TRUE;
 				}
@@ -653,7 +659,6 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 								ListView_GetItem(((LPNMHDR)lParam)->hwndFrom, &item);
 								TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
 								activateDoc(tlfs);
-								updateCategoryComboForSelectedFile(); // 更新分类下拉框显示当前文件的分类
 								return TRUE;
 							}
 						default:
@@ -683,37 +688,28 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
         }
         
 		case WM_CONTEXTMENU:
-		{
-			// 检查是否在文件列表上右键
-			POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-			RECT listRect;
-			::GetWindowRect(_fileListView.getHSelf(), &listRect);
-			
-			// 如果点击位置在文件列表区域内，显示文件右键菜单
-			if (PtInRect(&listRect, pt))
-			{
-				// 确保有选中的文件时才显示右键菜单
-				if (_fileListView.nbSelectedFiles() > 0)
-				{
-					_fileListView.showFileContextMenu(pt.x, pt.y);
-				}
-				else
-				{
-					// 如果没有选中文件，显示全局菜单
-					::TrackPopupMenu(_hGlobalMenu, 
-						NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-						GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, _hSelf, NULL);
-				}
-			}
-			else
-			{
-				// 在其他区域右键，显示全局菜单
-				::TrackPopupMenu(_hGlobalMenu, 
-					NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-					GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, _hSelf, NULL);
-			}
-			return TRUE;
-		}
+        {
+            // 检查是否在文件列表上右键
+            POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            RECT listRect;
+            ::GetWindowRect(_fileListView.getHSelf(), &listRect);
+            
+            // 检查右键点击位置是否在列表视图内
+            bool isInListView = ::PtInRect(&listRect, pt);
+            
+            if (isInListView) {
+                // 在文件列表上右键，显示包含文档分类的菜单
+                ::TrackPopupMenu(_hFileListMenu, 
+                    NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+                    pt.x, pt.y, 0, _hSelf, NULL);
+            } else {
+                // 在列表视图外（如头部）右键，显示不包含文档分类的菜单
+                ::TrackPopupMenu(_hGlobalMenu, 
+                    NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+                    pt.x, pt.y, 0, _hSelf, NULL);
+            }
+            return TRUE;
+        }
 
 		case WM_COMMAND:
 		{
@@ -725,16 +721,6 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				if (buttonIndex >= 0 && buttonIndex < static_cast<int>(_categoryButtons.size()))
 				{
 					onCategoryButtonClick(_categoryButtons[buttonIndex]);
-				}
-			}
-			// 处理分类下拉框选择变化（用于给当前文件分类）
-			else if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_CATEGORY_COMBO)
-			{
-				// 获取下拉框当前选中的索引
-				int selectedIndex = ::SendMessage(_hCategoryCombo, CB_GETCURSEL, 0, 0);
-				if (selectedIndex != CB_ERR)
-				{
-					onCategoryComboChange(selectedIndex);
 				}
 			}
 			// 处理文件右键菜单的分类选择
@@ -753,30 +739,23 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				}
 			}
 			// 处理字体下拉框选择变化
-			else if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_FONTSIZE_COMBO)
+			else if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_FONTSIZE_COMBO_VFS)
 			{
 				// 获取选中的字体大小
 				int selectedIndex = ::SendMessage(_hFontSizeCombo, CB_GETCURSEL, 0, 0);
 				if (selectedIndex != CB_ERR)
 				{
-					wchar_t fontSizeStr[10];
+					wchar_t fontSizeStr[10] = {0};
 					::SendMessage(_hFontSizeCombo, CB_GETLBTEXT, selectedIndex, (LPARAM)fontSizeStr);
-					
-					// 转换为整数
 					int fontSize = _wtoi(fontSizeStr);
-					if (fontSize > 0)
-					{
-						// 设置字体大小
-						setFontSize(fontSize);
-						
-						// 重新加载文件列表以确保字体大小改变后列表内容正确显示
-						_fileListView.reload();
-						
-						// 保存配置
-						NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = fontSize;
-						
-						debugLog(L"VerticalFileSwitcher::WM_COMMAND - 字体大小已更改为: %d", fontSize);
-					}
+					
+					// 更新列表视图的字体大小
+					_fileListView.setFontSize(fontSize);
+					
+					// 保存到配置
+					NppParameters& nppParams = NppParameters::getInstance();
+					nppParams.getNppGUI()._fileSwitcherFontSize = fontSize;
+					nppParams.saveConfig_xml();  // 修复方法名
 				}
 			}
 			else
@@ -856,72 +835,6 @@ void VerticalFileSwitcher::createCategoryButtons()
 		_currentCategoryButton = _categoryButtons[0];
 		updateCategoryButtonState(_currentCategoryButton);
 	}
-	
-	// 创建当前文件分类标签（用于给当前文件分类）
-	_hCategoryLabel = ::CreateWindowEx(
-		0, 
-		L"STATIC", 
-		L"当前文件分类:", 
-		WS_CHILD | WS_VISIBLE | SS_LEFT,
-		5, 65, 80, 20, // 位置在分类按钮栏下方
-		_hSelf, 
-		(HMENU)IDC_CATEGORY_STATIC, 
-		_hInst, 
-		NULL
-	);
-	
-	if (_hCategoryLabel)
-	{
-		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 当前文件分类标签创建成功，句柄: %p", _hCategoryLabel);
-		// 设置字体
-		HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
-		if (hFont)
-		{
-			::SendMessage(_hCategoryLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
-		}
-	}
-	else
-	{
-		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 错误：无法创建当前文件分类标签！");
-	}
-	
-	// 创建当前文件分类下拉框
-	_hCategoryCombo = ::CreateWindowEx(
-		0,
-		L"COMBOBOX",
-		L"",
-		WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-		90, 65, 120, 200, // 位置在分类标签右侧
-		_hSelf,
-		(HMENU)IDC_CATEGORY_COMBO,
-		_hInst,
-		NULL
-	);
-	
-	if (_hCategoryCombo)
-	{
-		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 当前文件分类下拉框创建成功，句柄: %p", _hCategoryCombo);
-		
-		// 设置字体
-		HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
-		if (hFont)
-		{
-			::SendMessage(_hCategoryCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
-		}
-		
-		// 添加分类选项到下拉框
-		for (size_t i = 0; i < categories.size(); ++i)
-		{
-			::SendMessage(_hCategoryCombo, CB_ADDSTRING, 0, (LPARAM)categories[i].name.c_str());
-		}
-		
-		// 默认选中第一个选项（"全部"分类）
-		::SendMessage(_hCategoryCombo, CB_SETCURSEL, 0, 0);
-	}
-	else
-	{
-		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 错误：无法创建当前文件分类下拉框！");
-	}
 }
 
 // 处理分类按钮点击事件（用于过滤查看文件）
@@ -988,167 +901,134 @@ void VerticalFileSwitcher::updateCategoryButtonState(HWND selectedButton)
 	}
 }
 
-// 处理分类下拉框选择变化（用于给当前文件分类）
-void VerticalFileSwitcher::onCategoryComboChange(int categoryIndex)
-{
-	if (categoryIndex < 0 || categoryIndex >= static_cast<int>(_categoryManager.getCategories().size()))
-		return;
-	
-	const auto& categories = _categoryManager.getCategories();
-	const std::wstring& selectedCategory = categories[categoryIndex].name;
-	
-	debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 选择当前文件分类: %s", selectedCategory.c_str());
-	
-	// 获取当前选中的文件
-	auto selectedFiles = _fileListView.getSelectedFiles();
-	if (!selectedFiles.empty())
-	{
-		// 设置当前文件的分类
-		BufferID bufferID = selectedFiles[0]._bufID;
-		int view = selectedFiles[0]._iView;
-		
-		// 获取正确的文件路径 - 从选中的文件列表中获取第一个选中文件的索引
-		int selectedIndex = -1;
-		int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
-		for (int i = 0; i < nbItem; ++i)
-		{
-			int isSelected = ListView_GetItemState(_fileListView.getHSelf(), i, LVIS_SELECTED);
-			if (isSelected == LVIS_SELECTED)
-			{
-				selectedIndex = i;
-				break;
-			}
-		}
-		
-		if (selectedIndex == -1)
-		{
-			debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 警告：未找到选中文件，无法设置分类");
-			return;
-		}
-		
-		std::wstring filePath = _fileListView.getFullFilePath(selectedIndex);
-		// 设置当前文件的分类 - 使用分类ID而不是分类名称
-		const std::wstring& categoryId = categories[categoryIndex].id;
-		_categoryManager.setFileCategory(filePath, categoryId);
-		
-		debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 文件 %s 分类已设置为: %s (ID: %s)", filePath.c_str(), selectedCategory.c_str(), categoryId.c_str());
-		
-		// 刷新文件列表显示
-		_fileListView.reload();
-	}
-	else
-	{
-		debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 警告：没有选中文件，无法设置分类");
-	}
-}
-
-// 更新分类下拉框显示当前选中文件的分类
-void VerticalFileSwitcher::updateCategoryComboForSelectedFile()
-{
-	// 获取当前选中的文件
-	auto selectedFiles = _fileListView.getSelectedFiles();
-	if (selectedFiles.empty())
-	{
-		// 如果没有选中文件，设置下拉框显示"全部"
-		::SendMessage(_hCategoryCombo, CB_SETCURSEL, 0, 0);
-		debugLog(L"VerticalFileSwitcher::updateCategoryComboForSelectedFile - 没有选中文件，设置分类下拉框显示'全部'");
-		return;
-	}
-	
-	// 获取第一个选中文件的路径
-	// 注意：这里需要从选中的文件列表中获取正确的文件路径
-	// 首先找到第一个选中文件在列表中的索引
-	int selectedIndex = -1;
-	int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
-	for (int i = 0; i < nbItem; ++i)
-	{
-		int isSelected = ListView_GetItemState(_fileListView.getHSelf(), i, LVIS_SELECTED);
-		if (isSelected == LVIS_SELECTED)
-		{
-			selectedIndex = i;
-			break;
-		}
-	}
-	
-	if (selectedIndex == -1)
-	{
-		// 如果没有找到选中项，设置下拉框显示"全部"
-		::SendMessage(_hCategoryCombo, CB_SETCURSEL, 0, 0);
-		debugLog(L"VerticalFileSwitcher::updateCategoryComboForSelectedFile - 未找到选中文件，设置分类下拉框显示'全部'");
-		return;
-	}
-	
-	std::wstring filePath = _fileListView.getFullFilePath(selectedIndex);
-	
-	// 获取文件的分类ID
-	std::wstring categoryId = _categoryManager.getFileCategory(filePath);
-	
-	// 获取所有分类
-	const auto& categories = _categoryManager.getCategories();
-	
-	// 查找分类ID对应的索引
-	int categoryIndex = 0; // 默认为"全部"
-	for (size_t i = 0; i < categories.size(); ++i)
-	{
-		if (categories[i].id == categoryId)
-		{
-			categoryIndex = static_cast<int>(i);
-			break;
-		}
-	}
-	
-	// 设置下拉框选中对应的分类
-	::SendMessage(_hCategoryCombo, CB_SETCURSEL, categoryIndex, 0);
-	
-	debugLog(L"VerticalFileSwitcher::updateCategoryComboForSelectedFile - 文件 %s 的分类已设置为下拉框索引: %d", 
-		filePath.c_str(), categoryIndex);
-}
-
 void VerticalFileSwitcher::initPopupMenus()
 {
-	NativeLangSpeaker* pNativeSpeaker = NppParameters::getInstance().getNativeLangSpeaker();
-	const NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
+    // 初始化全局菜单
+    
+    // 销毁现有的全局菜单（如果存在）
+    if (_hGlobalMenu)
+    {
+        ::DestroyMenu(_hGlobalMenu);
+        _hGlobalMenu = NULL;
+    }
+    
+    // 创建新的全局菜单（头部右键菜单，不包含文档分类功能）
+    _hGlobalMenu = ::CreatePopupMenu();
+    
+    // 获取本地化语言支持
+    NativeLangSpeaker* pNativeSpeaker = NppParameters::getInstance().getNativeLangSpeaker();
+    const NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
+    
+    // 获取菜单项文本
+    wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
+    wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
+    wstring groupStr = pNativeSpeaker->getAttrNameStr(L"Group by View", FS_ROOTNODE, FS_LVGROUPS);
 
-	wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
-	wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
-	wstring groupStr = pNativeSpeaker->getAttrNameStr(L"Group by View", FS_ROOTNODE, FS_LVGROUPS);
+    // 注意：头部右键菜单不包含文档分类菜单
+    
+    ::InsertMenu(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
+    ::InsertMenu(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
+    ::InsertMenu(_hGlobalMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+    ::InsertMenu(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
+    
+    // 添加字体大小菜单
+    HMENU hFontSizeMenu = ::CreatePopupMenu();
+    wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_6, MF_BYCOMMAND | MF_STRING, FONTSIZE_6, L"6");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_8, MF_BYCOMMAND | MF_STRING, FONTSIZE_8, L"8");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_10, MF_BYCOMMAND | MF_STRING, FONTSIZE_10, L"10");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_12, MF_BYCOMMAND | MF_STRING, FONTSIZE_12, L"12");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_14, MF_BYCOMMAND | MF_STRING, FONTSIZE_14, L"14");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_16, MF_BYCOMMAND | MF_STRING, FONTSIZE_16, L"16");
+    ::InsertMenu(_hGlobalMenu, FONTSIZE_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hFontSizeMenu), fontSizeStr.c_str());
 
-	_hGlobalMenu = ::CreatePopupMenu();
-	
-	// 添加文档分类菜单
-	HMENU hDocumentCategoryMenu = ::CreatePopupMenu();
-	const auto& categories = _categoryManager.getCategories();
-	
-	// 添加所有分类到菜单
-	for (size_t i = 0; i < categories.size(); ++i)
-	{
-		UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
-		::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
-	}
-	wstring documentCategoryStr = L"文档分类";
-	::InsertMenu(_hGlobalMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
-	
-	::InsertMenu(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
-	::InsertMenu(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
-	::InsertMenu(_hGlobalMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
-	::InsertMenu(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
-	
-	// 添加字体大小菜单
-	HMENU hFontSizeMenu = ::CreatePopupMenu();
-	wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
-	::InsertMenu(hFontSizeMenu, FONTSIZE_6, MF_BYCOMMAND | MF_STRING, FONTSIZE_6, L"6");
-	::InsertMenu(hFontSizeMenu, FONTSIZE_8, MF_BYCOMMAND | MF_STRING, FONTSIZE_8, L"8");
-	::InsertMenu(hFontSizeMenu, FONTSIZE_10, MF_BYCOMMAND | MF_STRING, FONTSIZE_10, L"10");
-	::InsertMenu(hFontSizeMenu, FONTSIZE_12, MF_BYCOMMAND | MF_STRING, FONTSIZE_12, L"12");
-	::InsertMenu(hFontSizeMenu, FONTSIZE_14, MF_BYCOMMAND | MF_STRING, FONTSIZE_14, L"14");
-	::InsertMenu(_hGlobalMenu, FONTSIZE_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hFontSizeMenu), fontSizeStr.c_str());
+    bool isExtColumn = nppGUI._fileSwitcherWithoutExtColumn;
+    ::CheckMenuItem(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
+    bool isPathColumn = nppGUI._fileSwitcherWithoutPathColumn;
+    ::CheckMenuItem(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | (isPathColumn ? MF_UNCHECKED : MF_CHECKED));
+    bool isListViewGroups = nppGUI._fileSwitcherDisableListViewGroups;
+    ::CheckMenuItem(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | (isListViewGroups ? MF_UNCHECKED : MF_CHECKED));
+    
+    // 初始化文件列表右键菜单（包含文档分类功能）
+    initFileListContextMenu();
+}
 
-	bool isExtColumn = nppGUI._fileSwitcherWithoutExtColumn;
-	::CheckMenuItem(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
-	bool isPathColumn = nppGUI._fileSwitcherWithoutPathColumn;
-	::CheckMenuItem(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | (isPathColumn ? MF_UNCHECKED : MF_CHECKED));
-	bool isListViewGroups = nppGUI._fileSwitcherDisableListViewGroups;
-	::CheckMenuItem(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | (isListViewGroups ? MF_UNCHECKED : MF_CHECKED));
+// 初始化文件列表右键菜单（包含文档分类功能）
+void VerticalFileSwitcher::initFileListContextMenu()
+{
+    // 销毁现有的文件列表菜单（如果存在）
+    if (_hFileListMenu)
+    {
+        ::DestroyMenu(_hFileListMenu);
+        _hFileListMenu = NULL;
+    }
+    
+    // 创建新的文件列表菜单（包含文档分类功能）
+    _hFileListMenu = ::CreatePopupMenu();
+    
+    // 获取本地化语言支持
+    NativeLangSpeaker* pNativeSpeaker = NppParameters::getInstance().getNativeLangSpeaker();
+    const NppGUI& nppGUI = NppParameters::getInstance().getNppGUI();
+    
+    // 获取菜单项文本
+    wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
+    wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
+    wstring groupStr = pNativeSpeaker->getAttrNameStr(L"Group by View", FS_ROOTNODE, FS_LVGROUPS);
+
+    // 添加文档分类菜单
+    HMENU hDocumentCategoryMenu = ::CreatePopupMenu();
+    const auto& categories = _categoryManager.getCategories();
+    
+    // 添加所有分类到菜单
+    for (size_t i = 0; i < categories.size(); ++i)
+    {
+        UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
+        ::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
+    }
+    wstring documentCategoryStr = L"文档分类";
+    ::InsertMenu(_hFileListMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
+    
+    ::InsertMenu(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
+    ::InsertMenu(_hFileListMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
+    ::InsertMenu(_hFileListMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+    ::InsertMenu(_hFileListMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
+    
+    // 添加字体大小菜单
+    HMENU hFontSizeMenu = ::CreatePopupMenu();
+    wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_6, MF_BYCOMMAND | MF_STRING, FONTSIZE_6, L"6");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_8, MF_BYCOMMAND | MF_STRING, FONTSIZE_8, L"8");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_10, MF_BYCOMMAND | MF_STRING, FONTSIZE_10, L"10");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_12, MF_BYCOMMAND | MF_STRING, FONTSIZE_12, L"12");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_14, MF_BYCOMMAND | MF_STRING, FONTSIZE_14, L"14");
+    ::InsertMenu(hFontSizeMenu, FONTSIZE_16, MF_BYCOMMAND | MF_STRING, FONTSIZE_16, L"16");
+    ::InsertMenu(_hFileListMenu, FONTSIZE_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hFontSizeMenu), fontSizeStr.c_str());
+
+    bool isExtColumn = nppGUI._fileSwitcherWithoutExtColumn;
+    ::CheckMenuItem(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
+    bool isPathColumn = nppGUI._fileSwitcherWithoutPathColumn;
+    ::CheckMenuItem(_hFileListMenu, CLMNPATH_ID, MF_BYCOMMAND | (isPathColumn ? MF_UNCHECKED : MF_CHECKED));
+    bool isListViewGroups = nppGUI._fileSwitcherDisableListViewGroups;
+    ::CheckMenuItem(_hFileListMenu, LVGROUPS_ID, MF_BYCOMMAND | (isListViewGroups ? MF_UNCHECKED : MF_CHECKED));
+    
+    // 添加文件特定的菜单项
+    // 添加分隔符
+    ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
+    
+    // 添加标签颜色子菜单
+    HMENU hTabColorMenu = ::CreatePopupMenu();
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 0, L"红色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 1, L"绿色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 2, L"蓝色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 3, L"黄色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 4, L"紫色标签");
+    
+    // 添加标签颜色菜单项
+    ::AppendMenu(_hFileListMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"标签颜色");
+    
+    ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
+    ::AppendMenu(_hFileListMenu, MF_STRING, 1001, L"打开文件所在目录");
+    ::AppendMenu(_hFileListMenu, MF_STRING, 1002, L"复制文件路径");
 }
 
 void VerticalFileSwitcher::popupMenuCmd(int cmdID)
@@ -1246,12 +1126,16 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 14;
 			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
 			break;
-		
+		case FONTSIZE_16:
+			setFontSize(16);
+			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 16;
+			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
+			break;
 
 	}
 }
 
-void VerticalFileSwitcher::display(bool toShow) const
+void VerticalFileSwitcher::display(bool toShow) const // 添加const修饰符
 {
 	// 添加调试信息
 	debugLog(L"VerticalFileSwitcher::display() called with toShow=%d\n", toShow);
@@ -1261,7 +1145,10 @@ void VerticalFileSwitcher::display(bool toShow) const
 	// 添加调试信息
 	debugLog(L"VerticalFileSwitcher::display() after DockingDlgInterface::display()\n");
 	
-	_fileListView.ensureVisibleCurrentItem();	// without this call the current item may stay above visible area after the program startup
+	// 我们需要一个非const引用来调用ensureVisibleCurrentItem
+	// 使用const_cast来解决这个问题
+	VerticalFileSwitcher* nonConstThis = const_cast<VerticalFileSwitcher*>(this);
+	nonConstThis->_fileListView.ensureVisibleCurrentItem();	// without this call the current item may stay above visible area after the program startup
 	
 	// 添加调试信息
 	debugLog(L"VerticalFileSwitcher::display() after ensureVisibleCurrentItem()\n");
@@ -1292,7 +1179,7 @@ void VerticalFileSwitcher::closeDoc(TaskLstFnStatus *tlfs) const
 		
 	int docPosInfo = static_cast<int32_t>(::SendMessage(_hParent, NPPM_GETPOSFROMBUFFERID, reinterpret_cast<WPARAM>(bufferID), view));
 	int view2set = docPosInfo >> 30;
-	int index2Switch = (docPosInfo << 2) >> 2;
+	int index2Switch = (docPosInfo << 2) > 2;
 
 	::SendMessage(_hParent, NPPM_INTERNAL_CLOSEDOC, view2set, index2Switch);
 }

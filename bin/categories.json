@@ -35,6 +35,14 @@
         {
             "categoryId": "programming",
             "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-编程.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-可视化编程.txt"
+        },
+        {
+            "categoryId": "study",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习.txt"
         }
     ]
 }

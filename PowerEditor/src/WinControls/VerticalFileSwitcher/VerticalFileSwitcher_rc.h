@@ -19,10 +19,8 @@
 
 #define	IDD_DOCLIST		3000
 #define	IDC_LIST_DOCLIST    (IDD_DOCLIST + 1)
-#define	IDC_FONTSIZE_STATIC (IDD_DOCLIST + 2)
-#define	IDC_FONTSIZE_COMBO  (IDD_DOCLIST + 3)
-#define	IDC_CATEGORY_STATIC (IDD_DOCLIST + 4)
-#define	IDC_CATEGORY_COMBO  (IDD_DOCLIST + 5)
+#define	IDC_FONTSIZE_STATIC_VFS (IDD_DOCLIST + 2)  // 修改为避免冲突的名称
+#define	IDC_FONTSIZE_COMBO_VFS  (IDD_DOCLIST + 3)  // 修改为避免冲突的名称
 
 // 分类菜单ID范围
 #define	CATEGORY_MENU_START  (IDD_DOCLIST + 100)
@@ -39,10 +37,9 @@
 #define	FONTSIZE_10          (IDD_DOCLIST + 202)
 #define	FONTSIZE_12          (IDD_DOCLIST + 203)
 #define	FONTSIZE_14          (IDD_DOCLIST + 204)
+#define	FONTSIZE_16          (IDD_DOCLIST + 205)  // 添加缺失的定义
 
 // 标签颜色菜单ID
 #define	TAB_COLOR_MENU_START  (IDD_DOCLIST + 250)
 #define	TAB_COLOR_MENU_END    (TAB_COLOR_MENU_START + 10)
 #define	TAB_COLOR_MENU_ID     (IDD_DOCLIST + 249)
-
-

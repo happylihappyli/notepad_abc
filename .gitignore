@@ -1,37 +1,11 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
+.sconsign.dblite
+/obj
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-/PowerEditor/visual.net/x64
 /PowerEditor/visual.net/.vs
-bin/npp_debug.log
-notepadPlus.pdb
-PowerEditor/src/WinControls/VerticalFileSwitcher/VerticalFileSwitcher.res
+/PowerEditor/visual.net/x64/Debug
+*.pdb
+*.dll
+*.lib
+*.dblite
+*.exe
+*.log
