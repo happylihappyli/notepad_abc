@@ -5,8 +5,9 @@
 
 #include <string>
 #include <vector>
-#include <map>
-#include <memory>
+#include <algorithm>
+#include <fstream>
+#include <windows.h>
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -29,27 +30,45 @@ struct FileCategory {
     
     // 转换为JSON
     json toJson() const {
+        // 使用UTF-8编码转换宽字符串
+        auto toUtf8 = [](const std::wstring& wstr) -> std::string {
+            if (wstr.empty()) return "";
+            int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
+            std::string str(size_needed, 0);
+            WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &str[0], size_needed, NULL, NULL);
+            return str;
+        };
+        
         return {
-            {"id", std::string(id.begin(), id.end())},
-            {"name", std::string(name.begin(), name.end())},
-            {"description", std::string(description.begin(), description.end())},
+            {"id", toUtf8(id)},
+            {"name", toUtf8(name)},
+            {"description", toUtf8(description)},
             {"order", order}
         };
     }
     
     // 从JSON加载
     void fromJson(const json& j) {
+        // 使用UTF-8编码转换到宽字符串
+        auto toWide = [](const std::string& str) -> std::wstring {
+            if (str.empty()) return L"";
+            int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
+            std::wstring wstr(size_needed, 0);
+            MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstr[0], size_needed);
+            return wstr;
+        };
+        
         if (j.contains("id")) {
             std::string idStr = j["id"];
-            id = std::wstring(idStr.begin(), idStr.end());
+            id = toWide(idStr);
         }
         if (j.contains("name")) {
             std::string nameStr = j["name"];
-            name = std::wstring(nameStr.begin(), nameStr.end());
+            name = toWide(nameStr);
         }
         if (j.contains("description")) {
             std::string descStr = j["description"];
-            description = std::wstring(descStr.begin(), descStr.end());
+            description = toWide(descStr);
         }
         if (j.contains("order")) {
             order = j["order"];
@@ -70,21 +89,39 @@ struct FileCategoryMapping {
     
     // 转换为JSON
     json toJson() const {
+        // 使用UTF-8编码转换宽字符串
+        auto toUtf8 = [](const std::wstring& wstr) -> std::string {
+            if (wstr.empty()) return "";
+            int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
+            std::string str(size_needed, 0);
+            WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &str[0], size_needed, NULL, NULL);
+            return str;
+        };
+        
         return {
-            {"filePath", std::string(filePath.begin(), filePath.end())},
-            {"categoryId", std::string(categoryId.begin(), categoryId.end())}
+            {"filePath", toUtf8(filePath)},
+            {"categoryId", toUtf8(categoryId)}
         };
     }
     
     // 从JSON加载
     void fromJson(const json& j) {
+        // 使用UTF-8编码转换到宽字符串
+        auto toWide = [](const std::string& str) -> std::wstring {
+            if (str.empty()) return L"";
+            int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
+            std::wstring wstr(size_needed, 0);
+            MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstr[0], size_needed);
+            return wstr;
+        };
+        
         if (j.contains("filePath")) {
             std::string pathStr = j["filePath"];
-            filePath = std::wstring(pathStr.begin(), pathStr.end());
+            filePath = toWide(pathStr);
         }
         if (j.contains("categoryId")) {
             std::string catIdStr = j["categoryId"];
-            categoryId = std::wstring(catIdStr.begin(), catIdStr.end());
+            categoryId = toWide(catIdStr);
         }
     }
 };

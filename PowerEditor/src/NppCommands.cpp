@@ -17,6 +17,7 @@
 #include <memory>
 #include <regex>
 #include <shlwapi.h>
+#include <windows.h>
 #include "Notepad_plus_Window.h"
 #include "EncodingMapper.h"
 #include "ShortcutMapper.h"
@@ -56,8 +57,14 @@ void debugLog(const wchar_t* format, ...) {
 	writeLog(L"npp_debug.log", buffer);
 	// 输出到调试窗口
 	OutputDebugStringW(buffer);
-	// 注释掉控制台输出，避免重复信息
-	// wprintf(L"%s", buffer);
+	// 输出到控制台，方便查看调试信息
+	// 使用WriteConsoleW直接输出宽字符到控制台，解决中文显示问号问题
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hConsole != INVALID_HANDLE_VALUE) {
+		DWORD charsWritten;
+		WriteConsoleW(hConsole, buffer, wcslen(buffer), &charsWritten, NULL);
+		WriteConsoleW(hConsole, L"\n", 1, &charsWritten, NULL);
+	}
 	
 	va_end(args);
 }

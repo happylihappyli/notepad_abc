@@ -50,7 +50,13 @@ void CategoryManager::initialize(const std::wstring& configPath) {
  */
 bool CategoryManager::loadConfig() {
     try {
-        std::ifstream file(m_configPath);
+        // 将相对路径转换为绝对路径
+        fs::path configPath(m_configPath);
+        if (configPath.is_relative()) {
+            configPath = fs::absolute(configPath);
+        }
+        
+        std::ifstream file(configPath);
         if (!file.is_open()) {
             return false;
         }
@@ -124,11 +130,23 @@ bool CategoryManager::saveConfig() {
         }
         config["fileMappings"] = mappingsArray;
         
+        // 将相对路径转换为绝对路径
+        fs::path configPath(m_configPath);
+        if (configPath.is_relative()) {
+            // 使用当前工作目录作为基础路径
+            fs::path currentDir = fs::current_path();
+            configPath = currentDir / configPath;
+        }
+        
+        // 调试信息：显示最终配置路径
+        std::wstring debugMsg = L"CategoryManager: 最终配置路径: " + configPath.wstring() + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
         // 使用trunc模式打开文件，确保覆盖现有内容
-        std::ofstream file(m_configPath, std::ios::trunc);
+        std::ofstream file(configPath, std::ios::trunc);
         if (!file.is_open()) {
             // 调试信息：文件打开失败
-            std::wstring debugMsg = L"CategoryManager: 无法打开配置文件: " + m_configPath + L"\n";
+            debugMsg = L"CategoryManager: 无法打开配置文件: " + configPath.wstring() + L"\n";
             OutputDebugStringW(debugMsg.c_str());
             return false;
         }
@@ -359,7 +377,9 @@ bool CategoryManager::ensureConfigDirectory() const {
         
         // 将相对路径转换为绝对路径
         if (configPath.is_relative()) {
-            configPath = fs::absolute(configPath);
+            // 使用当前工作目录作为基础路径
+            fs::path currentDir = fs::current_path();
+            configPath = currentDir / configPath;
             debugMsg = L"CategoryManager: 转换为绝对路径: " + configPath.wstring() + L"\n";
             OutputDebugStringW(debugMsg.c_str());
         }
@@ -370,7 +390,7 @@ bool CategoryManager::ensureConfigDirectory() const {
         debugMsg = L"CategoryManager: 配置路径: " + configPath.wstring() + L", 配置目录: " + configDir.wstring() + L"\n";
         OutputDebugStringW(debugMsg.c_str());
         
-        // 检查配置目录是否为空
+        // 检查配置目录是否为空（配置文件在当前目录）
         if (configDir.empty()) {
             OutputDebugStringW(L"CategoryManager: 配置文件在当前目录，不需要创建目录\n");
             return true;
@@ -380,12 +400,6 @@ bool CategoryManager::ensureConfigDirectory() const {
         fs::path currentDir = fs::current_path();
         debugMsg = L"CategoryManager: 当前工作目录: " + currentDir.wstring() + L"\n";
         OutputDebugStringW(debugMsg.c_str());
-        
-        // 检查目录是否等于当前工作目录
-        if (configDir == currentDir) {
-            OutputDebugStringW(L"CategoryManager: 配置目录等于当前工作目录，不需要创建目录\n");
-            return true;
-        }
         
         // 如果目录不存在，则创建目录
         if (!fs::exists(configDir)) {

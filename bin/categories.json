@@ -31,5 +31,10 @@
             "order": 4
         }
     ],
-    "fileMappings": []
+    "fileMappings": [
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-编程.txt"
+        }
+    ]
 }

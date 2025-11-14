@@ -38,11 +38,8 @@ public:
 	virtual void destroy() = 0;
 
 	virtual void display(bool toShow = true) const {
-		// 添加调试信息
-		debugLog(L"Window::display() called with toShow=%d\n", toShow);
+		// 移除过于频繁的调试日志，减少日志输出
 		::ShowWindow(_hSelf, toShow ? SW_SHOW : SW_HIDE);
-		// 添加调试信息
-		debugLog(L"Window::display() finished\n");
 	}
 
 

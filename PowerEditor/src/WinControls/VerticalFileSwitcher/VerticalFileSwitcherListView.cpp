@@ -1,18 +1,4 @@
-// This file is part of Notepad++ project
-// Copyright (C)2021 Don HO <don.h@free.fr>
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// at your option any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <shlwapi.h>
 #include <stdexcept>
@@ -156,17 +142,11 @@ void VerticalFileSwitcherListView::initList()
 	debugLog(L"当前索引: %d", taskListInfo._currentIndex);
 	debugLog(L"TaskListInfo地址: %p", &taskListInfo);
 	
-	// 如果获取的文档列表为空，添加备用数据
+	// 如果获取的文档列表为空，直接返回，不添加示例数据
 	if (taskListInfo._tlfsLst.empty()) {
-		debugLog(L"VerticalFileSwitcherListView::initList() - 文档列表为空，将添加备用示例数据");
-		
-		// 添加一些示例文档数据
-		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(MAIN_VIEW, 0, L"示例文档1.txt", 0, (void*)1, 0));
-		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(MAIN_VIEW, 1, L"示例文档2.cpp", 1, (void*)2, 0));
-		taskListInfo._tlfsLst.push_back(TaskLstFnStatus(SUB_VIEW, 0, L"示例文档3.md", 2, (void*)3, 0));
-		taskListInfo._currentIndex = 0;
-		
-		debugLog(L"VerticalFileSwitcherListView::initList() - 备用示例数据添加完成，共添加3个示例文档");
+		debugLog(L"VerticalFileSwitcherListView::initList() - 文档列表为空，跳过加载");
+		removeAll(); // 清空列表
+		return;
 	}
 
 	for (size_t i = 0, len = taskListInfo._tlfsLst.size(); i < len ; ++i)
@@ -304,6 +284,8 @@ void VerticalFileSwitcherListView::reload()
 			if (_currentCategory == L"全部")
 			{
 				// 不跳过任何文件，显示全部
+				debugLog(L"VerticalFileSwitcherListView::reload - 显示全部文件: %s, 当前分类: %s", 
+					filePath.c_str(), _currentCategory.c_str());
 			}
 			else
 			{
@@ -317,22 +299,22 @@ void VerticalFileSwitcherListView::reload()
 				if (fileCategoryName != _currentCategory)
 				{
 					// 调试信息：显示过滤的文件
-					debugLog(L"VerticalFileSwitcherListView::initList - 过滤文件: %s, 文件分类: %s, 当前分类: %s", 
-						filePath.c_str(), fileCategoryName.c_str(), _currentCategory.c_str());
+					debugLog(L"VerticalFileSwitcherListView::reload - 过滤文件: %s, 文件分类: %s, 当前分类: %s, 分类ID: %s", 
+						filePath.c_str(), fileCategoryName.c_str(), _currentCategory.c_str(), fileCategoryId.c_str());
 					continue;
 				}
 				else
 				{
 					// 调试信息：显示保留的文件
-					debugLog(L"VerticalFileSwitcherListView::initList - 保留文件: %s, 文件分类: %s, 当前分类: %s", 
-						filePath.c_str(), fileCategoryName.c_str(), _currentCategory.c_str());
+					debugLog(L"VerticalFileSwitcherListView::reload - 保留文件: %s, 文件分类: %s, 当前分类: %s, 分类ID: %s", 
+						filePath.c_str(), fileCategoryName.c_str(), _currentCategory.c_str(), fileCategoryId.c_str());
 				}
 			}
 		}
 		else
 		{
 			// 调试信息：分类过滤未启用
-			debugLog(L"VerticalFileSwitcherListView::initList - 分类过滤未启用: _currentCategory=%s, _categoryManager=%p", 
+			debugLog(L"VerticalFileSwitcherListView::reload - 分类过滤未启用: _currentCategory=%s, _categoryManager=%p", 
 				_currentCategory.c_str(), _categoryManager);
 		}
 
@@ -463,10 +445,8 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 	}
 }
 
-void VerticalFileSwitcherListView::setItemColor(BufferID bufferID)
+void VerticalFileSwitcherListView::setItemColor(BufferID bufferID, int colorIndex)
 {
-	Buffer* buf = bufferID;
-
 	LVITEM item{};
 	item.mask = LVIF_PARAM;
 
@@ -479,7 +459,7 @@ void VerticalFileSwitcherListView::setItemColor(BufferID bufferID)
 		TaskLstFnStatus* tlfs = reinterpret_cast<TaskLstFnStatus*>(item.lParam);
 		if (tlfs->_bufID == bufferID)
 		{
-			tlfs->_docColor = buf->getDocColorId();
+			tlfs->_docColor = colorIndex;
 			ListView_SetItem(_hSelf, &item);
 		}
 	}
@@ -725,6 +705,17 @@ void VerticalFileSwitcherListView::initFileContextMenu()
 	// 创建右键菜单
 	_hFileContextMenu = ::CreatePopupMenu();
 	
+	// 添加标签颜色子菜单
+	HMENU hTabColorMenu = ::CreatePopupMenu();
+	::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 0, L"红色标签");
+	::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 1, L"绿色标签");
+	::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 2, L"蓝色标签");
+	::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 3, L"黄色标签");
+	::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 4, L"紫色标签");
+	
+	// 添加主菜单项
+	::AppendMenu(_hFileContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"标签颜色");
+	
 	// 添加分类选择子菜单
 	HMENU hCategoryMenu = ::CreatePopupMenu();
 	if (_categoryManager)
@@ -739,19 +730,8 @@ void VerticalFileSwitcherListView::initFileContextMenu()
 		}
 	}
 	
-	// 添加标签颜色选择子菜单
-	HMENU hTabColorMenu = ::CreatePopupMenu();
-	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_1, L"应用颜色 1");
-	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_2, L"应用颜色 2");
-	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_3, L"应用颜色 3");
-	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_4, L"应用颜色 4");
-	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_5, L"应用颜色 5");
-	::AppendMenu(hTabColorMenu, MF_SEPARATOR, 0, NULL);
-	::AppendMenu(hTabColorMenu, MF_STRING, IDM_VIEW_TAB_COLOUR_NONE, L"移除颜色");
-	
 	// 添加主菜单项
-	::AppendMenu(_hFileContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"设置分类");
-	::AppendMenu(_hFileContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"标签颜色");
+	::AppendMenu(_hFileContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"文档分类");
 	::AppendMenu(_hFileContextMenu, MF_SEPARATOR, 0, NULL);
 	::AppendMenu(_hFileContextMenu, MF_STRING, 1001, L"打开文件所在目录");
 	::AppendMenu(_hFileContextMenu, MF_STRING, 1002, L"复制文件路径");
@@ -760,18 +740,20 @@ void VerticalFileSwitcherListView::initFileContextMenu()
 // 显示文件右键菜单
 void VerticalFileSwitcherListView::showFileContextMenu(int x, int y)
 {
+	// 初始化右键菜单（如果尚未初始化）
 	if (!_hFileContextMenu)
 	{
 		initFileContextMenu();
 	}
 	
-	// 获取选中的文件
-	int selectedCount = nbSelectedFiles();
-	if (selectedCount > 0)
+	// 显示右键菜单
+	if (_hFileContextMenu)
 	{
 		::TrackPopupMenu(_hFileContextMenu, 
 			NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-			x, y, 0, _hSelf, NULL);
+			x, y, 0, _hParent, NULL);
+		
+		debugLog(L"VerticalFileSwitcherListView::showFileContextMenu - 文件列表右键菜单已显示");
 	}
 }
 
@@ -811,4 +793,31 @@ void VerticalFileSwitcherListView::onFileCategoryChange(const std::wstring& cate
 	
 	debugLog(L"VerticalFileSwitcherListView::onFileCategoryChange - 已为%d个文件设置分类: %s", 
 		selectedFiles.size(), categoryName.c_str());
+}
+
+// 处理标签颜色变更
+void VerticalFileSwitcherListView::onTabColorChange(int colorIndex)
+{
+	// 获取选中的文件
+	std::vector<BufferViewInfo> selectedFiles = getSelectedFiles();
+	if (selectedFiles.empty())
+		return;
+	
+	// 为每个选中的文件设置标签颜色
+	for (const auto& fileInfo : selectedFiles)
+	{
+		// 获取文件路径
+		Buffer* buffer = MainFileManager.getBufferByID(fileInfo._bufID);
+		if (buffer)
+		{
+			// 设置标签颜色
+			setItemColor(fileInfo._bufID, colorIndex);
+		}
+	}
+	
+	// 刷新显示
+	redrawItems();
+	
+	debugLog(L"VerticalFileSwitcherListView::onTabColorChange - 已为%d个文件设置标签颜色: %d", 
+		selectedFiles.size(), colorIndex);
 }

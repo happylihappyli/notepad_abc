@@ -121,6 +121,12 @@ public:
 	
 	// 更新分类按钮状态
 	void updateCategoryButtonState(HWND selectedButton);
+	
+	// 处理分类下拉框变化
+	void onCategoryComboChange(int categoryIndex);
+	
+	// 更新分类下拉框显示当前选中文件的分类
+	void updateCategoryComboForSelectedFile();
 
 	// 获取当前字体大小
 	int getFontSize() const {
@@ -132,8 +138,8 @@ public:
 		_fileListView.closeItem(bufferID, iView);
 	}
 
-	void setItemColor(BufferID bufferID) {
-		_fileListView.setItemColor(bufferID);
+	void setItemColor(BufferID bufferID, int colorIndex = -1) {
+		_fileListView.setItemColor(bufferID, colorIndex);
 	}
 
 	void setItemIconStatus(BufferID bufferID) {
@@ -237,8 +243,8 @@ protected:
 		_fileListView.setItemIconStatus(bufferID);
 	}
 
-	void setItemColorInternal(BufferID bufferID) {
-		_fileListView.setItemColor(bufferID);
+	void setItemColorInternal(BufferID bufferID, int colorIndex = -1) {
+		_fileListView.setItemColor(bufferID, colorIndex);
 	}
 
 	std::wstring getFullFilePathInternal(size_t i) const {

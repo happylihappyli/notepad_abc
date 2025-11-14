@@ -385,6 +385,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 {
 	// 创建控制台窗口用于调试输出
 	if (AllocConsole()) {
+		// 设置控制台编码为UTF-8，解决中文显示问号问题
+		SetConsoleOutputCP(CP_UTF8);
+		SetConsoleCP(CP_UTF8);
 		// 重定向标准输出到控制台
 		freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 		freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);

@@ -52,7 +52,7 @@ public:
 	void activateItem(BufferID bufferID, int iView);
 	void setItemIconStatus(BufferID bufferID);
 	std::wstring getFullFilePath(size_t i) const;
-	void setItemColor(BufferID bufferID);
+	void setItemColor(BufferID bufferID, int colorIndex = -1);
 	
 	void insertColumn(const wchar_t *name, int width, int index);
 	void resizeColumns(int totalWidth);
@@ -68,7 +68,7 @@ public:
 	void redrawItems();
 	void ensureVisibleCurrentItem() const {
 		// 添加调试信息
-		debugLog(L"VerticalFileSwitcherListView::ensureVisibleCurrentItem() called with _currentIndex=%d\n", _currentIndex);
+		debugLog(L"测试 VerticalFileSwitcherListView::ensureVisibleCurrentItem() called with _currentIndex=%d\n", _currentIndex);
 		ListView_EnsureVisible(_hSelf, _currentIndex, false);
 		// 添加调试信息
 		debugLog(L"VerticalFileSwitcherListView::ensureVisibleCurrentItem() finished\n");
@@ -108,6 +108,7 @@ public:
 	void initFileContextMenu();
 	void showFileContextMenu(int x, int y);
 	void onFileCategoryChange(const std::wstring& categoryName);
+	void onTabColorChange(int colorIndex);
 
 protected:
 	HIMAGELIST _hImaLst = nullptr;

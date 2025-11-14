@@ -157,7 +157,7 @@ void writeLog(const wchar_t* logFileName, const char* log2write)
 
 void writeLog(const wchar_t* logFileName, const wchar_t* log2write)
 {
-	string log2WriteA = wstring2string(log2write, CP_ACP);
+	string log2WriteA = wstring2string(log2write, CP_UTF8);
 	return writeLog(logFileName, log2WriteA.c_str());
 }
 

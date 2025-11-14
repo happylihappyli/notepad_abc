@@ -333,10 +333,13 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取ListView控件句柄: %p, _hSelf: %p", hListView, _hSelf);
 			
 			// 初始化分类管理器
-    _categoryManager.initialize(L"bin/categories.json");
+	debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 开始初始化分类管理器，配置文件路径: ..\\bin\\categories.json");
+	_categoryManager.initialize(L"..\\bin\\categories.json");
+	debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类管理器初始化完成");
 		
 		// 设置分类管理器指针到列表视图
 		_fileListView.setCategoryManager(&_categoryManager);
+		debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类管理器指针已设置到列表视图: %p", &_categoryManager);
 		
 		// 创建分类按钮栏
 		createCategoryButtons();
@@ -539,6 +542,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
 
 					activateDoc(tlfs);
+					updateCategoryComboForSelectedFile(); // 更新分类下拉框显示当前文件的分类
 					return TRUE;
 				}
 
@@ -568,6 +572,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 						TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
 
 						activateDoc(tlfs);
+						updateCategoryComboForSelectedFile(); // 更新分类下拉框显示当前文件的分类
 					}
 
 					if (nbSelectedFiles() >= 1)
@@ -637,19 +642,20 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					switch (((LPNMLVKEYDOWN)lParam)->wVKey)
 					{
 						case VK_RETURN:
-						{
-							int i = ListView_GetSelectionMark(_fileListView.getHSelf());
-							if (i == -1)
-								return TRUE;
+							{
+								int i = ListView_GetSelectionMark(_fileListView.getHSelf());
+								if (i == -1)
+									return TRUE;
 
-							LVITEM item{};
-							item.mask = LVIF_PARAM;
-							item.iItem = i;	
-							ListView_GetItem(((LPNMHDR)lParam)->hwndFrom, &item);
-							TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
-							activateDoc(tlfs);
-							return TRUE;
-						}
+								LVITEM item{};
+								item.mask = LVIF_PARAM;
+								item.iItem = i;	
+								ListView_GetItem(((LPNMHDR)lParam)->hwndFrom, &item);
+								TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
+								activateDoc(tlfs);
+								updateCategoryComboForSelectedFile(); // 更新分类下拉框显示当前文件的分类
+								return TRUE;
+							}
 						default:
 							break;
 					}
@@ -664,49 +670,15 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
         case WM_SIZE:
         {
-		int width = LOWORD(lParam);
+	int width = LOWORD(lParam);
             int height = HIWORD(lParam);
 			
-			// 计算控件位置和大小
-		int labelWidth = 40;
-		int comboWidth = 100;
-		int spacing = 5;
-		int buttonBarHeight = 35; // 分类按钮栏高度
-		
-		// 字体大小控件位置（在按钮栏上方）
-		int fontSizeLabelX = width - labelWidth - comboWidth - spacing * 2;
-		int fontSizeComboX = width - comboWidth - spacing;
-		
-		// 设置字体大小控件位置和大小
-		if (_hFontSizeLabel && _hFontSizeCombo)
+			// 调整文件列表视图大小
+		int listViewHeight = height - 100; // 减去顶部控件的高度（分类按钮栏和下拉框）
+		if (listViewHeight > 0)
 		{
-			::MoveWindow(_hFontSizeLabel, fontSizeLabelX, spacing, labelWidth, 20, TRUE);
-			::MoveWindow(_hFontSizeCombo, fontSizeComboX, spacing, comboWidth, 200, TRUE);
+			::SetWindowPos(_fileListView.getHSelf(), NULL, 0, 100, width, listViewHeight, SWP_NOZORDER);
 		}
-		
-		// 设置分类按钮位置（在按钮栏内）
-		int buttonHeight = 25;
-		int buttonWidth = 80;
-		int buttonSpacing = 5;
-		int startX = 5;
-		int startY = spacing;
-		
-		for (size_t i = 0; i < _categoryButtons.size(); ++i)
-		{
-			int x = startX + i * (buttonWidth + buttonSpacing);
-			::MoveWindow(_categoryButtons[i], x, startY, buttonWidth, buttonHeight, TRUE);
-		}
-		
-		// 设置列表视图位置和大小（在按钮栏下方）
-		int listViewY = buttonBarHeight;
-		int listViewHeight = height - buttonBarHeight;
-		
-		if (_fileListView.getHSelf())
-		{
-			::MoveWindow(_fileListView.getHSelf(), 0, listViewY, width, listViewHeight, TRUE);
-		}
-		
-		_fileListView.resizeColumns(width);
             break;
         }
         
@@ -745,7 +717,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
 		case WM_COMMAND:
 		{
-			// 处理分类按钮点击
+			// 处理分类按钮点击事件（用于过滤查看文件）
 			if (LOWORD(wParam) >= CATEGORY_BUTTON_START && LOWORD(wParam) <= CATEGORY_BUTTON_END)
 			{
 				// 分类按钮点击 - 过滤整个文件列表
@@ -753,6 +725,16 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				if (buttonIndex >= 0 && buttonIndex < static_cast<int>(_categoryButtons.size()))
 				{
 					onCategoryButtonClick(_categoryButtons[buttonIndex]);
+				}
+			}
+			// 处理分类下拉框选择变化（用于给当前文件分类）
+			else if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_CATEGORY_COMBO)
+			{
+				// 获取下拉框当前选中的索引
+				int selectedIndex = ::SendMessage(_hCategoryCombo, CB_GETCURSEL, 0, 0);
+				if (selectedIndex != CB_ERR)
+				{
+					onCategoryComboChange(selectedIndex);
 				}
 			}
 			// 处理文件右键菜单的分类选择
@@ -817,7 +799,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 	return DockingDlgInterface::run_dlgProc(message, wParam, lParam);
 }
 
-// 创建分类按钮栏
+// 创建分类按钮栏和分类下拉框
 void VerticalFileSwitcher::createCategoryButtons()
 {
 	// 清空现有的按钮
@@ -831,26 +813,23 @@ void VerticalFileSwitcher::createCategoryButtons()
 	if (categories.empty())
 		return;
 	
-	// 按钮参数
-	int buttonHeight = 25;
-	int buttonWidth = 80;
+	// 创建分类按钮栏（用于过滤查看文件）
+	int buttonX = 5;
+	int buttonY = 35;
+	int buttonWidth = 60;
+	int buttonHeight = 20;
 	int buttonSpacing = 5;
-	int startX = 5;
-	int startY = 5;
 	
-	// 创建分类按钮
 	for (size_t i = 0; i < categories.size(); ++i)
 	{
-		int x = startX + i * (buttonWidth + buttonSpacing);
-		
 		HWND hButton = ::CreateWindowEx(
 			0,
 			L"BUTTON",
 			categories[i].name.c_str(),
 			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-			x, startY, buttonWidth, buttonHeight,
+			buttonX, buttonY, buttonWidth, buttonHeight,
 			_hSelf,
-			(HMENU)(CATEGORY_BUTTON_START + i), // 使用分类按钮ID
+			(HMENU)(CATEGORY_BUTTON_START + i),
 			_hInst,
 			NULL
 		);
@@ -866,51 +845,123 @@ void VerticalFileSwitcher::createCategoryButtons()
 				::SendMessage(hButton, WM_SETFONT, (WPARAM)hFont, TRUE);
 			}
 			
-			// 默认选中第一个按钮（"全部"分类）
-			if (i == 0)
-			{
-				_currentCategoryButton = hButton;
-				updateCategoryButtonState(hButton);
-			}
+			// 更新按钮位置
+			buttonX += buttonWidth + buttonSpacing;
 		}
+	}
+	
+	// 默认选中第一个按钮（"全部"分类）
+	if (!_categoryButtons.empty())
+	{
+		_currentCategoryButton = _categoryButtons[0];
+		updateCategoryButtonState(_currentCategoryButton);
+	}
+	
+	// 创建当前文件分类标签（用于给当前文件分类）
+	_hCategoryLabel = ::CreateWindowEx(
+		0, 
+		L"STATIC", 
+		L"当前文件分类:", 
+		WS_CHILD | WS_VISIBLE | SS_LEFT,
+		5, 65, 80, 20, // 位置在分类按钮栏下方
+		_hSelf, 
+		(HMENU)IDC_CATEGORY_STATIC, 
+		_hInst, 
+		NULL
+	);
+	
+	if (_hCategoryLabel)
+	{
+		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 当前文件分类标签创建成功，句柄: %p", _hCategoryLabel);
+		// 设置字体
+		HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
+		if (hFont)
+		{
+			::SendMessage(_hCategoryLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+		}
+	}
+	else
+	{
+		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 错误：无法创建当前文件分类标签！");
+	}
+	
+	// 创建当前文件分类下拉框
+	_hCategoryCombo = ::CreateWindowEx(
+		0,
+		L"COMBOBOX",
+		L"",
+		WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+		90, 65, 120, 200, // 位置在分类标签右侧
+		_hSelf,
+		(HMENU)IDC_CATEGORY_COMBO,
+		_hInst,
+		NULL
+	);
+	
+	if (_hCategoryCombo)
+	{
+		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 当前文件分类下拉框创建成功，句柄: %p", _hCategoryCombo);
+		
+		// 设置字体
+		HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
+		if (hFont)
+		{
+			::SendMessage(_hCategoryCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+		}
+		
+		// 添加分类选项到下拉框
+		for (size_t i = 0; i < categories.size(); ++i)
+		{
+			::SendMessage(_hCategoryCombo, CB_ADDSTRING, 0, (LPARAM)categories[i].name.c_str());
+		}
+		
+		// 默认选中第一个选项（"全部"分类）
+		::SendMessage(_hCategoryCombo, CB_SETCURSEL, 0, 0);
+	}
+	else
+	{
+		debugLog(L"VerticalFileSwitcher::createCategoryButtons - 错误：无法创建当前文件分类下拉框！");
 	}
 }
 
-// 处理分类按钮点击
+// 处理分类按钮点击事件（用于过滤查看文件）
 void VerticalFileSwitcher::onCategoryButtonClick(HWND hButton)
 {
-	// 查找按钮索引
-	int buttonIndex = -1;
+	// 查找按钮对应的分类索引
+	int categoryIndex = -1;
 	for (size_t i = 0; i < _categoryButtons.size(); ++i)
 	{
 		if (_categoryButtons[i] == hButton)
 		{
-			buttonIndex = static_cast<int>(i);
+			categoryIndex = static_cast<int>(i);
 			break;
 		}
 	}
 	
-	if (buttonIndex >= 0 && buttonIndex < static_cast<int>(_categoryManager.getCategories().size()))
+	if (categoryIndex < 0 || categoryIndex >= static_cast<int>(_categoryManager.getCategories().size()))
+		return;
+	
+	const auto& categories = _categoryManager.getCategories();
+	const std::wstring& selectedCategory = categories[categoryIndex].name;
+	
+	debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 选择分类按钮: %s", selectedCategory.c_str());
+	
+	// 更新按钮状态
+	_currentCategoryButton = hButton;
+	updateCategoryButtonState(_currentCategoryButton);
+	
+	// 过滤文件列表
+	if (selectedCategory == L"全部")
 	{
-		const auto& categories = _categoryManager.getCategories();
-		const auto& selectedCategory = categories[buttonIndex];
-		
-		// 根据选中的分类过滤文件列表
-		if (selectedCategory.name == L"全部")
-		{
-			// 选择"全部"分类，清除过滤
-			_fileListView.clearCategoryFilter();
-		}
-		else
-		{
-			// 设置当前分类进行过滤
-			_fileListView.setCurrentCategory(selectedCategory.name);
-		}
-		
-		// 更新按钮状态
-		updateCategoryButtonState(hButton);
-		
-		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 分类已更改为: %s", selectedCategory.name.c_str());
+		// 选择"全部"分类，清除过滤
+		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 清除分类过滤，显示全部文件");
+		_fileListView.clearCategoryFilter();
+	}
+	else
+	{
+		// 设置当前分类进行过滤
+		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 设置当前分类进行过滤: %s", selectedCategory.c_str());
+		_fileListView.setCurrentCategory(selectedCategory);
 	}
 }
 
@@ -937,6 +988,122 @@ void VerticalFileSwitcher::updateCategoryButtonState(HWND selectedButton)
 	}
 }
 
+// 处理分类下拉框选择变化（用于给当前文件分类）
+void VerticalFileSwitcher::onCategoryComboChange(int categoryIndex)
+{
+	if (categoryIndex < 0 || categoryIndex >= static_cast<int>(_categoryManager.getCategories().size()))
+		return;
+	
+	const auto& categories = _categoryManager.getCategories();
+	const std::wstring& selectedCategory = categories[categoryIndex].name;
+	
+	debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 选择当前文件分类: %s", selectedCategory.c_str());
+	
+	// 获取当前选中的文件
+	auto selectedFiles = _fileListView.getSelectedFiles();
+	if (!selectedFiles.empty())
+	{
+		// 设置当前文件的分类
+		BufferID bufferID = selectedFiles[0]._bufID;
+		int view = selectedFiles[0]._iView;
+		
+		// 获取正确的文件路径 - 从选中的文件列表中获取第一个选中文件的索引
+		int selectedIndex = -1;
+		int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
+		for (int i = 0; i < nbItem; ++i)
+		{
+			int isSelected = ListView_GetItemState(_fileListView.getHSelf(), i, LVIS_SELECTED);
+			if (isSelected == LVIS_SELECTED)
+			{
+				selectedIndex = i;
+				break;
+			}
+		}
+		
+		if (selectedIndex == -1)
+		{
+			debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 警告：未找到选中文件，无法设置分类");
+			return;
+		}
+		
+		std::wstring filePath = _fileListView.getFullFilePath(selectedIndex);
+		// 设置当前文件的分类 - 使用分类ID而不是分类名称
+		const std::wstring& categoryId = categories[categoryIndex].id;
+		_categoryManager.setFileCategory(filePath, categoryId);
+		
+		debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 文件 %s 分类已设置为: %s (ID: %s)", filePath.c_str(), selectedCategory.c_str(), categoryId.c_str());
+		
+		// 刷新文件列表显示
+		_fileListView.reload();
+	}
+	else
+	{
+		debugLog(L"VerticalFileSwitcher::onCategoryComboChange - 警告：没有选中文件，无法设置分类");
+	}
+}
+
+// 更新分类下拉框显示当前选中文件的分类
+void VerticalFileSwitcher::updateCategoryComboForSelectedFile()
+{
+	// 获取当前选中的文件
+	auto selectedFiles = _fileListView.getSelectedFiles();
+	if (selectedFiles.empty())
+	{
+		// 如果没有选中文件，设置下拉框显示"全部"
+		::SendMessage(_hCategoryCombo, CB_SETCURSEL, 0, 0);
+		debugLog(L"VerticalFileSwitcher::updateCategoryComboForSelectedFile - 没有选中文件，设置分类下拉框显示'全部'");
+		return;
+	}
+	
+	// 获取第一个选中文件的路径
+	// 注意：这里需要从选中的文件列表中获取正确的文件路径
+	// 首先找到第一个选中文件在列表中的索引
+	int selectedIndex = -1;
+	int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
+	for (int i = 0; i < nbItem; ++i)
+	{
+		int isSelected = ListView_GetItemState(_fileListView.getHSelf(), i, LVIS_SELECTED);
+		if (isSelected == LVIS_SELECTED)
+		{
+			selectedIndex = i;
+			break;
+		}
+	}
+	
+	if (selectedIndex == -1)
+	{
+		// 如果没有找到选中项，设置下拉框显示"全部"
+		::SendMessage(_hCategoryCombo, CB_SETCURSEL, 0, 0);
+		debugLog(L"VerticalFileSwitcher::updateCategoryComboForSelectedFile - 未找到选中文件，设置分类下拉框显示'全部'");
+		return;
+	}
+	
+	std::wstring filePath = _fileListView.getFullFilePath(selectedIndex);
+	
+	// 获取文件的分类ID
+	std::wstring categoryId = _categoryManager.getFileCategory(filePath);
+	
+	// 获取所有分类
+	const auto& categories = _categoryManager.getCategories();
+	
+	// 查找分类ID对应的索引
+	int categoryIndex = 0; // 默认为"全部"
+	for (size_t i = 0; i < categories.size(); ++i)
+	{
+		if (categories[i].id == categoryId)
+		{
+			categoryIndex = static_cast<int>(i);
+			break;
+		}
+	}
+	
+	// 设置下拉框选中对应的分类
+	::SendMessage(_hCategoryCombo, CB_SETCURSEL, categoryIndex, 0);
+	
+	debugLog(L"VerticalFileSwitcher::updateCategoryComboForSelectedFile - 文件 %s 的分类已设置为下拉框索引: %d", 
+		filePath.c_str(), categoryIndex);
+}
+
 void VerticalFileSwitcher::initPopupMenus()
 {
 	NativeLangSpeaker* pNativeSpeaker = NppParameters::getInstance().getNativeLangSpeaker();
@@ -948,18 +1115,18 @@ void VerticalFileSwitcher::initPopupMenus()
 
 	_hGlobalMenu = ::CreatePopupMenu();
 	
-	// 添加分类选择菜单
-	HMENU hCategoryMenu = ::CreatePopupMenu();
+	// 添加文档分类菜单
+	HMENU hDocumentCategoryMenu = ::CreatePopupMenu();
 	const auto& categories = _categoryManager.getCategories();
 	
 	// 添加所有分类到菜单
 	for (size_t i = 0; i < categories.size(); ++i)
 	{
 		UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
-		::InsertMenu(hCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
+		::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
 	}
-	wstring categoryStr = L"选择分类";
-	::InsertMenu(_hGlobalMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hCategoryMenu), categoryStr.c_str());
+	wstring documentCategoryStr = L"文档分类";
+	::InsertMenu(_hGlobalMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
 	
 	::InsertMenu(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
 	::InsertMenu(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
@@ -986,6 +1153,46 @@ void VerticalFileSwitcher::initPopupMenus()
 
 void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 {
+	// 处理标签颜色菜单点击
+	if (cmdID >= TAB_COLOR_MENU_START && cmdID < TAB_COLOR_MENU_START + 10)
+	{
+		// 获取颜色索引
+		int colorIndex = cmdID - TAB_COLOR_MENU_START;
+		
+		// 设置标签颜色
+		_fileListView.onTabColorChange(colorIndex);
+		
+		debugLog(L"VerticalFileSwitcher::popupMenuCmd - 标签颜色已更改为: %d", colorIndex);
+		return;
+	}
+	
+	// 处理分类菜单点击
+	if (cmdID >= CATEGORY_MENU_START && cmdID < CATEGORY_MENU_START + 100)
+	{
+		// 获取分类索引
+		size_t categoryIndex = cmdID - CATEGORY_MENU_START;
+		const auto& categories = _categoryManager.getCategories();
+		
+		if (categoryIndex < categories.size())
+		{
+			const auto& selectedCategory = categories[categoryIndex];
+			
+			if (selectedCategory.name == L"全部")
+			{
+				// 选择"全部"分类，清除过滤
+				_fileListView.clearCategoryFilter();
+			}
+			else
+			{
+				// 设置当前分类进行过滤
+				_fileListView.setCurrentCategory(selectedCategory.name);
+			}
+			
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 分类已更改为: %s", selectedCategory.name.c_str());
+		}
+		return;
+	}
+	
 	switch (cmdID)
 	{
 		case CLMNEXT_ID:
