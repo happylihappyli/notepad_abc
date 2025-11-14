@@ -33,16 +33,48 @@
     ],
     "fileMappings": [
         {
+            "categoryId": "life",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-律师维权.txt"
+        },
+        {
             "categoryId": "programming",
             "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-编程.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\main.zig"
         },
         {
             "categoryId": "programming",
             "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-可视化编程.txt"
         },
         {
-            "categoryId": "study",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习.txt"
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod_gdscript.js"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-C++.txt"
+        },
+        {
+            "categoryId": "work",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-咖啡事业.txt"
+        },
+        {
+            "categoryId": "work",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-音乐教育.txt"
+        },
+        {
+            "categoryId": "life",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-健康.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-ai.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot.txt"
         }
     ]
 }

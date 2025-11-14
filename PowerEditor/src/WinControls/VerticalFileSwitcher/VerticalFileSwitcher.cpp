@@ -325,9 +325,6 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 	{
 		case WM_INITDIALOG :
 		{
-			// 对话框初始化时初始化控件
-			VerticalFileSwitcher::initPopupMenus();
-
 			// 从窗口中获取列表视图控件
 			HWND hListView = ::GetDlgItem(_hSelf, IDC_LIST_DOCLIST);
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取ListView控件句柄: %p, _hSelf: %p", hListView, _hSelf);
@@ -337,129 +334,132 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			_categoryManager.initialize(L"..\\bin\\categories.json");
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类管理器初始化完成");
 		
-		// 设置分类管理器指针到列表视图
-		_fileListView.setCategoryManager(&_categoryManager);
-		debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类管理器指针已设置到列表视图: %p", &_categoryManager);
-		
-		// 创建分类按钮栏
-		createCategoryButtons();
-		
-		// 初始化字体大小下拉框
-		_hFontSizeCombo = ::GetDlgItem(_hSelf, IDC_FONTSIZE_COMBO_VFS);
-		if (_hFontSizeCombo)
-		{
-			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取字体大小下拉框句柄: %p", _hFontSizeCombo);
+			// 设置分类管理器指针到列表视图
+			_fileListView.setCategoryManager(&_categoryManager);
+			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 分类管理器指针已设置到列表视图: %p", &_categoryManager);
 			
-			// 创建字体大小标签
-			_hFontSizeLabel = ::CreateWindowEx(
-				0, 
-				L"STATIC", 
-				L"字体大小:", 
-				WS_CHILD | WS_VISIBLE | SS_LEFT,
-				5, 5, 60, 20, 
-				_hSelf, 
-				(HMENU)IDC_FONTSIZE_STATIC_VFS, 
-				_hInst, 
-				NULL
-			);
+			// 对话框初始化时初始化控件（在分类管理器初始化之后）
+			VerticalFileSwitcher::initPopupMenus();
+		
+			// 创建分类按钮栏
+			createCategoryButtons();
 			
-			if (_hFontSizeLabel)
+			// 初始化字体大小下拉框
+			_hFontSizeCombo = ::GetDlgItem(_hSelf, IDC_FONTSIZE_COMBO_VFS);
+			if (_hFontSizeCombo)
 			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 字体大小标签创建成功，句柄: %p", _hFontSizeLabel);
-				// 设置字体
-				HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
-				if (hFont)
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取字体大小下拉框句柄: %p", _hFontSizeCombo);
+				
+				// 创建字体大小标签
+				_hFontSizeLabel = ::CreateWindowEx(
+					0, 
+					L"STATIC", 
+					L"字体大小:", 
+					WS_CHILD | WS_VISIBLE | SS_LEFT,
+					5, 5, 60, 20, 
+					_hSelf, 
+					(HMENU)IDC_FONTSIZE_STATIC_VFS, 
+					_hInst, 
+					NULL
+				);
+				
+				if (_hFontSizeLabel)
 				{
-					::SendMessage(_hFontSizeLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
-				}
-			}
-			else
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法创建字体大小标签！");
-			}
-				
-				// 添加字体大小选项到下拉框
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"6");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"8");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"10");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"12");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"14");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"16");  // 添加16号字体
-				
-				// 加载当前字体大小配置并设置下拉框选中项
-				NppParameters& nppParams = NppParameters::getInstance();
-				int fontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
-				wchar_t fontSizeStr[10];
-				swprintf(fontSizeStr, 10, L"%d", fontSize);
-				
-				// 查找并选中当前字体大小
-				int index = ::SendMessage(_hFontSizeCombo, CB_FINDSTRINGEXACT, -1, (LPARAM)fontSizeStr);
-				if (index != CB_ERR)
-				{
-					::SendMessage(_hFontSizeCombo, CB_SETCURSEL, index, 0);
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 字体大小标签创建成功，句柄: %p", _hFontSizeLabel);
+					// 设置字体
+					HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
+					if (hFont)
+					{
+						::SendMessage(_hFontSizeLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+					}
 				}
 				else
 				{
-					// 如果找不到，默认选中10号字体
-					::SendMessage(_hFontSizeCombo, CB_SETCURSEL, 2, 0);
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法创建字体大小标签！");
 				}
-			}
-			else
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_FONTSIZE_COMBO_VFS控件句柄！");
-			}
-			
-			if (hListView)
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - ListView控件有效，开始初始化");
+					
+					// 添加字体大小选项到下拉框
+					::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"6");
+					::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"8");
+					::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"10");
+					::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"12");
+					::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"14");
+					::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"16");  // 添加16号字体
+					
+					// 加载当前字体大小配置并设置下拉框选中项
+					NppParameters& nppParams = NppParameters::getInstance();
+					int fontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
+					wchar_t fontSizeStr[10];
+					swprintf(fontSizeStr, 10, L"%d", fontSize);
+					
+					// 查找并选中当前字体大小
+					int index = ::SendMessage(_hFontSizeCombo, CB_FINDSTRINGEXACT, -1, (LPARAM)fontSizeStr);
+					if (index != CB_ERR)
+					{
+						::SendMessage(_hFontSizeCombo, CB_SETCURSEL, index, 0);
+					}
+					else
+					{
+						// 如果找不到，默认选中10号字体
+						::SendMessage(_hFontSizeCombo, CB_SETCURSEL, 2, 0);
+					}
+				}
+				else
+				{
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_FONTSIZE_COMBO_VFS控件句柄！");
+				}
 				
-				// 确保_fileListView正确关联到这个控件
-			if (_fileListView.getHSelf() != hListView)
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 设置_fileListView的句柄和图像列表");
-				// 先调用init方法设置父窗口句柄
-				_fileListView.init(_hInst, _hParent, _hImaLst);
-				// 设置Notepad++主窗口句柄
-				_fileListView.setNppMainWnd(_hParent);
-				// 然后设置列表视图控件句柄
-				_fileListView.setHSelf(hListView);
-			}
-				
-				// 保存原始窗口过程
-				_defaultListViewProc = (WNDPROC)GetWindowLongPtr(hListView, GWLP_WNDPROC);
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 原始窗口过程: %p", _defaultListViewProc);
-				
-				// 保存VerticalFileSwitcher实例指针到列表视图控件
-				SetWindowLongPtr(hListView, -21, (LONG_PTR)this); // -21 是GWL_USERDATA的替代
-				// 使用正确的窗口过程
-				SetWindowLongPtr(hListView, GWLP_WNDPROC, (LONG_PTR)VerticalFileSwitcher::listViewStaticProc);
-				
-				// 设置列表视图的扩展样式
-				ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
-				
-				// 设置图像列表
-				ListView_SetImageList(hListView, _hImaLst, LVSIL_SMALL);
-				
-				// 加载字体大小配置
-				NppParameters& nppParams = NppParameters::getInstance();
-				int fontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
-				_fileListView.setFontSize(fontSize);
-				
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 准备调用_fileListView.initList()");
-				// 初始化列表和显示
-				_fileListView.initList();
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - _fileListView.initList()调用完成");
-			}
-			else
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_LIST_DOCLIST控件句柄！");
-			}
+				if (hListView)
+				{
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - ListView控件有效，开始初始化");
+					
+					// 确保_fileListView正确关联到这个控件
+				if (_fileListView.getHSelf() != hListView)
+				{
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 设置_fileListView的句柄和图像列表");
+					// 先调用init方法设置父窗口句柄
+					_fileListView.init(_hInst, _hParent, _hImaLst);
+					// 设置Notepad++主窗口句柄
+					_fileListView.setNppMainWnd(_hParent);
+					// 然后设置列表视图控件句柄
+					_fileListView.setHSelf(hListView);
+				}
+					
+					// 保存原始窗口过程
+					_defaultListViewProc = (WNDPROC)GetWindowLongPtr(hListView, GWLP_WNDPROC);
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 原始窗口过程: %p", _defaultListViewProc);
+					
+					// 保存VerticalFileSwitcher实例指针到列表视图控件
+					SetWindowLongPtr(hListView, -21, (LONG_PTR)this); // -21 是GWL_USERDATA的替代
+					// 使用正确的窗口过程
+					SetWindowLongPtr(hListView, GWLP_WNDPROC, (LONG_PTR)VerticalFileSwitcher::listViewStaticProc);
+					
+					// 设置列表视图的扩展样式
+					ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+					
+					// 设置图像列表
+					ListView_SetImageList(hListView, _hImaLst, LVSIL_SMALL);
+					
+					// 加载字体大小配置
+					NppParameters& nppParams = NppParameters::getInstance();
+					int fontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
+					_fileListView.setFontSize(fontSize);
+					
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 准备调用_fileListView.initList()");
+					// 初始化列表和显示
+					_fileListView.initList();
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - _fileListView.initList()调用完成");
+				}
+				else
+				{
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_LIST_DOCLIST控件句柄！");
+				}
 
-			NppDarkMode::autoSubclassAndThemeChildControls(_hSelf);
-			VerticalFileSwitcher::autoSubclassWindowNotify(_hSelf);
+				NppDarkMode::autoSubclassAndThemeChildControls(_hSelf);
+				VerticalFileSwitcher::autoSubclassWindowNotify(_hSelf);
 
-			return TRUE; // 返回TRUE表示成功处理WM_INITDIALOG
-		}
+				return TRUE; // 返回TRUE表示成功处理WM_INITDIALOG
+			}
 
 		case NPPM_INTERNAL_REFRESHDARKMODE:
 		{
@@ -691,11 +691,27 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
         {
             // 检查是否在文件列表上右键
             POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            
+            // 如果lParam中的坐标是-1，-1，表示需要使用当前鼠标位置
+            if (pt.x == -1 && pt.y == -1)
+            {
+                // 获取当前鼠标位置
+                ::GetCursorPos(&pt);
+            }
+            else
+            {
+                // 将屏幕坐标转换为客户端坐标
+                ::ScreenToClient(_hSelf, &pt);
+            }
+            
             RECT listRect;
             ::GetWindowRect(_fileListView.getHSelf(), &listRect);
             
             // 检查右键点击位置是否在列表视图内
             bool isInListView = ::PtInRect(&listRect, pt);
+            
+            // 将客户端坐标转换回屏幕坐标用于菜单显示
+            ::ClientToScreen(_hSelf, &pt);
             
             if (isInListView) {
                 // 在文件列表上右键，显示包含文档分类的菜单
@@ -979,14 +995,21 @@ void VerticalFileSwitcher::initFileListContextMenu()
     HMENU hDocumentCategoryMenu = ::CreatePopupMenu();
     const auto& categories = _categoryManager.getCategories();
     
+    // 调试信息：显示分类数量
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 分类数量: %zu", categories.size());
+    
     // 添加所有分类到菜单
     for (size_t i = 0; i < categories.size(); ++i)
     {
         UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
-        ::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
+        ::AppendMenu(hDocumentCategoryMenu, MF_STRING, menuId, categories[i].name.c_str());
+        // 调试信息：显示每个分类的名称
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 添加分类到菜单: %s (ID: %u)", categories[i].name.c_str(), menuId);
     }
+    
     wstring documentCategoryStr = L"文档分类";
-    ::InsertMenu(_hFileListMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
+    ::InsertMenu(_hFileListMenu, 0, MF_BYPOSITION | MF_STRING | MF_POPUP, reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 文档分类菜单已添加到文件列表菜单");
     
     ::InsertMenu(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
     ::InsertMenu(_hFileListMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
