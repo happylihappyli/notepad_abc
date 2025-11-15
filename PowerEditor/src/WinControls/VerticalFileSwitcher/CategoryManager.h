@@ -241,8 +241,8 @@ public:
     /**
      * @brief 获取默认分类名称
      */
-    static std::wstring getDefaultCategoryName() { return L"默认分类"; }
-    
+    static std::wstring getDefaultCategoryName() { return L"全部"; }
+
 private:
     /**
      * @brief 确保配置文件目录存在

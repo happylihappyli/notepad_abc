@@ -520,7 +520,12 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 			// 点击文件名时不要更新显示文本，保持原文件名不变
 			// 使用原始文件名，不显示完整路径
 			wchar_t fileNameOnly[MAX_PATH] = { '\0' };
-			wcscpy_s(fileNameOnly, MAX_PATH, PathFindFileName(tlfs->_fn.c_str()));
+			const wchar_t* fileName = PathFindFileName(tlfs->_fn.c_str());
+			if (fileName) {
+				wcscpy_s(fileNameOnly, MAX_PATH, fileName);
+				// 移除文件扩展名，只显示文件名主体
+				::PathRemoveExtension(fileNameOnly);
+			}
 			item.pszText = fileNameOnly;
 			
 			ListView_SetItem(_hSelf, &item);
@@ -545,9 +550,10 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 			// 更新扩展名列（第3列）
 			if (isExtColumn)
 			{
-				// 显示空扩展名（不显示扩展名）
-				wchar_t emptyStr[] = L"";
-				ListView_SetItemText(_hSelf, i, ++colIndex, emptyStr);
+				// 显示文件扩展名
+				wchar_t extText[MAX_PATH] = { '\0' };
+				wcscpy_s(extText, ::PathFindExtension(tlfs->_fn.c_str()));
+				ListView_SetItemText(_hSelf, i, ++colIndex, extText);
 			}
 			if (isPathColumn)
 			{
@@ -555,6 +561,7 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 				wchar_t emptyStr[] = L"";
 				ListView_SetItemText(_hSelf, i, ++colIndex, emptyStr);
 			}
+
 		}
 	}
 }
@@ -636,10 +643,17 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 	// 保持文件名原样不变，不进行任何处理
 	// 直接使用原始文件名
 	
+	// 复制文件名并移除扩展名
+	wchar_t fileNameOnly[MAX_PATH] = { '\0' };
+	if (fileName) {
+		wcscpy_s(fileNameOnly, MAX_PATH, fileName);
+		::PathRemoveExtension(fileNameOnly);
+	}
+	
 	LVITEM item{};
 	item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_GROUPID;
 	
-	item.pszText = const_cast<wchar_t*>(fileName);
+	item.pszText = fileNameOnly;
 	item.iItem = _currentIndex;
 	item.iSubItem = 0;
 	item.iImage = buf->isMonitoringOn()?3:(buf->isReadOnly()?2:(buf->isDirty()?1:0));
@@ -647,11 +661,30 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 	item.iGroupId = (iView == MAIN_VIEW) ? _groupID : _group2ID;
 	ListView_InsertItem(_hSelf, &item);
 	int colIndex = 0;
+	
+	// 第1列：分类（新增）
+	if (_categoryManager)
+	{
+		std::wstring fileCategoryId = _categoryManager->getFileCategory(buf->getFullPathName());
+		FileCategory* fileCategory = _categoryManager->getCategoryById(fileCategoryId);
+		std::wstring fileCategoryName = fileCategory ? fileCategory->name : _categoryManager->getDefaultCategoryName();
+		wchar_t categoryText[MAX_PATH] = { '\0' };
+		wcscpy_s(categoryText, fileCategoryName.c_str());
+		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, categoryText);
+	}
+	else
+	{
+		// 如果没有分类管理器，显示默认文本
+		wchar_t defaultCategory[] = L"默认分类";
+		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, defaultCategory);
+	}
+	
 	if (isExtColumn)
 	{
-		// 显示空扩展名（不显示扩展名）
-		wchar_t emptyStr[] = L"";
-		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, emptyStr);
+		// 显示文件扩展名
+		wchar_t extText[MAX_PATH] = { '\0' };
+		wcscpy_s(extText, ::PathFindExtension(buf->getFullPathName()));
+		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, extText);
 	}
 	if (isPathColumn)
 	{

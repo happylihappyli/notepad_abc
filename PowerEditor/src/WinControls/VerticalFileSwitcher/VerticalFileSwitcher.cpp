@@ -558,9 +558,10 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 						// 在列表视图头部右键，显示不包含文档分类的菜单
 						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
 						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
-						::TrackPopupMenu(_hGlobalMenu, 
-							NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-							pt.x, pt.y, 0, _hSelf, NULL);
+						// 不再在这里显示菜单，让WM_CONTEXTMENU处理
+						// ::TrackPopupMenu(_hGlobalMenu, 
+						// 	NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+						// 	pt.x, pt.y, 0, _hSelf, NULL);
 						return TRUE;
 					}
 
@@ -586,9 +587,10 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 						// 在文件列表上右键，显示包含文档分类的菜单
 						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
 						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
-						::TrackPopupMenu(_hFileListMenu, 
-							NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-							pt.x, pt.y, 0, _hSelf, NULL);
+						// 不再在这里显示菜单，让WM_CONTEXTMENU处理
+						// ::TrackPopupMenu(_hFileListMenu, 
+						// 	NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
+						// 	pt.x, pt.y, 0, _hSelf, NULL);
 					}
 					return TRUE;
 				}
@@ -679,11 +681,32 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
             int height = HIWORD(lParam);
 			
 			// 调整文件列表视图大小
-		int listViewHeight = height - 100; // 减去顶部控件的高度（分类按钮栏和下拉框）
-		if (listViewHeight > 0)
-		{
-			::SetWindowPos(_fileListView.getHSelf(), NULL, 0, 100, width, listViewHeight, SWP_NOZORDER);
-		}
+			// 计算顶部控件的实际高度，而不是使用硬编码值
+			int topControlsHeight = 0;
+			
+			// 获取字体大小下拉框的位置和高度
+			if (_hFontSizeCombo)
+			{
+				RECT comboRect;
+				::GetWindowRect(_hFontSizeCombo, &comboRect);
+				::MapWindowPoints(NULL, _hSelf, (LPPOINT)&comboRect, 2);
+				topControlsHeight = (topControlsHeight > (comboRect.bottom + 5)) ? topControlsHeight : (comboRect.bottom + 5); // 添加一些边距
+			}
+			
+			// 获取分类按钮的位置和高度
+			if (!_categoryButtons.empty())
+			{
+				RECT buttonRect;
+				::GetWindowRect(_categoryButtons.back(), &buttonRect); // 获取最后一个按钮
+				::MapWindowPoints(NULL, _hSelf, (LPPOINT)&buttonRect, 2);
+				topControlsHeight = (topControlsHeight > (buttonRect.bottom + 5)) ? topControlsHeight : (buttonRect.bottom + 5); // 添加一些边距
+			}
+			
+			int listViewHeight = height - topControlsHeight;
+			if (listViewHeight > 0)
+			{
+				::SetWindowPos(_fileListView.getHSelf(), NULL, 0, topControlsHeight, width, listViewHeight, SWP_NOZORDER);
+			}
             break;
         }
         

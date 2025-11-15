@@ -141,6 +141,14 @@
         {
             "categoryId": "programming",
             "filePath": "E:\\BaiduSyncdisk\\bak\\视频\\计划-视频.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod_csharp.js"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\test_dll.zig"
         }
     ]
 }
