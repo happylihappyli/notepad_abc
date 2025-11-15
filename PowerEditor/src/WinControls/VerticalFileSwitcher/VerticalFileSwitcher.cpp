@@ -885,12 +885,14 @@ void VerticalFileSwitcher::onCategoryButtonClick(HWND hButton)
 		// 选择"全部"分类，清除过滤
 		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 清除分类过滤，显示全部文件");
 		_fileListView.clearCategoryFilter();
+		_fileListView.reload(); // 重新加载文件列表以确保过滤生效
 	}
 	else
 	{
 		// 设置当前分类进行过滤
 		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 设置当前分类进行过滤: %s", selectedCategory.c_str());
 		_fileListView.setCurrentCategory(selectedCategory);
+		_fileListView.reload(); // 重新加载文件列表以确保过滤生效
 	}
 }
 

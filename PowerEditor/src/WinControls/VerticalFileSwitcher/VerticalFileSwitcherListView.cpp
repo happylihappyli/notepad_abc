@@ -525,6 +525,24 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 			
 			ListView_SetItem(_hSelf, &item);
 			int colIndex = 0;
+			// 更新分类列（第2列）
+			if (_categoryManager)
+			{
+				std::wstring fileCategoryId = _categoryManager->getFileCategory(tlfs->_fn);
+				FileCategory* fileCategory = _categoryManager->getCategoryById(fileCategoryId);
+				std::wstring fileCategoryName = fileCategory ? fileCategory->name : _categoryManager->getDefaultCategoryName();
+				wchar_t categoryText[MAX_PATH] = { '\0' };
+				wcscpy_s(categoryText, fileCategoryName.c_str());
+				ListView_SetItemText(_hSelf, i, ++colIndex, categoryText);
+			}
+			else
+			{
+				// 如果没有分类管理器，显示默认文本
+				wchar_t defaultCategory[] = L"默认分类";
+				ListView_SetItemText(_hSelf, i, ++colIndex, defaultCategory);
+			}
+			
+			// 更新扩展名列（第3列）
 			if (isExtColumn)
 			{
 				// 显示空扩展名（不显示扩展名）

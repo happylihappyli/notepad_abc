@@ -75,6 +75,22 @@
         {
             "categoryId": "programming",
             "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot.txt"
+        },
+        {
+            "categoryId": "work",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-公司.txt"
+        },
+        {
+            "categoryId": "study",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot游戏创意.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot我的世界.txt"
         }
     ]
 }
