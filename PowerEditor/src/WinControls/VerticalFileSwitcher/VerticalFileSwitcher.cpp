@@ -691,38 +691,41 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
         {
             // 检查是否在文件列表上右键
             POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            POINT screenPt = pt; // 保存原始屏幕坐标用于菜单显示
             
             // 如果lParam中的坐标是-1，-1，表示需要使用当前鼠标位置
             if (pt.x == -1 && pt.y == -1)
             {
                 // 获取当前鼠标位置
                 ::GetCursorPos(&pt);
+                screenPt = pt; // 更新屏幕坐标
             }
             else
             {
-                // 将屏幕坐标转换为客户端坐标
+                // 保存屏幕坐标用于菜单显示
+                screenPt = pt;
+                // 将屏幕坐标转换为客户端坐标用于区域判断
                 ::ScreenToClient(_hSelf, &pt);
             }
             
-            RECT listRect;
-            ::GetWindowRect(_fileListView.getHSelf(), &listRect);
+            // 获取列表视图的客户区矩形（相对于父窗口）
+            RECT listClientRect;
+            ::GetClientRect(_fileListView.getHSelf(), &listClientRect);
+            ::MapWindowPoints(_fileListView.getHSelf(), _hSelf, (LPPOINT)&listClientRect, 2);
             
             // 检查右键点击位置是否在列表视图内
-            bool isInListView = ::PtInRect(&listRect, pt);
-            
-            // 将客户端坐标转换回屏幕坐标用于菜单显示
-            ::ClientToScreen(_hSelf, &pt);
+            bool isInListView = ::PtInRect(&listClientRect, pt);
             
             if (isInListView) {
                 // 在文件列表上右键，显示包含文档分类的菜单
                 ::TrackPopupMenu(_hFileListMenu, 
                     NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-                    pt.x, pt.y, 0, _hSelf, NULL);
+                    screenPt.x, screenPt.y, 0, _hSelf, NULL);
             } else {
                 // 在列表视图外（如头部）右键，显示不包含文档分类的菜单
                 ::TrackPopupMenu(_hGlobalMenu, 
                     NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-                    pt.x, pt.y, 0, _hSelf, NULL);
+                    screenPt.x, screenPt.y, 0, _hSelf, NULL);
             }
             return TRUE;
         }

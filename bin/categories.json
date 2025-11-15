@@ -9,7 +9,7 @@
         {
             "description": "编程相关的文件",
             "id": "programming",
-            "name": "编程",
+            "name": "开发",
             "order": 1
         },
         {
@@ -29,6 +29,12 @@
             "id": "study",
             "name": "学习",
             "order": 4
+        },
+        {
+            "description": "其他文件",
+            "id": "other",
+            "name": "其他",
+            "order": 5
         }
     ],
     "fileMappings": [
@@ -91,6 +97,50 @@
         {
             "categoryId": "programming",
             "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot我的世界.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod_new.js"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod.js"
+        },
+        {
+            "categoryId": "study",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习-看视频.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\常用js.txt"
+        },
+        {
+            "categoryId": "life",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\打官司有关\\计划-公积金.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\编程.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-应用题.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "D:\\data\\container_loading\\码垛笼子\\0.json"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "D:\\data\\container_loading\\码垛笼子\\0.json.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "D:\\data\\container_loading\\码垛笼子\\output\\0.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\视频\\计划-视频.txt"
         }
     ]
 }

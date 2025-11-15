@@ -11,3 +11,4 @@
 *.log
 bin/categories.json
 .sconsign.dblite
+*.ilk
