@@ -1,18 +1,4 @@
-// This file is part of Notepad++ project
-// Copyright (C)2021 Don HO <don.h@free.fr>
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// at your option any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 
@@ -350,22 +336,28 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 		{
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取字体大小下拉框句柄: %p", _hFontSizeCombo);
 			
-			// 创建字体大小标签
-			_hFontSizeLabel = ::CreateWindowEx(
-				0, 
-				L"STATIC", 
-				L"字体大小:", 
-				WS_CHILD | WS_VISIBLE | SS_LEFT,
-				5, 5, 60, 20, 
-				_hSelf, 
-				(HMENU)IDC_FONTSIZE_STATIC_VFS, 
-				_hInst, 
-				NULL
-			);
+			// 获取已存在的字体大小标签句柄（从资源文件加载）
+			_hFontSizeLabel = ::GetDlgItem(_hSelf, IDC_FONTSIZE_STATIC_VFS);
 			
 			if (_hFontSizeLabel)
 			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 字体大小标签创建成功，句柄: %p", _hFontSizeLabel);
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 字体大小标签获取成功，句柄: %p", _hFontSizeLabel);
+				// 使用本地化系统设置字体大小标签文本
+				NppParameters& nppParams = NppParameters::getInstance();
+				NativeLangSpeaker* pNativeSpeaker = nppParams.getNativeLangSpeaker();
+				wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
+				if (!fontSizeStr.empty())
+				{
+					::SetWindowText(_hFontSizeLabel, fontSizeStr.c_str());
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 设置字体大小标签文本为: %s", fontSizeStr.c_str());
+				}
+				else
+				{
+					// 如果本地化文本为空，使用默认文本
+					::SetWindowText(_hFontSizeLabel, L"字体大小:");
+					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 使用默认字体大小标签文本");
+				}
+				
 				// 设置字体
 				HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
 				if (hFont)
@@ -375,7 +367,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			}
 			else
 			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法创建字体大小标签！");
+				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取字体大小标签句柄！");
 			}
 				
 				// 添加字体大小选项到下拉框

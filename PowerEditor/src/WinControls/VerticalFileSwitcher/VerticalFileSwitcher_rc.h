@@ -19,8 +19,8 @@
 
 #define	IDD_DOCLIST		3000
 #define	IDC_LIST_DOCLIST    (IDD_DOCLIST + 1)
-#define	IDC_FONTSIZE_STATIC_VFS (IDD_DOCLIST + 2)  // 修改为避免冲突的名称
-#define	IDC_FONTSIZE_COMBO_VFS  (IDD_DOCLIST + 3)  // 修改为避免冲突的名称
+#define	IDC_FONTSIZE_STATIC_VFS 2209  // 使用与本地化文件一致的ID
+#define	IDC_FONTSIZE_COMBO_VFS  2210  // 为下拉框分配相邻ID
 
 // 分类菜单ID范围
 #define	CATEGORY_MENU_START  (IDD_DOCLIST + 100)

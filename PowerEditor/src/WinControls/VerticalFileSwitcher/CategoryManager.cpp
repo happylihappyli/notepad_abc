@@ -343,7 +343,7 @@ void CategoryManager::createDefaultCategories() {
     m_categories.clear();
     
     // 创建默认分类，使用固定的分类ID
-    FileCategory defaultCategory(getDefaultCategoryName(), L"未分类的文件", 0);
+    FileCategory defaultCategory(L"全部", L"未分类的文件", 0);
     defaultCategory.id = getDefaultCategoryId();
     m_categories.push_back(defaultCategory);
     
