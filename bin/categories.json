@@ -1,9 +1,9 @@
-{
+﻿{
     "categories": [
         {
             "description": "未分类的文件",
             "id": "default",
-            "name": "默认分类",
+            "name": "全部",
             "order": 0
         },
         {

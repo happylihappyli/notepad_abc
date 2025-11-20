@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <windows.h>
-#include "json.hpp"
+#include "../../json/json.hpp"
 
 using json = nlohmann::json;
 

@@ -96,7 +96,7 @@ bool CategoryManager::loadConfig() {
         
         return true;
     }
-    catch (const std::exception& e) {
+    catch (const std::exception&) {
         // 加载失败，返回false
         return false;
     }
@@ -142,8 +142,11 @@ bool CategoryManager::saveConfig() {
         std::wstring debugMsg = L"CategoryManager: 最终配置路径: " + configPath.wstring() + L"\n";
         OutputDebugStringW(debugMsg.c_str());
         
-        // 使用trunc模式打开文件，确保覆盖现有内容
-        std::ofstream file(configPath, std::ios::trunc);
+        // 生成JSON字符串
+        std::string jsonString = config.dump(4); // 缩进4个空格，便于阅读
+        
+        // 以二进制模式打开文件，写入UTF-8 BOM
+        std::ofstream file(configPath, std::ios::binary | std::ios::trunc);
         if (!file.is_open()) {
             // 调试信息：文件打开失败
             debugMsg = L"CategoryManager: 无法打开配置文件: " + configPath.wstring() + L"\n";
@@ -151,17 +154,21 @@ bool CategoryManager::saveConfig() {
             return false;
         }
         
-        file << config.dump(4); // 缩进4个空格，便于阅读
+        // 写入UTF-8 BOM标记
+        const unsigned char bom[] = {0xEF, 0xBB, 0xBF};
+        file.write(reinterpret_cast<const char*>(bom), 3);
+        
+        // 写入JSON内容
+        file << jsonString;
         file.close(); // 确保文件正确关闭
         
         // 调试信息：保存成功
         OutputDebugStringW(L"CategoryManager: 配置文件保存成功\n");
         return true;
     }
-    catch (const std::exception& e) {
+    catch (const std::exception&) {
         // 调试信息：异常信息
-        std::string errorMsg = "CategoryManager: 保存配置时发生异常: " + std::string(e.what()) + "\n";
-        OutputDebugStringA(errorMsg.c_str());
+        OutputDebugStringA("CategoryManager: 保存配置时发生异常\n");
         return false;
     }
 }
@@ -416,8 +423,8 @@ bool CategoryManager::ensureConfigDirectory() const {
         OutputDebugStringW(L"CategoryManager: 配置目录已存在\n");
         return true;
     }
-    catch (const std::exception& e) {
-        std::string errorMsg = "CategoryManager: ensureConfigDirectory异常: " + std::string(e.what()) + "\n";
+    catch (const std::exception&) {
+        std::string errorMsg = "CategoryManager: ensureConfigDirectory异常\n";
         OutputDebugStringA(errorMsg.c_str());
         return false;
     }
@@ -433,7 +440,7 @@ std::wstring CategoryManager::normalizePath(const std::wstring& path) const {
         normalized = normalized.lexically_normal();
         return normalized.wstring();
     }
-    catch (const std::exception& e) {
+    catch (const std::exception&) {
         return path; // 如果标准化失败，返回原路径
     }
 }
