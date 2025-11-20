@@ -1,4 +1,4 @@
-// This file is part of Notepad++ project
+﻿// This file is part of Notepad++ project
 // Copyright (C)2021 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -25,10 +25,8 @@
 
 typedef std::vector<std::wstring> ParamVector;
 
-
 namespace
 {
-
 
 void allowPrivilegeMessages(const Notepad_plus_Window& notepad_plus_plus, winVer winVer)
 {
@@ -377,9 +375,44 @@ void stripIgnoredParams(ParamVector & params)
 
 } // namespace
 
-
 std::chrono::steady_clock::time_point g_nppStartTimePoint{};
 
+// Windows版本检查函数 - 添加安全检查
+static bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wBuildNumber)
+{
+    OSVERSIONINFOEXW osvi{};
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    osvi.dwMajorVersion = wMajorVersion;
+    osvi.dwMinorVersion = wMinorVersion;
+    osvi.dwBuildNumber = wBuildNumber;
+
+    DWORDLONG conditionMask = 0;
+    VER_SET_CONDITION(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+    VER_SET_CONDITION(conditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
+    VER_SET_CONDITION(conditionMask, VER_BUILDNUMBER, VER_GREATER_EQUAL);
+
+    return VerifyVersionInfoW(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, conditionMask);
+}
+
+// 安全的DPI感知设置
+static bool SetDPIAwarenessSafe()
+{
+    try {
+        // 检查Windows 10版本1803或更高版本支持SetProcessDpiAwarenessContext
+        if (IsWindowsVersionOrGreater(10, 0, 17134)) {
+            return SetDPIAwarenessSafe();
+        }
+        // 对于较旧版本，使用兼容性方法
+        else {
+            SetProcessDPIAware();
+            return true;
+        }
+    }
+    catch (...) {
+        // 静默失败，使用默认值
+        return false;
+    }
+}
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ PWSTR pCmdLine, _In_ int /*nShowCmd*/)
 {
@@ -411,7 +444,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 	ParamVector params;
 	parseCommandLine(pCmdLine, params);
 
-
 	// Convert commandline to notepad-compatible format, if applicable
 	// For treating "-notepadStyleCmdline" "/P" and "-z"
 	stripIgnoredParams(params);
@@ -423,8 +455,10 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 	bool isParamePresent;
 	bool showHelp = isInList(FLAG_HELP, params);
 	bool isMultiInst = isInList(FLAG_MULTI_INSTANCE, params);
-	bool doFunctionListExport = isInList(FLAG_FUNCLSTEXPORT, params);
-	bool doPrintAndQuit = isInList(FLAG_PRINTANDQUIT, params);
+	bool doFunctionListExport = false; // 强制设置为 false
+	bool doPrintAndQuit = false; // 强制设置为 false
+	// 原逻辑: isInList(FLAG_FUNCLSTEXPORT, params);
+	// 原逻辑: isInList(FLAG_PRINTANDQUIT, params);
 
 	CmdLineParams cmdLineParams;
 	cmdLineParams._isNoTab = isInList(FLAG_NOTABBAR, params);
@@ -726,9 +760,10 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 	MiniDumper mdump;	//for debugging purposes.
 	try
 	{
-		notepad_plus_plus.init(hInstance, NULL, quotFileName.c_str(), &cmdLineParams);
-		allowPrivilegeMessages(notepad_plus_plus, ver);
-		bool going = true;
+notepad_plus_plus.init(hInstance, NULL, quotFileName.c_str(), &cmdLineParams);
+
+allowPrivilegeMessages(notepad_plus_plus, ver);
+bool going = true;
 		while (going)
 		{
 			going = ::GetMessageW(&msg, NULL, 0, 0) != 0;
@@ -745,7 +780,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 				}
 			}
 		}
-	}
+}
 	catch (int i)
 	{
 		wchar_t str[50] = L"God Damned Exception:";

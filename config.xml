@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<NotepadPlus>
+    <GUIConfig name="stylerTheme">default_black.xml</GUIConfig>
+    <GUIConfig name="appPos" x="100" y="100" width="1200" height="800" isMaximized="false"/>
+    <GUIConfig name="styleConfig">stylers.xml</GUIConfig>
+    <GUIConfig name="langsConfig">langs.xml</GUIConfig>
+    <GUIConfig name="list" line="200" width="600"/>
+    <GUIConfig name="findWindowPos" width="540" height="370"/>
+    <GUIConfig name="replaceWindowPos" width="540" height="420"/>
+    <GUIConfig name="columnEdit" />
+    <GUIConfig name="autoIndent" />
+    <GUIConfig name="SmartHighLight" />
+    <GUIConfig name="SmartHighLightConfig" />
+    <GUIConfig name="TagsMatchHps" />
+    <GUIConfig name="TagsMatchHpsConfig" />
+    <GUIConfig name="WordCharList" />
+    <GUIConfig name="Print" lineNumber="false" color="#000000" bkColor="#FFFFFF"/>
+    <GUIConfig name="ScintillaPrimaryView" linenumber="true" viewWS="false" viewEOL="false" viewIndentGuide="true" viewBookmark="true" viewSyntax="true" viewTooltip="true" wrap="false" wrapSymbol="true" focus="true" currentLineHiliting="true" styleSelect="true" indentGuideLine="true" braceHiliting="true" braceStyle="straight"/>
+    <GUIConfig name="TaskPos" x="10" y="10" width="400" height="300"/>
+    <GUIConfig name="Plugin" id="0"/>
+    <GUIConfig name="FileBrowser" path=""/>
+    <GUIConfig name="Session" file=""/>
+    <GUIConfig name="LaunchHistory" size="8"/>
+    <GUIConfig name="docSwitcher" />
+    <GUIConfig name="Workspace" />
+    <GUIConfig name="ProjectPanel" />
+    <GUIConfig name="FunctionList" />
+    <GUIConfig name="DocumentMap" />
+    <GUIConfig name="ClipboardHistory" />
+    <GUIConfig name="Backup" isSnapshot="false" backupDir="" />
+    <GUIConfig name="WebServer1" path="" port="8000" />
+    <GUIConfig name="WebServer2" path="" port="8080" />
+    <GUIConfig name="WebServer3" path="" port="8181" />
+    <GUIConfig name="Cloud" link="" />
+    <GUIConfig name="SearchEngine" name="" />
+    <GUIConfig name="TxWChLogCtrlPos" />
+    <GUIConfig name="UserDefineLang" />
+    <GUIConfig name="udlGlobalXmlFilesPath" />
+    <GUIConfig name="printAndSave" print="false" save="false"/>
+    <GUIConfig name="saveAllOpen" />
+    <GUIConfig name="saveLog" />
+    <GUIConfig name="sessionExt" />
+    <GUIConfig name="fileSaveReDirectory" />
+    <GUIConfig name="fileSaveReExt" />
+    <GUIConfig name="fileSaveReFilter" />
+    <GUIConfig name="AppImage" />
+    <GUIConfig name="ToolBar" />
+    <GUIConfig name="TabSetting" space="false" size="4"/>
+    <GUIConfig name="Caret" width="1" blinkRate="500"/>
+    <GUIConfig name="MISC" autoHCPos="false" autoCP="false" newDocDefaultSetting="false" />
+    <GUIConfig name="MISC" openSaveDir="false" />
+    <GUIConfig name="MISC" detectEncoding="true" />
+    <GUIConfig name="MISC" autoSave="false" />
+    <GUIConfig name="MISC" styleMRU="true" />
+    <GUIConfig name="MISC" rememberLastSession="false" />
+    <GUIConfig name="MISC" mainGUIStatus="false" />
+    <GUIConfig name="MISC" check4Update="false" />
+    <GUIConfig name="MISC" enableNotepad2Function="false" />
+    <GUIConfig name="MISC" enablePluginFunction="false" />
+    <GUIConfig name="MISC" enableCloseAllFunction="false" />
+    <GUIConfig name="MISC" enableMultiInstance="false" />
+    <GUIConfig name="MISC" enableTabsPosition="false" />
+    <GUIConfig name="MISC" enableTabSwitcher="false" />
+    <GUIConfig name="MISC" tabPosition="0" />
+    <GUIConfig name="MISC" enableTabAtRight="false" />
+    <GUIConfig name="MISC" themeSwitcher="false" />
+    <GUIConfig name="MISC" hideMenuBar="false" />
+    <GUIConfig name="MISC" hideToolBar="false" />
+    <GUIConfig name="statusBar="false" />
+    <GUIConfig name="MRU" />
+    <GUIConfig name="FileOpenDialog" />
+    <GUIConfig name="FileSaveDialog" />
+    <GUIConfig name="FindHistory" />
+    <GUIConfig name="ReplaceHistory" />
+    <GUIConfig name="FindHistory" />
+    <GUIConfig name="History" />
+    <GUIConfig name="ShortcutMapper" />
+    <GUIConfig name="UserKeywords" />
+    <GUIConfig name="UserDefinedLangExt" />
+    <GUIConfig name="macros" />
+    <GUIConfig name="ScintillaGlobalSettings" />
+    <GUIConfig name="File association" />
+</NotepadPlus>

@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-11-20 10:52:56",
+  "working_directory": "E:\\GitHub3\\notepad_abc",
+  "config_analysis": {
+    "config_files": {
+      "config.xml": {
+        "exists": false
+      },
+      "nativeLang.xml": {
+        "exists": false
+      },
+      "shortcuts.xml": {
+        "exists": false
+      },
+      "stylers.xml": {
+        "exists": false
+      },
+      "themes/theme.xml": {
+        "exists": false
+      },
+      "plugins/config.ini": {
+        "exists": false
+      }
+    },
+    "total_files": 6,
+    "missing_files": [
+      "config.xml",
+      "nativeLang.xml",
+      "shortcuts.xml",
+      "stylers.xml",
+      "themes/theme.xml",
+      "plugins/config.ini"
+    ]
+  },
+  "permission_analysis": {
+    ".": {
+      "exists": true,
+      "can_read": true,
+      "can_write": true,
+      "can_execute": true,
+      "can_create_files": true,
+      "error": null
+    },
+    "config": {
+      "exists": false,
+      "can_read": false,
+      "can_write": false,
+      "can_execute": false,
+      "can_create_files": false
+    },
+    "bin": {
+      "exists": true,
+      "can_read": true,
+      "can_write": true,
+      "can_execute": true,
+      "can_create_files": true,
+      "error": null
+    },
+    "themes": {
+      "exists": false,
+      "can_read": false,
+      "can_write": false,
+      "can_execute": false,
+      "can_create_files": false
+    }
+  },
+  "process_analysis": {
+    "process_id": 27112,
+    "process_state": "运行中",
+    "windows_found": 0,
+    "windows": []
+  }
+}

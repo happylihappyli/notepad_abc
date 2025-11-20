@@ -175,15 +175,16 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		sessionLoadingTime = std::chrono::steady_clock::now() - sessionLoadingStartTP;
 	}
 
-	if (false) // 强制禁用隐藏窗口逻辑
+	if (nppParams.doFunctionListExport() || nppParams.doPrintAndExit())
 	{
 		::ShowWindow(_hSelf, SW_HIDE);
 	}
-	else if (true) // 强制显示窗口
+	else if (!cmdLineParams->_isPreLaunch)
 	{
-		::ShowWindow(_hSelf, SW_SHOW); // 总是显示窗口
-		if (nppGUI._isMaximized)
-			::ShowWindow(_hSelf, SW_MAXIMIZE); // 如果配置了最大化，则最大化
+		if (cmdLineParams->isPointValid())
+			::ShowWindow(_hSelf, SW_SHOW);
+		else
+			::ShowWindow(_hSelf, nppGUI._isMaximized ? SW_MAXIMIZE : SW_SHOW);
 	}
 	else
 	{

@@ -1003,17 +1003,43 @@ NppParameters::NppParameters()
 	//Get windows version
 	_winVersion = getWindowsVersion();
 
-	// Prepare for default path
+	// Prepare for default path with proper error checking
 	wchar_t nppPath[MAX_PATH];
-	::GetModuleFileName(NULL, nppPath, MAX_PATH);
-
-	PathRemoveFileSpec(nppPath);
+	DWORD pathLength = ::GetModuleFileName(NULL, nppPath, MAX_PATH);
+	
+	// 检查GetModuleFileName是否成功
+	if (pathLength == 0 || pathLength >= MAX_PATH)
+	{
+		// 如果失败，使用当前工作目录作为后备
+		wprintf(L"[调试] GetModuleFileName失败，使用当前目录作为程序路径\n");
+		::GetCurrentDirectory(MAX_PATH, nppPath);
+	}
+	else
+	{
+		// 成功获取模块路径，移除文件名部分
+		PathRemoveFileSpec(nppPath);
+	}
+	
 	_nppPath = nppPath;
+	wprintf(L"[调试] 程序路径设置为: %s\n", _nppPath.c_str());
 
-	//Initialize current directory to startup directory
+	//Initialize current directory to startup directory with proper error checking
 	wchar_t curDir[MAX_PATH];
-	::GetCurrentDirectory(MAX_PATH, curDir);
-	_currentDirectory = curDir;
+	DWORD dirLength = ::GetCurrentDirectory(MAX_PATH, curDir);
+	
+	// 检查GetCurrentDirectory是否成功
+	if (dirLength == 0 || dirLength >= MAX_PATH)
+	{
+		// 如果失败，使用程序目录作为当前目录
+		wprintf(L"[调试] GetCurrentDirectory失败，使用程序目录作为当前目录\n");
+		_currentDirectory = _nppPath;
+	}
+	else
+	{
+		_currentDirectory = curDir;
+	}
+	
+	wprintf(L"[调试] 当前目录设置为: %s\n", _currentDirectory.c_str());
 
 	_appdataNppDir.clear();
 	std::wstring notepadStylePath(_nppPath);

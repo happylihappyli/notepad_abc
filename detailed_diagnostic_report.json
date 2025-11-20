@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-11-20 10:56:17",
+  "working_directory": "E:\\GitHub3\\notepad_abc",
+  "files_status": {
+    "config.xml": {
+      "exists": true,
+      "type": "file",
+      "size": 5105
+    },
+    "nativeLang.xml": {
+      "exists": true,
+      "type": "file",
+      "size": 172
+    },
+    "shortcuts.xml": {
+      "exists": true,
+      "type": "file",
+      "size": 3156
+    },
+    "stylers.xml": {
+      "exists": true,
+      "type": "file",
+      "size": 228934
+    },
+    "contextMenu.xml": {
+      "exists": true,
+      "type": "file",
+      "size": 668
+    },
+    "doLocalConf.xml": {
+      "exists": true,
+      "type": "file",
+      "size": 127
+    },
+    "themes": {
+      "exists": true,
+      "type": "directory"
+    },
+    "plugins": {
+      "exists": true,
+      "type": "directory"
+    },
+    "bin/notepad_abc_new.exe": {
+      "exists": true,
+      "type": "file",
+      "size": 8164864
+    },
+    "bin/bin": {
+      "exists": true,
+      "type": "directory"
+    }
+  },
+  "process_info": {
+    "pid": 11396,
+    "name": "notepad_abc_new.exe",
+    "status": "running",
+    "create_time": 1763607368.685118,
+    "cmdline": [
+      "bin\\notepad_abc_new.exe"
+    ],
+    "memory": {
+      "rss": 19406848,
+      "vms": 9506816
+    },
+    "cpu_percent": 0.0,
+    "num_threads": 4,
+    "num_handles": 168
+  },
+  "missing_files": []
+}

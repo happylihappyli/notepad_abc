@@ -1,5 +1,0 @@
-
-EXPORTS
-    VarUI1FromI4 @381
-    SysAllocStringLen
-    SysFreeString

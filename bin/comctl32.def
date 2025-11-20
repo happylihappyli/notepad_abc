@@ -1,7 +1,0 @@
-EXPORTS
-InitCommonControls @17
-RemoveWindowSubclass @412
-SetWindowSubclass @410
-DefSubclassProc @413
-__Ordinal381 @381
-__Ordinal411 @411

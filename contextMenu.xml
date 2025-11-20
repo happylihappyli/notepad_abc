@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+    <ScintillaContextMenu>
+        <Item id="1"/>
+        <Item id="2"/>
+        <Item id="3"/>
+        <Item sep="yes"/>
+        <Item id="40001"/>
+        <Item id="40002"/>
+        <Item id="40003"/>
+        <Item sep="yes"/>
+        <Item id="40004"/>
+        <Item id="40005"/>
+        <Item sep="yes"/>
+        <Item id="40006"/>
+        <Item id="40007"/>
+        <Item sep="yes"/>
+        <Item id="40008"/>
+        <Item id="40009"/>
+        <Item sep="yes"/>
+        <Item id="41001"/>
+        <Item id="41002"/>
+        <Item id="41003"/>
+        <Item sep="yes"/>
+        <Item id="42001"/>
+        <Item id="42002"/>
+        <Item id="42003"/>
+        <Item sep="yes"/>
+        <Item id="43001"/>
+        <Item id="43002"/>
+        <Item id="43003"/>
+        <Item id="43004"/>
+        <Item id="43005"/>
+    </ScintillaContextMenu>
+</NotepadPlus>

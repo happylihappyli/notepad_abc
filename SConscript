@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Notepad++ SConscript构建脚本
 基于CMakeLists.txt的改进版本
@@ -82,7 +82,7 @@ env.Append(LIBPATH=[
 ])
 
 # 设置目标文件名
-target_name = 'notepad_abc_new.exe'
+target_name = 'notepad_abc.exe'
 
 # 源文件列表 - 基于CMakeLists.txt
 src_files = [

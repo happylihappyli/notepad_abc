@@ -9,3 +9,4 @@
 *.dblite
 *.exe
 *.log
+bin/categories.json

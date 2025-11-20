@@ -207,6 +207,9 @@ def configure_link_options(env):
     
     # 链接标志 - 基于Visual Studio项目文件的完整链接器选项
     linkflags = [
+        # '/NODEFAULTLIB:msvcprt.lib',     # 允许使用动态Release C++标准库
+        # '/NODEFAULTLIB:ucrt.lib',         # 允许使用动态Release UCRT
+        # '/NODEFAULTLIB:vcruntime.lib',    # 允许使用动态Release C++运行时
         '/SUBSYSTEM:WINDOWS,6.00',  # 指定子系统版本，与Visual Studio一致
         '/VERSION:1.0',
         '/DYNAMICBASE',              # 启用ASLR
