@@ -121,6 +121,13 @@ public:
 	// 添加display方法的声明
 	void display(bool toShow = true) const override;
 
+	// 设置对话框相关方法
+	void showSettingsDialog();
+
+	// 分类管理器访问方法（用于对话框过程）
+	CategoryManager* getCategoryManager() { return &_categoryManager; }
+	const CategoryManager* getCategoryManager() const { return &_categoryManager; }
+
 private:
 	bool registerWindowClass(HINSTANCE hInst);
 
@@ -216,8 +223,6 @@ private:
 	HMENU _hGlobalMenu = NULL;
 	HMENU _hFileListMenu = NULL;  // 新增：文件列表右键菜单
 	VerticalFileSwitcherListView _fileListView;
-	HWND _hFontSizeCombo = nullptr; // 字体大小下拉框句柄
-	HWND _hFontSizeLabel = nullptr; // 字体大小标签句柄
 	CategoryManager _categoryManager; // 分类管理器
 	std::vector<HWND> _categoryButtons; // 分类按钮句柄数组
 	HWND _currentCategoryButton = nullptr; // 当前选中的分类按钮

@@ -254,6 +254,50 @@ FileCategory* CategoryManager::getCategoryByName(const std::wstring& name) {
 }
 
 /**
+ * @brief 重命名分类
+ */
+bool CategoryManager::renameCategory(const std::wstring& oldName, const std::wstring& newName) {
+    if (oldName == newName) {
+        return true; // 名称相同，无需重命名
+    }
+    
+    // 检查新名称是否已存在
+    if (getCategoryByName(newName)) {
+        return false; // 新名称已存在
+    }
+    
+    // 查找并重命名分类
+    for (auto& category : m_categories) {
+        if (category.name == oldName) {
+            category.name = newName;
+            return saveConfig();
+        }
+    }
+    
+    return false; // 原分类不存在
+}
+
+/**
+ * @brief 重命名分类（根据ID）
+ */
+bool CategoryManager::renameCategoryById(const std::wstring& categoryId, const std::wstring& newName) {
+    // 首先根据新名称查找是否已存在
+    if (getCategoryByName(newName)) {
+        return false; // 新名称已存在
+    }
+    
+    // 查找并重命名分类
+    for (auto& category : m_categories) {
+        if (category.id == categoryId) {
+            category.name = newName;
+            return saveConfig();
+        }
+    }
+    
+    return false; // 原分类不存在
+}
+
+/**
  * @brief 设置文件的分类
  */
 bool CategoryManager::setFileCategory(const std::wstring& filePath, const std::wstring& categoryId) {

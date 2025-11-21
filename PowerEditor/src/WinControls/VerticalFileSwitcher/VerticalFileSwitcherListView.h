@@ -32,6 +32,7 @@
 #define FS_CLMNPATH				"ColumnPath"
 #define FS_LVGROUPS				"ListGroups"
 #define FS_FONTSIZE				"FontSize"
+#define FS_SETTINGS				"Settings"
 
 
 class VerticalFileSwitcherListView : public Window

@@ -29,6 +29,12 @@
             "id": "study",
             "name": "学习",
             "order": 4
+        },
+        {
+            "description": "",
+            "id": "cat_5",
+            "name": "新分类",
+            "order": 5
         }
     ],
     "fileMappings": []

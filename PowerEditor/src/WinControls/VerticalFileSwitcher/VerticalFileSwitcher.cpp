@@ -1,4 +1,4 @@
-
+﻿
 
 
 
@@ -330,78 +330,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 		// 创建分类按钮栏
 		createCategoryButtons();
 		
-		// 初始化字体大小下拉框
-		_hFontSizeCombo = ::GetDlgItem(_hSelf, IDC_FONTSIZE_COMBO_VFS);
-		if (_hFontSizeCombo)
-		{
-			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取字体大小下拉框句柄: %p", _hFontSizeCombo);
-			
-			// 获取已存在的字体大小标签句柄（从资源文件加载）
-			_hFontSizeLabel = ::GetDlgItem(_hSelf, IDC_FONTSIZE_STATIC_VFS);
-			
-			if (_hFontSizeLabel)
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 字体大小标签获取成功，句柄: %p", _hFontSizeLabel);
-				// 使用本地化系统设置字体大小标签文本
-				NppParameters& nppParams = NppParameters::getInstance();
-				NativeLangSpeaker* pNativeSpeaker = nppParams.getNativeLangSpeaker();
-				wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
-				if (!fontSizeStr.empty())
-				{
-					::SetWindowText(_hFontSizeLabel, fontSizeStr.c_str());
-					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 设置字体大小标签文本为: %s", fontSizeStr.c_str());
-				}
-				else
-				{
-					// 如果本地化文本为空，使用默认文本
-					::SetWindowText(_hFontSizeLabel, L"字体大小:");
-					debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 使用默认字体大小标签文本");
-				}
-				
-				// 设置字体
-				HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
-				if (hFont)
-				{
-					::SendMessage(_hFontSizeLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
-				}
-			}
-			else
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取字体大小标签句柄！");
-			}
-				
-				// 添加字体大小选项到下拉框
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"6");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"8");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"10");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"12");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"14");
-				::SendMessage(_hFontSizeCombo, CB_ADDSTRING, 0, (LPARAM)L"16");  // 添加16号字体
-				
-				// 加载当前字体大小配置并设置下拉框选中项
-				NppParameters& nppParams = NppParameters::getInstance();
-				int fontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
-				wchar_t fontSizeStr[10];
-				swprintf(fontSizeStr, 10, L"%d", fontSize);
-				
-				// 查找并选中当前字体大小
-				int index = ::SendMessage(_hFontSizeCombo, CB_FINDSTRINGEXACT, -1, (LPARAM)fontSizeStr);
-				if (index != CB_ERR)
-				{
-					::SendMessage(_hFontSizeCombo, CB_SETCURSEL, index, 0);
-				}
-				else
-				{
-					// 如果找不到，默认选中10号字体
-					::SendMessage(_hFontSizeCombo, CB_SETCURSEL, 2, 0);
-				}
-			}
-			else
-			{
-				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_FONTSIZE_COMBO_VFS控件句柄！");
-			}
-			
-			if (hListView)
+		if (hListView)
 			{
 				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - ListView控件有效，开始初始化");
 				
@@ -667,7 +596,7 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
         case WM_SIZE:
         {
-	int width = LOWORD(lParam);
+			int width = LOWORD(lParam);
             int height = HIWORD(lParam);
 			
 			// 调整文件列表视图大小
@@ -705,6 +634,15 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
 		case WM_COMMAND:
 		{
+			// 处理设置按钮点击事件
+			if (LOWORD(wParam) == IDM_SETTINGS_VFS)// IDC_SETTINGS_BUTTON_VFS)
+			{
+				// 显示设置对话框
+				showSettingsDialog();
+				debugLog(L"VerticalFileSwitcher::WM_COMMAND - 设置按钮被点击，已显示设置对话框");
+				break;
+			}
+			
 			// 处理分类按钮点击事件（用于过滤查看文件）
 			if (LOWORD(wParam) >= CATEGORY_BUTTON_START && LOWORD(wParam) <= CATEGORY_BUTTON_END)
 			{
@@ -728,26 +666,6 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					_fileListView.onFileCategoryChange(selectedCategory.name);
 					
 					debugLog(L"VerticalFileSwitcher::WM_COMMAND - 文件分类已更改为: %s", selectedCategory.name.c_str());
-				}
-			}
-			// 处理字体下拉框选择变化
-			else if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == IDC_FONTSIZE_COMBO_VFS)
-			{
-				// 获取选中的字体大小
-				int selectedIndex = ::SendMessage(_hFontSizeCombo, CB_GETCURSEL, 0, 0);
-				if (selectedIndex != CB_ERR)
-				{
-					wchar_t fontSizeStr[10] = {0};
-					::SendMessage(_hFontSizeCombo, CB_GETLBTEXT, selectedIndex, (LPARAM)fontSizeStr);
-					int fontSize = _wtoi(fontSizeStr);
-					
-					// 更新列表视图的字体大小
-					_fileListView.setFontSize(fontSize);
-					
-					// 保存到配置
-					NppParameters& nppParams = NppParameters::getInstance();
-					nppParams.getNppGUI()._fileSwitcherFontSize = fontSize;
-					nppParams.saveConfig_xml();  // 修复方法名
 				}
 			}
 			else
@@ -786,10 +704,10 @@ void VerticalFileSwitcher::createCategoryButtons()
 	
 	// 创建分类按钮栏（用于过滤查看文件）
 	int buttonX = 5;
-	int buttonY = 35;
-	int buttonWidth = 60;
-	int buttonHeight = 20;
-	int buttonSpacing = 5;
+	int buttonY = 5;  // 调整为从顶部开始，因为删除了字体控件
+	int buttonWidth = 80;  // 增大按钮宽度从60到80
+	int buttonHeight = 28; // 增大按钮高度从20到28
+	int buttonSpacing = 8; // 增大按钮间距从5到8
 	
 	for (size_t i = 0; i < categories.size(); ++i)
 	{
@@ -809,11 +727,35 @@ void VerticalFileSwitcher::createCategoryButtons()
 		{
 			_categoryButtons.push_back(hButton);
 			
-			// 设置字体
+			// 设置分类按钮的字体（使用更大的字号）
 			HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
 			if (hFont)
 			{
-				::SendMessage(hButton, WM_SETFONT, (WPARAM)hFont, TRUE);
+				// 获取当前字体信息并创建一个更大字号的字体
+				LOGFONT lf;
+				if (GetObject(hFont, sizeof(LOGFONT), &lf))
+				{
+					lf.lfHeight = 16;  // 设置为16号字体，比原来的更大
+					lf.lfWeight = FW_NORMAL; // 正常粗细
+					wcscpy_s(lf.lfFaceName, L"宋体"); // 使用宋体字体
+					
+					HFONT hNewFont = ::CreateFontIndirect(&lf);
+					if (hNewFont)
+					{
+						::SendMessage(hButton, WM_SETFONT, (WPARAM)hNewFont, TRUE);
+						// 注意：这里不删除字体，因为按钮可能还会使用
+					}
+					else
+					{
+						// 如果创建新字体失败，使用原来的字体
+						::SendMessage(hButton, WM_SETFONT, (WPARAM)hFont, TRUE);
+					}
+				}
+				else
+				{
+					// 如果获取字体信息失败，使用原来的字体
+					::SendMessage(hButton, WM_SETFONT, (WPARAM)hFont, TRUE);
+				}
 			}
 			
 			// 更新按钮位置
@@ -893,6 +835,276 @@ void VerticalFileSwitcher::updateCategoryButtonState(HWND selectedButton)
 	}
 }
 
+// 设置对话框窗口过程
+static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			// 获取VerticalFileSwitcher实例指针
+			VerticalFileSwitcher* pThis = reinterpret_cast<VerticalFileSwitcher*>(lParam);
+			::SetWindowLongPtr(hwndDlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pThis));
+			
+			// 初始化字体大小滑块（6-16号字体）
+			HWND hFontSlider = ::GetDlgItem(hwndDlg, IDC_FONTSIZE_SLIDER);
+			if (hFontSlider)
+			{
+				::SendMessage(hFontSlider, TBM_SETRANGE, TRUE, MAKELPARAM(6, 16));
+				::SendMessage(hFontSlider, TBM_SETTICFREQ, 1, 0);
+				
+				// 获取当前字体大小并设置滑块位置
+				NppParameters& nppParams = NppParameters::getInstance();
+				int currentFontSize = nppParams.getNppGUI()._fileSwitcherFontSize;
+				if (currentFontSize < 6) currentFontSize = 6;
+				if (currentFontSize > 16) currentFontSize = 16;
+				
+				::SendMessage(hFontSlider, TBM_SETPOS, TRUE, currentFontSize);
+				
+				// 更新字体大小显示
+				wchar_t fontSizeStr[10];
+				swprintf(fontSizeStr, 10, L"%d", currentFontSize);
+				::SetDlgItemText(hwndDlg, IDC_FONTSIZE_DISPLAY, fontSizeStr);
+				
+				debugLog(L"设置对话框初始化：当前字体大小 = %d", currentFontSize);
+			}
+			
+			// 初始化分类列表
+			if (pThis)
+			{
+				HWND hCategoryList = ::GetDlgItem(hwndDlg, IDC_CATEGORY_LIST);
+				if (hCategoryList)
+				{
+					// 清空列表
+					::SendMessage(hCategoryList, LB_RESETCONTENT, 0, 0);
+					
+					// 更新分类列表显示
+					const auto& categories = pThis->getCategoryManager()->getCategories();
+					for (const auto& category : categories)
+					{
+						int index = ::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str()));
+						::SendMessage(hCategoryList, LB_SETITEMDATA, index, reinterpret_cast<LPARAM>(&category));
+					}
+					
+					debugLog(L"设置对话框初始化：加载了 %d 个分类", categories.size());
+				}
+			}
+			return TRUE;
+		}
+		
+		case WM_HSCROLL:
+		case WM_VSCROLL:
+		{
+			// 处理滑块消息
+			if (LOWORD(wParam) != SB_THUMBPOSITION && LOWORD(wParam) != SB_ENDSCROLL)
+			{
+				break;
+			}
+			
+			HWND hFontSlider = ::GetDlgItem(hwndDlg, IDC_FONTSIZE_SLIDER);
+			if (hFontSlider == (HWND)lParam)
+			{
+				int fontSize = ::SendMessage(hFontSlider, TBM_GETPOS, 0, 0);
+				
+				// 更新字体大小显示
+				wchar_t fontSizeStr[10];
+				swprintf(fontSizeStr, 10, L"%d", fontSize);
+				::SetDlgItemText(hwndDlg, IDC_FONTSIZE_DISPLAY, fontSizeStr);
+				
+				debugLog(L"设置对话框：字体大小滑块位置变化 = %d", fontSize);
+			}
+			break;
+		}
+		
+		case WM_COMMAND:
+		{
+			VerticalFileSwitcher* pThis = reinterpret_cast<VerticalFileSwitcher*>(::GetWindowLongPtr(hwndDlg, GWLP_USERDATA));
+			
+			switch (LOWORD(wParam))
+			{
+				case IDOK:
+				{
+					// 处理确定按钮：保存设置
+					HWND hFontSlider = ::GetDlgItem(hwndDlg, IDC_FONTSIZE_SLIDER);
+					if (hFontSlider && pThis)
+					{
+						int fontSize = ::SendMessage(hFontSlider, TBM_GETPOS, 0, 0);
+						
+						// 更新配置
+						NppParameters& nppParams = NppParameters::getInstance();
+						nppParams.getNppGUI()._fileSwitcherFontSize = fontSize;
+						nppParams.saveConfig_xml();
+						
+						// 更新文件列表的字体大小
+						pThis->setFontSize(fontSize);
+						
+						debugLog(L"设置对话框：保存字体大小设置 = %d", fontSize);
+					}
+					
+					::EndDialog(hwndDlg, IDOK);
+					return TRUE;
+				}
+				
+				case IDCANCEL:
+				{
+					// 处理取消按钮：不保存设置
+					debugLog(L"设置对话框：取消设置");
+					::EndDialog(hwndDlg, IDCANCEL);
+					return TRUE;
+				}
+				
+				case IDC_ADD_CATEGORY:
+				{
+					if (pThis)
+					{
+						// 添加分类功能 - 简化版本，使用固定名称
+						wstring newCategoryName = L"新分类";
+						
+						// 使用MessageBox确认添加
+						wchar_t buffer[200];
+						wsprintf(buffer, L"确定要添加名为'%s'的分类吗？", newCategoryName.c_str());
+						if (::MessageBox(hwndDlg, buffer, L"添加分类", MB_YESNO | MB_ICONQUESTION) == IDYES)
+						{
+							// 添加新分类
+						FileCategory newCategory;
+						newCategory.id = L"cat_" + std::to_wstring(pThis->getCategoryManager()->getCategories().size());
+						newCategory.name = newCategoryName;
+						newCategory.description = L"";
+						newCategory.order = static_cast<int>(pThis->getCategoryManager()->getCategories().size());
+							
+							pThis->getCategoryManager()->addCategory(newCategory);
+							
+							// 重新加载分类列表
+							HWND hCategoryList = ::GetDlgItem(hwndDlg, IDC_CATEGORY_LIST);
+							if (hCategoryList)
+							{
+								::SendMessage(hCategoryList, LB_RESETCONTENT, 0, 0);
+								const auto& categories = pThis->getCategoryManager()->getCategories();
+								for (const auto& category : categories)
+								{
+									int index = ::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str()));
+									::SendMessage(hCategoryList, LB_SETITEMDATA, index, reinterpret_cast<LPARAM>(&category));
+								}
+							}
+							
+							debugLog(L"设置对话框：成功添加分类 '%s'", newCategoryName.c_str());
+						}
+					}
+					return TRUE;
+				}
+				
+				case IDC_DELETE_CATEGORY:
+				{
+					if (pThis)
+					{
+						// 删除分类功能
+						HWND hCategoryList = ::GetDlgItem(hwndDlg, IDC_CATEGORY_LIST);
+						if (hCategoryList)
+						{
+							int selectedIndex = ::SendMessage(hCategoryList, LB_GETCURSEL, 0, 0);
+							if (selectedIndex != LB_ERR)
+							{
+								// 获取选中的分类
+								FileCategory* pCategory = reinterpret_cast<FileCategory*>(
+									::SendMessage(hCategoryList, LB_GETITEMDATA, selectedIndex, 0));
+								
+								if (pCategory && wcscmp(pCategory->name.c_str(), L"全部") != 0)
+								{
+									if (::MessageBox(hwndDlg, L"确定要删除这个分类吗？", L"确认删除", MB_YESNO | MB_ICONQUESTION) == IDYES)
+									{
+										// 删除分类
+										pThis->getCategoryManager()->removeCategory(pCategory->id);
+										
+										// 重新加载分类列表
+										::SendMessage(hCategoryList, LB_RESETCONTENT, 0, 0);
+										const auto& categories = pThis->getCategoryManager()->getCategories();
+										for (const auto& category : categories)
+										{
+											int index = ::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str()));
+											::SendMessage(hCategoryList, LB_SETITEMDATA, index, reinterpret_cast<LPARAM>(&category));
+										}
+										
+										debugLog(L"设置对话框：成功删除分类 '%s'", pCategory->name.c_str());
+									}
+								}
+								else
+								{
+									MessageBox(hwndDlg, L"不能删除默认的'全部'分类！", L"提示", MB_OK | MB_ICONWARNING);
+								}
+							}
+							else
+							{
+								MessageBox(hwndDlg, L"请先选择一个要删除的分类！", L"提示", MB_OK | MB_ICONINFORMATION);
+							}
+						}
+					}
+					return TRUE;
+				}
+				
+				case IDC_RENAME_CATEGORY:
+				{
+					if (pThis)
+					{
+						// 重命名分类功能
+						HWND hCategoryList = ::GetDlgItem(hwndDlg, IDC_CATEGORY_LIST);
+						if (hCategoryList)
+						{
+							int selectedIndex = ::SendMessage(hCategoryList, LB_GETCURSEL, 0, 0);
+							if (selectedIndex != LB_ERR)
+							{
+								// 获取选中的分类
+								FileCategory* pCategory = reinterpret_cast<FileCategory*>(
+									::SendMessage(hCategoryList, LB_GETITEMDATA, selectedIndex, 0));
+								
+								if (pCategory && wcscmp(pCategory->name.c_str(), L"全部") != 0)
+								{
+									if (::MessageBox(hwndDlg, L"重命名功能暂未实现", L"提示", MB_OK | MB_ICONINFORMATION) == IDOK)
+									{
+										debugLog(L"设置对话框：重命名分类功能被调用");
+									}
+								}
+								else
+								{
+									MessageBox(hwndDlg, L"不能重命名默认的'全部'分类！", L"提示", MB_OK | MB_ICONWARNING);
+								}
+							}
+							else
+							{
+								MessageBox(hwndDlg, L"请先选择一个要重命名的分类！", L"提示", MB_OK | MB_ICONINFORMATION);
+							}
+						}
+					}
+					return TRUE;
+				}
+			}
+			break;
+		}
+	}
+	return FALSE;
+}
+
+// 实现设置对话框显示功能
+void VerticalFileSwitcher::showSettingsDialog()
+{
+	debugLog(L"VerticalFileSwitcher::showSettingsDialog - 准备显示设置对话框");
+
+	// 创建设置对话框的模态对话框，传递this指针
+	INT_PTR result = ::DialogBoxParam(_hInst, MAKEINTRESOURCE(IDD_DOCLIST_SETTINGS), _hSelf, SettingsDlgProc, reinterpret_cast<LPARAM>(this));
+
+	if (result == IDOK)
+	{
+		debugLog(L"VerticalFileSwitcher::showSettingsDialog - 设置对话框已确认，配置已保存");
+	}
+	else if (result == IDCANCEL)
+	{
+		debugLog(L"VerticalFileSwitcher::showSettingsDialog - 设置对话框已取消");
+	}
+	else
+	{
+		debugLog(L"VerticalFileSwitcher::showSettingsDialog - 设置对话框创建失败，错误码: %d", result);
+	}
+}
+
 void VerticalFileSwitcher::initPopupMenus()
 {
     // 初始化全局菜单
@@ -922,6 +1134,13 @@ void VerticalFileSwitcher::initPopupMenus()
     ::InsertMenu(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
     ::InsertMenu(_hGlobalMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     ::InsertMenu(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
+    
+    // 添加分隔符
+    ::InsertMenu(_hGlobalMenu, 0, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
+    
+    // 添加设置菜单项
+    wstring settingsStr = pNativeSpeaker->getAttrNameStr(L"Settings", FS_ROOTNODE, FS_SETTINGS);
+    ::InsertMenu(_hGlobalMenu, IDM_SETTINGS_VFS, MF_BYCOMMAND | MF_STRING, IDM_SETTINGS_VFS, settingsStr.c_str());
     
     // 添加字体大小菜单
     HMENU hFontSizeMenu = ::CreatePopupMenu();
@@ -987,7 +1206,7 @@ void VerticalFileSwitcher::initFileListContextMenu()
     
     // 添加字体大小菜单
     HMENU hFontSizeMenu = ::CreatePopupMenu();
-    wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
+    wstring fontSizeStr = L"设置字体"; //pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
     ::InsertMenu(hFontSizeMenu, FONTSIZE_6, MF_BYCOMMAND | MF_STRING, FONTSIZE_6, L"6");
     ::InsertMenu(hFontSizeMenu, FONTSIZE_8, MF_BYCOMMAND | MF_STRING, FONTSIZE_8, L"8");
     ::InsertMenu(hFontSizeMenu, FONTSIZE_10, MF_BYCOMMAND | MF_STRING, FONTSIZE_10, L"10");
@@ -1006,7 +1225,14 @@ void VerticalFileSwitcher::initFileListContextMenu()
     // 添加文件特定的菜单项
     // 添加分隔符
     ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
-    
+
+    // 添加设置菜单项
+    wstring settingsStr = L"设置"; //pNativeSpeaker->getAttrNameStr(L"Settings", FS_ROOTNODE, FS_SETTINGS);
+    ::AppendMenu(_hFileListMenu, MF_STRING, IDM_SETTINGS_VFS, settingsStr.c_str());
+
+    // 添加分隔符
+    ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
+
     // 添加标签颜色子菜单
     HMENU hTabColorMenu = ::CreatePopupMenu();
     ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 0, L"红色标签");
@@ -1071,7 +1297,9 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 		{
 			bool& isExtColumn = NppParameters::getInstance().getNppGUI()._fileSwitcherWithoutExtColumn;
 			isExtColumn = !isExtColumn;
+			// 同时更新全局菜单和文件列表菜单的检查状态
 			::CheckMenuItem(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
+			::CheckMenuItem(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
 			reload();
 		}
 		break;
@@ -1079,7 +1307,9 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 		{
 			bool& isPathColumn = NppParameters::getInstance().getNppGUI()._fileSwitcherWithoutPathColumn;
 			isPathColumn = !isPathColumn;
+			// 同时更新全局菜单和文件列表菜单的检查状态
 			::CheckMenuItem(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | (isPathColumn ? MF_UNCHECKED : MF_CHECKED));
+			::CheckMenuItem(_hFileListMenu, CLMNPATH_ID, MF_BYCOMMAND | (isPathColumn ? MF_UNCHECKED : MF_CHECKED));
 			reload();
 		}
 		break;
@@ -1087,7 +1317,9 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 		{
 			bool& isListViewGroups = NppParameters::getInstance().getNppGUI()._fileSwitcherDisableListViewGroups;
 			isListViewGroups = !isListViewGroups;
+			// 同时更新全局菜单和文件列表菜单的检查状态
 			::CheckMenuItem(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | (isListViewGroups ? MF_UNCHECKED : MF_CHECKED));
+			::CheckMenuItem(_hFileListMenu, LVGROUPS_ID, MF_BYCOMMAND | (isListViewGroups ? MF_UNCHECKED : MF_CHECKED));
 			reload();
 		}
 		break;
@@ -1123,6 +1355,18 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 16;
 			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
 			break;
+		
+		// 设置菜单处理
+		case IDM_SETTINGS_VFS:
+		{
+			// 处理设置命令
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 设置命令被触发");
+			
+			// 发送消息打开设置对话框 - 使用标准的IDM_SETTING_PREFERENCE
+			::SendMessage(_hParent, NPPM_MENUCOMMAND, 0, IDM_SETTING_PREFERENCE);
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已发送标准设置对话框打开消息");
+		}
+		break;
 
 	}
 }

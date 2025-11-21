@@ -59,6 +59,7 @@
     <GUIConfig name="MISC" enablePluginFunction="false" />
     <GUIConfig name="MISC" enableCloseAllFunction="false" />
     <GUIConfig name="MISC" enableMultiInstance="false" />
+    <GUIConfig name="multiInst" setting="0" documentList="yes" />
     <GUIConfig name="MISC" enableTabsPosition="false" />
     <GUIConfig name="MISC" enableTabSwitcher="false" />
     <GUIConfig name="MISC" tabPosition="0" />

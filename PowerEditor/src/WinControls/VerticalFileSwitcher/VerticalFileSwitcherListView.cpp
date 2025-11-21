@@ -1,5 +1,6 @@
 #include <shlwapi.h>
 #include <stdexcept>
+#include <iostream>
 #include "VerticalFileSwitcherListView.h"
 #include "VerticalFileSwitcher_rc.h"
 #include "Buffer.h"
@@ -789,6 +790,9 @@ void VerticalFileSwitcherListView::initContextMenu(HMENU hGlobalMenu)
         {
             const auto& categories = _categoryManager->getCategories();
             
+			
+       		debugLog(L"VerticalFileSwitcherListView::initContextMenu - 添加分类");
+			std::cout << "分类数量: " << categories.size() << std::endl;
             // 添加所有分类到菜单
             for (size_t i = 0; i < categories.size(); ++i)
             {

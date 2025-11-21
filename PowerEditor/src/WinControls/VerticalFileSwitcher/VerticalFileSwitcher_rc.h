@@ -19,27 +19,45 @@
 
 #define	IDD_DOCLIST		3000
 #define	IDC_LIST_DOCLIST    (IDD_DOCLIST + 1)
-#define	IDC_FONTSIZE_STATIC_VFS 2209  // 使用与本地化文件一致的ID
-#define	IDC_FONTSIZE_COMBO_VFS  2210  // 为下拉框分配相邻ID
+
 
 // 分类菜单ID范围
-#define	CATEGORY_MENU_START  (IDD_DOCLIST + 100)
-#define	CATEGORY_MENU_END    (CATEGORY_MENU_START + 50)
-#define	CATEGORY_MENU_ID     (IDD_DOCLIST + 99)
+#define	CATEGORY_MENU_START  3060
+#define	CATEGORY_MENU_END    3070
+#define	CATEGORY_MENU_ID     3059
 
 // 分类按钮ID范围
-#define	CATEGORY_BUTTON_START  (IDD_DOCLIST + 150)
-#define	CATEGORY_BUTTON_END    (CATEGORY_BUTTON_START + 50)
+#define	CATEGORY_BUTTON_START  3070
+#define	CATEGORY_BUTTON_END    3080
 
 // 字体大小菜单ID
-#define	FONTSIZE_6           (IDD_DOCLIST + 200)
-#define	FONTSIZE_8           (IDD_DOCLIST + 201)
-#define	FONTSIZE_10          (IDD_DOCLIST + 202)
-#define	FONTSIZE_12          (IDD_DOCLIST + 203)
-#define	FONTSIZE_14          (IDD_DOCLIST + 204)
-#define	FONTSIZE_16          (IDD_DOCLIST + 205)  // 添加缺失的定义
+#define	FONTSIZE_6           3080
+#define	FONTSIZE_8           3081
+#define	FONTSIZE_10          3082
+#define	FONTSIZE_12          3083
+#define	FONTSIZE_14          3084
+#define	FONTSIZE_16          3085  // 添加缺失的定义
 
 // 标签颜色菜单ID
-#define	TAB_COLOR_MENU_START  (IDD_DOCLIST + 250)
-#define	TAB_COLOR_MENU_END    (TAB_COLOR_MENU_START + 10)
-#define	TAB_COLOR_MENU_ID     (IDD_DOCLIST + 249)
+#define	TAB_COLOR_MENU_START  3090
+#define	TAB_COLOR_MENU_END    3100
+#define	TAB_COLOR_MENU_ID     3089
+
+// 设置按钮ID
+#define	IDC_SETTINGS_BUTTON_VFS 3099
+
+// 设置菜单ID
+#define	IDM_SETTINGS_VFS 3100
+
+// 设置对话框ID
+#define	IDD_DOCLIST_SETTINGS 3050
+// 输入对话框ID
+#define IDD_DOCLIST_INPUT_DLG 3051
+
+// 设置对话框控件ID
+#define	IDC_FONTSIZE_SLIDER 3051
+#define	IDC_FONTSIZE_DISPLAY 3052
+#define	IDC_CATEGORY_LIST 3053
+#define	IDC_ADD_CATEGORY 3054
+#define	IDC_DELETE_CATEGORY 3055
+#define	IDC_RENAME_CATEGORY 3056

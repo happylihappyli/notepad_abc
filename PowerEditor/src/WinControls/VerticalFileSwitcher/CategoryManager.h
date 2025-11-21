@@ -191,6 +191,20 @@ public:
     FileCategory* getCategoryByName(const std::wstring& name);
     
     /**
+     * @brief 重命名分类
+     * @param oldName 原名称
+     * @param newName 新名称
+     */
+    bool renameCategory(const std::wstring& oldName, const std::wstring& newName);
+    
+    /**
+     * @brief 重命名分类（根据ID）
+     * @param categoryId 分类ID
+     * @param newName 新名称
+     */
+    bool renameCategoryById(const std::wstring& categoryId, const std::wstring& newName);
+    
+    /**
      * @brief 设置文件的分类
      * @param filePath 文件路径
      * @param categoryId 分类ID
