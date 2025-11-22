@@ -11,3 +11,6 @@
 *.log
 bin/categories.json
 /test/.godot
+/test
+/fix
+PowerEditor/src/WinControls/VerticalFileSwitcher/VerticalFileSwitcher.res

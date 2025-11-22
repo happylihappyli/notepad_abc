@@ -30,9 +30,15 @@
 #define FS_CLMNNAME				"ColumnName"
 #define FS_CLMNEXT				"ColumnExt"
 #define FS_CLMNPATH				"ColumnPath"
+#define FS_CLMNCATEGORY			"ColumnCategory"  // 新增：分类列配置
 #define FS_LVGROUPS				"ListGroups"
 #define FS_FONTSIZE				"FontSize"
 #define FS_SETTINGS				"Settings"
+
+// 列索引常量
+#define COLUMN_INDEX_NAME       0
+#define COLUMN_INDEX_EXT        1  
+#define COLUMN_INDEX_CATEGORY   2  // 新增：分类列索引
 
 
 class VerticalFileSwitcherListView : public Window

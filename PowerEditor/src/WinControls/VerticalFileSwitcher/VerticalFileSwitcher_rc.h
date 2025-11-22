@@ -20,6 +20,11 @@
 #define	IDD_DOCLIST		3000
 #define	IDC_LIST_DOCLIST    (IDD_DOCLIST + 1)
 
+// 列表视图列ID
+#define	IDC_CLMNNAME_VFS      (IDD_DOCLIST + 2)
+#define	IDC_CLMNEXT_VFS       (IDD_DOCLIST + 3)  
+#define	IDC_CLMNCATEGORY_VFS  (IDD_DOCLIST + 4)  // 分类列ID
+
 
 // 分类菜单ID范围
 #define	CATEGORY_MENU_START  3060
@@ -48,6 +53,9 @@
 
 // 设置菜单ID
 #define	IDM_SETTINGS_VFS 3100
+
+// 编辑分类JSON菜单ID
+#define	IDM_EDIT_CATEGORY_JSON 3101
 
 // 设置对话框ID
 #define	IDD_DOCLIST_SETTINGS 3050

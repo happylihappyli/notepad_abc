@@ -882,7 +882,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 					const auto& categories = pThis->getCategoryManager()->getCategories();
 					for (const auto& category : categories)
 					{
-						int index = ::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str()));
+						int index = static_cast<int>(::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str())));
 						::SendMessage(hCategoryList, LB_SETITEMDATA, index, reinterpret_cast<LPARAM>(&category));
 					}
 					
@@ -904,7 +904,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 			HWND hFontSlider = ::GetDlgItem(hwndDlg, IDC_FONTSIZE_SLIDER);
 			if (hFontSlider == (HWND)lParam)
 			{
-				int fontSize = ::SendMessage(hFontSlider, TBM_GETPOS, 0, 0);
+				int fontSize = static_cast<int>(::SendMessage(hFontSlider, TBM_GETPOS, 0, 0));
 				
 				// 更新字体大小显示
 				wchar_t fontSizeStr[10];
@@ -928,7 +928,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 					HWND hFontSlider = ::GetDlgItem(hwndDlg, IDC_FONTSIZE_SLIDER);
 					if (hFontSlider && pThis)
 					{
-						int fontSize = ::SendMessage(hFontSlider, TBM_GETPOS, 0, 0);
+						int fontSize = static_cast<int>(::SendMessage(hFontSlider, TBM_GETPOS, 0, 0));
 						
 						// 更新配置
 						NppParameters& nppParams = NppParameters::getInstance();
@@ -982,7 +982,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 								const auto& categories = pThis->getCategoryManager()->getCategories();
 								for (const auto& category : categories)
 								{
-									int index = ::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str()));
+									int index = static_cast<int>(::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str())));
 									::SendMessage(hCategoryList, LB_SETITEMDATA, index, reinterpret_cast<LPARAM>(&category));
 								}
 							}
@@ -1001,7 +1001,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 						HWND hCategoryList = ::GetDlgItem(hwndDlg, IDC_CATEGORY_LIST);
 						if (hCategoryList)
 						{
-							int selectedIndex = ::SendMessage(hCategoryList, LB_GETCURSEL, 0, 0);
+							int selectedIndex = static_cast<int>(::SendMessage(hCategoryList, LB_GETCURSEL, 0, 0));
 							if (selectedIndex != LB_ERR)
 							{
 								// 获取选中的分类
@@ -1020,7 +1020,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 										const auto& categories = pThis->getCategoryManager()->getCategories();
 										for (const auto& category : categories)
 										{
-											int index = ::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str()));
+											int index = static_cast<int>(::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str())));
 											::SendMessage(hCategoryList, LB_SETITEMDATA, index, reinterpret_cast<LPARAM>(&category));
 										}
 										
@@ -1049,7 +1049,7 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 						HWND hCategoryList = ::GetDlgItem(hwndDlg, IDC_CATEGORY_LIST);
 						if (hCategoryList)
 						{
-							int selectedIndex = ::SendMessage(hCategoryList, LB_GETCURSEL, 0, 0);
+							int selectedIndex = static_cast<int>(::SendMessage(hCategoryList, LB_GETCURSEL, 0, 0));
 							if (selectedIndex != LB_ERR)
 							{
 								// 获取选中的分类
@@ -1142,6 +1142,10 @@ void VerticalFileSwitcher::initPopupMenus()
     wstring settingsStr = pNativeSpeaker->getAttrNameStr(L"Settings", FS_ROOTNODE, FS_SETTINGS);
     ::InsertMenu(_hGlobalMenu, IDM_SETTINGS_VFS, MF_BYCOMMAND | MF_STRING, IDM_SETTINGS_VFS, settingsStr.c_str());
     
+    // 添加编辑分类JSON菜单项
+    wstring editCategoryJsonStr = L"编辑文件分类JSON";
+    ::InsertMenu(_hGlobalMenu, IDM_EDIT_CATEGORY_JSON, MF_BYCOMMAND | MF_STRING, IDM_EDIT_CATEGORY_JSON, editCategoryJsonStr.c_str());
+    
     // 添加字体大小菜单
     HMENU hFontSizeMenu = ::CreatePopupMenu();
     wstring fontSizeStr = pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
@@ -1167,15 +1171,25 @@ void VerticalFileSwitcher::initPopupMenus()
 // 初始化文件列表右键菜单（包含文档分类功能）
 void VerticalFileSwitcher::initFileListContextMenu()
 {
+    debugLog(L"========== VerticalFileSwitcher::initFileListContextMenu - 开始");
+    
     // 销毁现有的文件列表菜单（如果存在）
     if (_hFileListMenu)
     {
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 销毁现有文件列表菜单");
         ::DestroyMenu(_hFileListMenu);
         _hFileListMenu = NULL;
     }
     
     // 创建新的文件列表菜单（包含文档分类功能）
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 创建新的文件列表菜单");
     _hFileListMenu = ::CreatePopupMenu();
+    
+    if (!_hFileListMenu)
+    {
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 创建文件列表菜单失败");
+        return;
+    }
     
     // 获取本地化语言支持
     NativeLangSpeaker* pNativeSpeaker = NppParameters::getInstance().getNativeLangSpeaker();
@@ -1186,18 +1200,50 @@ void VerticalFileSwitcher::initFileListContextMenu()
     wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
     wstring groupStr = pNativeSpeaker->getAttrNameStr(L"Group by View", FS_ROOTNODE, FS_LVGROUPS);
 
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 开始创建文档分类子菜单");
+
     // 添加文档分类菜单
     HMENU hDocumentCategoryMenu = ::CreatePopupMenu();
+    if (!hDocumentCategoryMenu)
+    {
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 创建文档分类子菜单失败");
+        return;
+    }
+    
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 获取分类数据");
     const auto& categories = _categoryManager.getCategories();
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 获取到分类数量: %d", categories.size());
+    
+    // 检查分类数据
+    if (categories.empty())
+    {
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 警告：分类列表为空，检查CategoryManager是否正确初始化");
+    }
     
     // 添加所有分类到菜单
     for (size_t i = 0; i < categories.size(); ++i)
     {
         UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
-        ::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 添加分类菜单项: %s (ID: %d)", categories[i].name.c_str(), menuId);
+        
+        BOOL result = ::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
+        if (!result)
+        {
+            DWORD error = ::GetLastError();
+            debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 添加分类菜单项失败: %s (ID: %d)，错误码: %d", 
+                categories[i].name.c_str(), menuId, error);
+        }
     }
+    
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 插入文档分类子菜单到主菜单");
     wstring documentCategoryStr = L"文档分类";
-    ::InsertMenu(_hFileListMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
+    BOOL insertResult = ::InsertMenu(_hFileListMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, 
+                                     reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
+    if (!insertResult)
+    {
+        DWORD error = ::GetLastError();
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 插入文档分类子菜单失败，错误码: %d", error);
+    }
     
     ::InsertMenu(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
     ::InsertMenu(_hFileListMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
@@ -1229,6 +1275,10 @@ void VerticalFileSwitcher::initFileListContextMenu()
     // 添加设置菜单项
     wstring settingsStr = L"设置"; //pNativeSpeaker->getAttrNameStr(L"Settings", FS_ROOTNODE, FS_SETTINGS);
     ::AppendMenu(_hFileListMenu, MF_STRING, IDM_SETTINGS_VFS, settingsStr.c_str());
+    
+    // 添加编辑分类JSON菜单项
+    wstring editCategoryJsonStr = L"编辑文件分类JSON";
+    ::AppendMenu(_hFileListMenu, MF_STRING, IDM_EDIT_CATEGORY_JSON, editCategoryJsonStr.c_str());
 
     // 添加分隔符
     ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
@@ -1247,6 +1297,8 @@ void VerticalFileSwitcher::initFileListContextMenu()
     ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
     ::AppendMenu(_hFileListMenu, MF_STRING, 1001, L"打开文件所在目录");
     ::AppendMenu(_hFileListMenu, MF_STRING, 1002, L"复制文件路径");
+    
+    debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 完成");
 }
 
 void VerticalFileSwitcher::popupMenuCmd(int cmdID)
@@ -1365,6 +1417,62 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			// 发送消息打开设置对话框 - 使用标准的IDM_SETTING_PREFERENCE
 			::SendMessage(_hParent, NPPM_MENUCOMMAND, 0, IDM_SETTING_PREFERENCE);
 			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已发送标准设置对话框打开消息");
+		}
+		break;
+
+		// 编辑分类JSON菜单处理
+		case IDM_EDIT_CATEGORY_JSON:
+		{
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 编辑分类JSON命令被触发");
+			
+			// 获取程序目录
+			wchar_t exePath[MAX_PATH];
+			if (::GetModuleFileName(NULL, exePath, MAX_PATH) == 0)
+			{
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 获取程序路径失败");
+				MessageBox(_hParent, L"获取程序路径失败", L"错误", MB_OK | MB_ICONERROR);
+				break;
+			}
+			
+			// 移除文件名，只保留目录
+			wchar_t* lastBackslash = wcsrchr(exePath, L'\\');
+			if (lastBackslash)
+			{
+				*lastBackslash = L'\0';
+			}
+			
+			// 构建categories.json的完整路径
+			wstring categoryJsonPath = wstring(exePath) + L"\\bin\\categories.json";
+			
+			// 检查文件是否存在
+			if (::GetFileAttributes(categoryJsonPath.c_str()) == INVALID_FILE_ATTRIBUTES)
+			{
+				wstring errorMsg = L"找不到分类文件:\n" + categoryJsonPath;
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - %s", errorMsg.c_str());
+				MessageBox(_hParent, errorMsg.c_str(), L"文件不存在", MB_OK | MB_ICONERROR);
+				break;
+			}
+			
+			// 使用notepad打开JSON文件
+			HINSTANCE hResult = ::ShellExecute(_hParent, L"open", L"notepad.exe", categoryJsonPath.c_str(), NULL, SW_SHOW);
+			
+			if (reinterpret_cast<INT_PTR>(hResult) <= 32)
+			{
+				// ShellExecute返回值为32以下表示错误
+				DWORD error = ::GetLastError();
+				wstring errorMsg = L"打开编辑器失败，错误代码: " + to_wstring(error);
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - %s", errorMsg.c_str());
+				MessageBox(_hParent, errorMsg.c_str(), L"打开失败", MB_OK | MB_ICONERROR);
+			}
+			else
+			{
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 成功打开分类JSON文件: %s", categoryJsonPath.c_str());
+				// 成功打开后提示用户重新加载分类
+				MessageBox(_hParent, 
+					L"分类JSON文件已打开在记事本中。\n\n"
+					L"修改完成后，请关闭程序重新启动以使更改生效。", 
+					L"提示", MB_OK | MB_ICONINFORMATION);
+			}
 		}
 		break;
 

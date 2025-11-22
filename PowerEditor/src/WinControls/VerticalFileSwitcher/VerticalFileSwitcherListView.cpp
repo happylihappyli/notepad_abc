@@ -94,9 +94,9 @@ void VerticalFileSwitcherListView::initList()
 	ListView_InsertGroup(_hSelf, -1, &group);
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
-	// 强制只显示文件名和扩展名两列，忽略路径列配置
+	// 强制只显示文件名、扩展名和分类三列，忽略路径列配置
 	bool isExtColumn = true;  // 总是显示扩展名列
-	bool isPathColumn = false; // 从不显示路径列
+	bool isCategoryColumn = true; // 总是显示分类列
 
 	RECT rc{};
 	::GetClientRect(_hParent, &rc);
@@ -104,6 +104,8 @@ void VerticalFileSwitcherListView::initList()
 	int colIndex = 0;
 	if (isExtColumn)
 		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
+	if (isCategoryColumn)
+		nameWidth -= nppParams._dpiManager.scaleX(100); // 减去分类列宽度
 
 	//add columns
 	wstring nameStr = pNativeSpeaker->getAttrNameStr(L"Name", FS_ROOTNODE, FS_CLMNNAME);
@@ -113,7 +115,15 @@ void VerticalFileSwitcherListView::initList()
 		wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
 		insertColumn(extStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth), ++colIndex); //2nd column
 	}
-	// 注释掉路径列的添加，确保只显示两列
+	// 新增：添加分类列
+	if (isCategoryColumn)
+	{
+		wstring categoryStr = pNativeSpeaker->getAttrNameStr(L"Category", FS_ROOTNODE, FS_CLMNCATEGORY);
+		int categoryWidth = nppParams._dpiManager.scaleX(100); // 默认分类列宽度
+		insertColumn(categoryStr.c_str(), categoryWidth, ++colIndex); //3rd column
+		debugLog(L"VerticalFileSwitcherListView::initList() - 添加分类列，宽度: %d", categoryWidth);
+	}
+	// 注释掉路径列的添加，确保只显示三列
 
 	TaskListInfo taskListInfo;
 	// 使用我们设置的Notepad++主窗口句柄，而不是通过GetParent获取
@@ -225,7 +235,38 @@ void VerticalFileSwitcherListView::initList()
 		{
 			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, ::PathFindExtension(fileNameStatus._fn.c_str()));
 		}
-		// 注释掉路径列的数据设置，确保只显示两列
+		// 新增：设置分类列的数据
+		if (isCategoryColumn)
+		{
+			// 获取文件分类信息
+			std::wstring filePath = fileNameStatus._fn;
+			std::wstring fileCategoryName;
+			
+			if (_categoryManager)
+			{
+				// 获取文件的分类ID
+				std::wstring categoryId = _categoryManager->getFileCategory(filePath);
+				
+				// 根据分类ID获取分类名称
+				FileCategory* category = _categoryManager->getCategoryById(categoryId);
+				if (category)
+				{
+					fileCategoryName = category->name;
+				}
+				else
+				{
+					fileCategoryName = _categoryManager->getDefaultCategoryName();
+				}
+			}
+			else
+			{
+				fileCategoryName = L"未分类";
+			}
+			
+			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPWSTR)fileCategoryName.c_str());
+			debugLog(L"VerticalFileSwitcherListView::initList - 为文件 %s 设置分类列数据: %s", filePath.c_str(), fileCategoryName.c_str());
+		}
+		// 注释掉路径列的数据设置，确保只显示三列
 		itemIndex++;
 	}
 	_currentIndex = taskListInfo._currentIndex;
@@ -279,9 +320,9 @@ void VerticalFileSwitcherListView::reload()
 	ListView_InsertGroup(_hSelf, -1, &group);
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
-	// 强制只显示文件名和扩展名两列，忽略路径列配置
+	// 强制只显示文件名、扩展名和分类三列，忽略路径列配置
 	bool isExtColumn = true;  // 总是显示扩展名列
-	bool isPathColumn = false; // 从不显示路径列
+	bool isCategoryColumn = true; // 总是显示分类列
 
 	RECT rc{};
 	::GetClientRect(_hParent, &rc);
@@ -298,7 +339,15 @@ void VerticalFileSwitcherListView::reload()
 		wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
 		insertColumn(extStr.c_str(), nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth), ++colIndex); //2nd column
 	}
-	// 注释掉路径列的添加，确保只显示两列
+	// 新增：添加分类列
+	if (isCategoryColumn)
+	{
+		wstring categoryStr = pNativeSpeaker->getAttrNameStr(L"Category", FS_ROOTNODE, FS_CLMNCATEGORY);
+		int categoryWidth = nppParams._dpiManager.scaleX(100); // 默认分类列宽度
+		insertColumn(categoryStr.c_str(), categoryWidth, ++colIndex); //3rd column
+		debugLog(L"VerticalFileSwitcherListView::reload() - 添加分类列，宽度: %d", categoryWidth);
+	}
+	// 注释掉路径列的添加，确保只显示三列
 
 	TaskListInfo taskListInfo;
 	// 使用我们设置的Notepad++主窗口句柄，而不是通过GetParent获取
@@ -398,7 +447,38 @@ void VerticalFileSwitcherListView::reload()
 		{
 			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPTSTR)::PathFindExtension(fileNameStatus._fn.c_str()));
 		}
-		// 注释掉路径列的数据设置，确保只显示两列
+		// 新增：设置分类列的数据
+		if (isCategoryColumn)
+		{
+			// 获取文件分类信息
+			std::wstring filePath = fileNameStatus._fn;
+			std::wstring fileCategoryName;
+			
+			if (_categoryManager)
+			{
+				// 获取文件的分类ID
+				std::wstring categoryId = _categoryManager->getFileCategory(filePath);
+				
+				// 根据分类ID获取分类名称
+				FileCategory* category = _categoryManager->getCategoryById(categoryId);
+				if (category)
+				{
+					fileCategoryName = category->name;
+				}
+				else
+				{
+					fileCategoryName = _categoryManager->getDefaultCategoryName();
+				}
+			}
+			else
+			{
+				fileCategoryName = L"未分类";
+			}
+			
+			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPWSTR)fileCategoryName.c_str());
+			debugLog(L"VerticalFileSwitcherListView::reload - 为文件 %s 设置分类列数据: %s", filePath.c_str(), fileCategoryName.c_str());
+		}
+		// 注释掉路径列的数据设置，确保只显示三列
 		
 		itemIndex++;
 	}
@@ -679,7 +759,6 @@ void VerticalFileSwitcherListView::resizeColumns(int totalWidth)
 	NppParameters& nppParams = NppParameters::getInstance();
 	// 强制只显示文件名和扩展名两列，忽略路径列配置
 	bool isExtColumn = true;  // 总是显示扩展名列
-	bool isPathColumn = false; // 从不显示路径列
 
 	const int extWidthDyn = nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
 	int totalColWidthDynExceptName = 0;
@@ -757,6 +836,8 @@ void VerticalFileSwitcherListView::updateFont()
 // 初始化统一右键菜单
 void VerticalFileSwitcherListView::initContextMenu(HMENU hGlobalMenu)
 {
+    debugLog(L"========== VerticalFileSwitcherListView::initContextMenu - 开始");
+            
     // 销毁现有的菜单（如果存在）
     if (_hContextMenu)
     {
@@ -790,22 +871,48 @@ void VerticalFileSwitcherListView::initContextMenu(HMENU hGlobalMenu)
         {
             const auto& categories = _categoryManager->getCategories();
             
-			
-       		debugLog(L"VerticalFileSwitcherListView::initContextMenu - 添加分类");
-			std::cout << "分类数量: " << categories.size() << std::endl;
+            debugLog(L"VerticalFileSwitcherListView::initContextMenu - 开始添加分类，分类数量: %d", categories.size());
+            
             // 添加所有分类到菜单
             for (size_t i = 0; i < categories.size(); ++i)
             {
                 UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
-                ::AppendMenu(hCategoryMenu, MF_STRING, menuId, categories[i].name.c_str());
+                BOOL result = ::AppendMenu(hCategoryMenu, MF_STRING, menuId, categories[i].name.c_str());
+                if (result)
+                {
+                    debugLog(L"VerticalFileSwitcherListView::initContextMenu - 成功添加分类菜单项: %s (ID: %d)", 
+                        categories[i].name.c_str(), menuId);
+                }
+                else
+                {
+                    DWORD error = ::GetLastError();
+                    debugLog(L"VerticalFileSwitcherListView::initContextMenu - 添加分类菜单项失败: %s (ID: %d)，错误码: %d", 
+                        categories[i].name.c_str(), menuId, error);
+                }
             }
+        }
+        else
+        {
+            debugLog(L"VerticalFileSwitcherListView::initContextMenu - _categoryManager为nullptr");
         }
         
         // 添加文档分类菜单项（仅在文件列表右键菜单中显示）
-        ::AppendMenu(_hContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"文档分类");
+        BOOL menuResult = ::AppendMenu(_hContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"文档分类");
+        if (menuResult)
+        {
+            debugLog(L"VerticalFileSwitcherListView::initContextMenu - 成功添加文档分类子菜单");
+        }
+        else
+        {
+            DWORD error = ::GetLastError();
+            debugLog(L"VerticalFileSwitcherListView::initContextMenu - 添加文档分类子菜单失败，错误码: %d", error);
+        }
+        
         ::AppendMenu(_hContextMenu, MF_SEPARATOR, 0, NULL);
         ::AppendMenu(_hContextMenu, MF_STRING, 1001, L"打开文件所在目录");
         ::AppendMenu(_hContextMenu, MF_STRING, 1002, L"复制文件路径");
+        ::AppendMenu(_hContextMenu, MF_SEPARATOR, 0, NULL);
+        ::AppendMenu(_hContextMenu, MF_STRING, IDM_EDIT_CATEGORY_JSON, L"编辑文件分类JSON文件");
     }
 }
 
