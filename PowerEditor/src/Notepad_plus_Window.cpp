@@ -333,6 +333,10 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	scnN.nmhdr.hwndFrom = _hSelf;
 	scnN.nmhdr.idFrom = 0;
 	_notepad_plus_plus_core._pluginsManager.notify(&scnN);
+	
+	// 确保菜单和工具栏显示
+	::SendMessage(_hSelf, NPPM_HIDEMENU, 0, FALSE);
+	::SendMessage(_hSelf, NPPM_HIDETOOLBAR, 0, FALSE);
 
 	if (!cmdLineParams->_easterEggName.empty())
 	{
