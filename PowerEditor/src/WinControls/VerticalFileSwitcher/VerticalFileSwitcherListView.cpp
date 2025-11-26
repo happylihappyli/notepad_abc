@@ -569,17 +569,43 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 			
 			ListView_SetItem(_hSelf, &item);
 			int colIndex = 0;
+			bool isCategoryColumn = true; // 总是显示分类列
+			
 			if (isExtColumn)
 			{
-				// 显示空扩展名（不显示扩展名）
-				wchar_t emptyStr[] = L"";
-				ListView_SetItemText(_hSelf, i, ++colIndex, emptyStr);
+				// 显示扩展名
+				ListView_SetItemText(_hSelf, i, ++colIndex, ::PathFindExtension(tlfs->_fn.c_str()));
 			}
-			if (isPathColumn)
+			
+			// 设置分类列的数据
+			if (isCategoryColumn)
 			{
-				// 显示空路径（不显示路径）
-				wchar_t emptyStr[] = L"";
-				ListView_SetItemText(_hSelf, i, ++colIndex, emptyStr);
+				// 获取文件分类信息
+				std::wstring filePath = tlfs->_fn;
+				std::wstring fileCategoryName;
+				
+				if (_categoryManager)
+				{
+					// 获取文件的分类ID
+					std::wstring categoryId = _categoryManager->getFileCategory(filePath);
+					
+					// 根据分类ID获取分类名称
+					FileCategory* category = _categoryManager->getCategoryById(categoryId);
+					if (category)
+					{
+						fileCategoryName = category->name;
+					}
+					else
+					{
+						fileCategoryName = _categoryManager->getDefaultCategoryName();
+					}
+				}
+				else
+				{
+					fileCategoryName = L"未分类";
+				}
+				
+				ListView_SetItemText(_hSelf, i, ++colIndex, (LPWSTR)fileCategoryName.c_str());
 			}
 		}
 	}
@@ -673,18 +699,45 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 	item.iGroupId = (iView == MAIN_VIEW) ? _groupID : _group2ID;
 	ListView_InsertItem(_hSelf, &item);
 	int colIndex = 0;
+	bool isCategoryColumn = true; // 总是显示分类列
+	
 	if (isExtColumn)
 	{
-		// 显示空扩展名（不显示扩展名）
-		wchar_t emptyStr[] = L"";
-		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, emptyStr);
+		// 显示扩展名
+		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, ::PathFindExtension(buf->getFullPathName()));
 	}
-	if (isPathColumn)
+	
+	// 设置分类列的数据
+	if (isCategoryColumn)
 	{
-		// 显示空路径（不显示路径）
-		wchar_t emptyStr[] = L"";
-		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, emptyStr);
+		// 获取文件分类信息
+		std::wstring filePath = buf->getFullPathName();
+		std::wstring fileCategoryName;
+		
+		if (_categoryManager)
+		{
+			// 获取文件的分类ID
+			std::wstring categoryId = _categoryManager->getFileCategory(filePath);
+			
+			// 根据分类ID获取分类名称
+			FileCategory* category = _categoryManager->getCategoryById(categoryId);
+			if (category)
+			{
+				fileCategoryName = category->name;
+			}
+			else
+			{
+				fileCategoryName = _categoryManager->getDefaultCategoryName();
+			}
+		}
+		else
+		{
+			fileCategoryName = L"未分类";
+		}
+		
+		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, (LPWSTR)fileCategoryName.c_str());
 	}
+	
 	selectCurrentItem();
 	
 	return _currentIndex;
