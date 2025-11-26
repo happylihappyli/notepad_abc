@@ -938,7 +938,15 @@ void VerticalFileSwitcherListView::onFileCategoryChange(const std::wstring& cate
     if (selectedFiles.empty() || !_categoryManager)
         return;
     
-    // 为每个选中的文件设置分类
+    // 确定分类列索引
+    NppParameters& nppParams = NppParameters::getInstance();
+    bool isExtColumn = true;  // 总是显示扩展名列
+    bool isCategoryColumn = true; // 总是显示分类列
+    int categoryColIndex = 1; // 默认第二列
+    if (isExtColumn)
+        categoryColIndex = 2; // 如果有扩展名列，分类列是第三列
+    
+    // 为每个选中的文件设置分类并更新显示
     for (const auto& fileInfo : selectedFiles)
     {
         // 获取文件路径
@@ -957,6 +965,31 @@ void VerticalFileSwitcherListView::onFileCategoryChange(const std::wstring& cate
             {
                 // 设置分类
                 _categoryManager->addFileToCategory(filePath, categoryName);
+            }
+            
+            // 更新列表中该文件的分类列显示
+            int nbItem = ListView_GetItemCount(_hSelf);
+            for (int i = 0; i < nbItem; ++i)
+            {
+                LVITEM item{};
+                item.mask = LVIF_PARAM;
+                item.iItem = i;
+                ListView_GetItem(_hSelf, &item);
+                TaskLstFnStatus* tlfs = reinterpret_cast<TaskLstFnStatus*>(item.lParam);
+                if (tlfs && tlfs->_bufID == fileInfo._bufID)
+                {
+                    // 更新分类列显示
+                    std::wstring displayCategoryName = categoryName;
+                    if (categoryName == L"全部")
+                    {
+                        // 如果清除分类，显示默认分类名称
+                        displayCategoryName = _categoryManager->getDefaultCategoryName();
+                    }
+                    ListView_SetItemText(_hSelf, i, categoryColIndex, const_cast<LPWSTR>(displayCategoryName.c_str()));
+                    debugLog(L"VerticalFileSwitcherListView::onFileCategoryChange - 更新文件 %s 的分类列为: %s", 
+                        filePath.c_str(), displayCategoryName.c_str());
+                    break;
+                }
             }
         }
     }

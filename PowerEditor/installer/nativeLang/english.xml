@@ -1606,6 +1606,7 @@ Please verify the search condition before performing the action."/> <!-- HowToRe
 			<ColumnExt name="Ext."/>
 			<ColumnPath name="Path"/>
 			<ListGroups name="Group by View"/>
+			<Settings name="设置"/>
 		</DocList>
 		<WindowsDlg>
 			<ColumnName name="Name"/>

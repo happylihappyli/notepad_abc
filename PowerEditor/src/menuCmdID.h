@@ -321,6 +321,8 @@
     //#define    IDM_VIEW_DRAWTABBAR_VERTICAL       (IDM_VIEW + 43)
     //#define    IDM_VIEW_DRAWTABBAR_MULTILINE      (IDM_VIEW + 44)
     //#define    IDM_VIEW_DOCCHANGEMARGIN           (IDM_VIEW + 45)
+    #define    IDM_VIEW_DOCUMENT_LIST             (IDM_VIEW + 46)
+    #define    IDM_VIEW_DOCUMENT_CATEGORY         (IDM_VIEW + 47)
     //#define    IDM_VIEW_LWDEF                     (IDM_VIEW + 46)
     //#define    IDM_VIEW_LWALIGN                   (IDM_VIEW + 47)
     #define    IDM_PINTAB                         (IDM_VIEW + 48)
@@ -384,6 +386,9 @@
     #define    IDM_VIEW_SWITCHTO_FILEBROWSER      (IDM_VIEW + 107)
     #define    IDM_VIEW_SWITCHTO_FUNC_LIST        (IDM_VIEW + 108)
     #define    IDM_VIEW_SWITCHTO_DOCLIST          (IDM_VIEW + 109)
+    #define    IDM_VIEW_DOCLIST_CATEGORY_MENU     (IDM_VIEW + 120)  // 文档分类菜单
+    #define    IDM_VIEW_DOCLIST_EDIT_CATEGORY     (IDM_VIEW + 121)  // 编辑分类文件
+    #define    IDM_VIEW_DOCLIST_REFRESH_CATEGORY  (IDM_VIEW + 122)  // 刷新分类
 
     #define    IDM_VIEW_TAB_COLOUR_NONE           (IDM_VIEW + 110)
     #define    IDM_VIEW_TAB_COLOUR_1              (IDM_VIEW + 111)

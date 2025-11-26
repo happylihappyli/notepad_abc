@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Notepad++ SConscript构建脚本
 基于CMakeLists.txt的改进版本
@@ -593,7 +593,7 @@ void {os.path.basename(rc_file).replace('.', '_')}_resource_placeholder() {{}}
             
             # 写入C++文件
             os.makedirs(obj_dir, exist_ok=True)
-            with open(cpp_file, 'w', encoding='utf-8-sig') as f:
+            with open(cpp_file, 'w', encoding='utf-8') as f:
                 f.write(cpp_content)
             
             # 编译C++文件
@@ -617,7 +617,7 @@ void {os.path.basename(rc_file).replace('.', '_')}_resource_placeholder() {{}}
 void vertical_file_switcher_resource_fallback() {}
 '''
                 os.makedirs(obj_dir, exist_ok=True)
-                with open(cpp_file, 'w', encoding='utf-8-sig') as f:
+                with open(cpp_file, 'w', encoding='utf-8') as f:
                     f.write(fallback_content)
                 
                 try:
@@ -643,7 +643,7 @@ void vertical_file_switcher_resource_fallback() {}
 void function_list_panel_resource_fallback() {}
 '''
                 os.makedirs(obj_dir, exist_ok=True)
-                with open(cpp_file, 'w', encoding='utf-8-sig') as f:
+                with open(cpp_file, 'w', encoding='utf-8') as f:
                     f.write(fallback_content)
                 
                 try:
@@ -672,7 +672,7 @@ void function_list_panel_resource_fallback() {}
 void vertical_file_switcher_resource_fallback() {}
 '''
             os.makedirs(obj_dir, exist_ok=True)
-            with open(cpp_file, 'w', encoding='utf-8-sig') as f:
+            with open(cpp_file, 'w', encoding='utf-8') as f:
                 f.write(fallback_content)
             
             try:
@@ -699,7 +699,7 @@ void vertical_file_switcher_resource_fallback() {}
 void function_list_panel_resource_fallback() {}
 '''
             os.makedirs(obj_dir, exist_ok=True)
-            with open(cpp_file, 'w', encoding='utf-8-sig') as f:
+            with open(cpp_file, 'w', encoding='utf-8') as f:
                 f.write(fallback_content)
             
             try:

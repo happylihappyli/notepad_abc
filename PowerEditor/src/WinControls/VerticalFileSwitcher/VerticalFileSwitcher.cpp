@@ -1,17 +1,15 @@
-﻿
-
-
-
-#include "VerticalFileSwitcher.h"
+﻿#include "VerticalFileSwitcher.h"
 #include "menuCmdID.h"
 #include "Parameters.h"
 #include "resource.h"
 #include "localization.h"
 #include "Common.h"
+#include "Notepad_plus_msgs.h"
 // 确保包含windows.h以支持窗口创建函数
 #include <windows.h>
 // 包含异常处理相关头文件
 #include <stdexcept>
+#include <vector>
 
 using namespace std;
 
@@ -72,14 +70,283 @@ void VerticalFileSwitcher::startColumnSort()
 		_lastSortingColumn = 0;
 		_lastSortingDirection = SORT_DIRECTION_NONE;
 	}
+}
 
-	if (_lastSortingDirection != SORT_DIRECTION_NONE)
+void VerticalFileSwitcher::showCategoryMenu()
+{
+	debugLog(L"VerticalFileSwitcher::showCategoryMenu - 开始显示分类菜单\n");
+	
+	try 
 	{
-		sortCompareData sortData = {_fileListView.getHSelf(), _lastSortingColumn, _lastSortingDirection};
-		ListView_SortItemsEx(_fileListView.getHSelf(), ListViewCompareProc, reinterpret_cast<LPARAM>(&sortData));
+		// 获取分类管理器实例
+		CategoryManager* pCategoryManager = getCategoryManager();
+		if (!pCategoryManager)
+		{
+			debugLog(L"VerticalFileSwitcher::showCategoryMenu - 错误: 分类管理器为空\n");
+			MessageBox(_hParent, L"分类管理器未初始化", L"错误", MB_OK | MB_ICONERROR);
+			return;
+		}
+		
+		// 获取当前文档的路径
+		BufferID currentBufferID = reinterpret_cast<BufferID>(::SendMessage(_hParent, NPPM_GETCURRENTBUFFERID, 0, 0));
+		if (!currentBufferID)
+		{
+			debugLog(L"VerticalFileSwitcher::showCategoryMenu - 错误: 当前没有打开的文档\n");
+			MessageBox(_hParent, L"请先打开一个文档", L"提示", MB_OK | MB_ICONINFORMATION);
+			return;
+		}
+		
+		// 获取文档路径
+		// 先获取路径长度
+		int pathLen = static_cast<int>(::SendMessage(_hParent, NPPM_GETFULLPATHFROMBUFFERID, reinterpret_cast<WPARAM>(currentBufferID), reinterpret_cast<LPARAM>(nullptr)));
+		if (pathLen <= 0)
+		{
+			debugLog(L"VerticalFileSwitcher::showCategoryMenu - 错误: 无法获取文档路径\n");
+			MessageBox(_hParent, L"无法获取文档路径", L"错误", MB_OK | MB_ICONERROR);
+			return;
+		}
+		
+		// 分配缓冲区并获取路径
+		std::vector<wchar_t> buffer(pathLen + 1);
+		::SendMessage(_hParent, NPPM_GETFULLPATHFROMBUFFERID, reinterpret_cast<WPARAM>(currentBufferID), reinterpret_cast<LPARAM>(buffer.data()));
+		wstring currentFilePath = buffer.data();
+		
+		debugLog(L"VerticalFileSwitcher::showCategoryMenu - 当前文档路径: %s\n", currentFilePath.c_str());
+		
+		// 加载分类并显示菜单
+		if (pCategoryManager->loadConfig())
+		{
+			debugLog(L"VerticalFileSwitcher::showCategoryMenu - 分类加载成功\n");
+			
+			// 显示分类菜单 - 这里我们需要实现一个弹出式菜单
+			HMENU hCategoryMenu = ::CreatePopupMenu();
+			if (hCategoryMenu)
+			{
+				// 获取分类列表并添加到菜单
+				auto categories = pCategoryManager->getCategories();
+				int menuItemID = 1; // 从1开始，避免与系统菜单冲突
+				
+				// 添加"无分类"选项
+				::AppendMenu(hCategoryMenu, MF_STRING, menuItemID++, L"无分类");
+				::AppendMenu(hCategoryMenu, MF_SEPARATOR, 0, NULL);
+				
+				// 添加所有分类
+				for (const auto& category : categories)
+				{
+					wstring menuText = category.name;
+					if (category.description != L"")
+					{
+						menuText += L" (" + category.description + L")";
+					}
+					::AppendMenu(hCategoryMenu, MF_STRING, menuItemID++, menuText.c_str());
+				}
+				
+				// 获取鼠标位置显示菜单
+				POINT pt;
+				::GetCursorPos(&pt);
+				
+				int selectedID = ::TrackPopupMenu(hCategoryMenu, 
+					TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN,
+					pt.x, pt.y, 0, _hParent, NULL);
+				
+				// 处理用户选择
+				if (selectedID > 0)
+				{
+					if (selectedID == 1)
+					{
+						// 用户选择了"无分类"
+						debugLog(L"VerticalFileSwitcher::showCategoryMenu - 用户选择无分类\n");
+						pCategoryManager->removeFileFromCategory(currentFilePath);
+					}
+					else if (selectedID > 2 && selectedID <= categories.size() + 2)
+					{
+						// 用户选择了一个分类 (索引需要调整)
+						int categoryIndex = selectedID - 3;
+						if (categoryIndex >= 0 && categoryIndex < categories.size())
+						{
+							const auto& selectedCategory = categories[categoryIndex];
+							debugLog(L"VerticalFileSwitcher::showCategoryMenu - 用户选择分类: %s\n", selectedCategory.name.c_str());
+							pCategoryManager->addFileToCategory(currentFilePath, selectedCategory.name);
+						}
+					}
+				}
+				
+				// 清理菜单
+				::DestroyMenu(hCategoryMenu);
+				
+				// 刷新显示
+				_fileListView.reload();
+				startColumnSort();
+			}
+			else
+			{
+				debugLog(L"VerticalFileSwitcher::showCategoryMenu - 创建菜单失败\n");
+				MessageBox(_hParent, L"创建分类菜单失败", L"错误", MB_OK | MB_ICONERROR);
+			}
+		}
+		else
+		{
+			debugLog(L"VerticalFileSwitcher::showCategoryMenu - 分类加载失败\n");
+			MessageBox(_hParent, L"分类文件加载失败，请检查categories.json文件", L"错误", MB_OK | MB_ICONERROR);
+		}
+	}
+	catch (const exception& e)
+	{
+		debugLog(L"VerticalFileSwitcher::showCategoryMenu - 异常: %S\n", e.what());
+		MessageBox(_hParent, L"显示分类菜单时发生错误", L"错误", MB_OK | MB_ICONERROR);
 	}
 	
-	updateHeaderArrow();
+	debugLog(L"VerticalFileSwitcher::showCategoryMenu - 完成\n");
+}
+
+void VerticalFileSwitcher::editCategoryFile()
+{
+	debugLog(L"VerticalFileSwitcher::editCategoryFile - 开始编辑分类文件\n");
+	
+	try 
+	{
+		// 获取程序目录
+		wchar_t exePath[MAX_PATH];
+		if (::GetModuleFileName(NULL, exePath, MAX_PATH) == 0)
+		{
+			debugLog(L"VerticalFileSwitcher::editCategoryFile - 获取程序路径失败\n");
+			MessageBox(_hParent, L"获取程序路径失败", L"错误", MB_OK | MB_ICONERROR);
+			return;
+		}
+		
+		// 移除文件名，只保留目录
+		wchar_t* lastBackslash = wcsrchr(exePath, L'\\');
+		if (lastBackslash)
+		{
+			*lastBackslash = L'\0';
+		}
+		
+		// 构建categories.json的完整路径
+		wstring categoryJsonPath = wstring(exePath) + L"\\bin\\categories.json";
+		
+		// 检查文件是否存在，如果不存在则创建默认文件
+		if (::GetFileAttributes(categoryJsonPath.c_str()) == INVALID_FILE_ATTRIBUTES)
+		{
+			debugLog(L"VerticalFileSwitcher::editCategoryFile - 分类文件不存在，创建默认文件\n");
+			
+			// 创建默认的分类文件
+			ofstream outFile(categoryJsonPath);
+			if (outFile.is_open())
+			{
+				outFile << "{\n";
+				outFile << "  \"categories\": [\n";
+				outFile << "    {\n";
+				outFile << "      \"name\": \"工作文件\",\n";
+				outFile << "      \"description\": \"正在进行的工作相关文档\",\n";
+				outFile << "      \"extensions\": [\"*.cpp\", \"*.h\", \"*.py\"],\n";
+				outFile << "      \"autoClassify\": true\n";
+				outFile << "    },\n";
+				outFile << "    {\n";
+				outFile << "      \"name\": \"配置文件\",\n";
+				outFile << "      \"description\": \"配置文件和设置文件\",\n";
+				outFile << "      \"extensions\": [\"*.json\", \"*.xml\", \"*.ini\", \"*.config\"],\n";
+				outFile << "      \"autoClassify\": true\n";
+				outFile << "    }\n";
+				outFile << "  ]\n";
+				outFile << "}\n";
+				outFile.close();
+				debugLog(L"VerticalFileSwitcher::editCategoryFile - 默认分类文件创建成功\n");
+			}
+			else
+			{
+				debugLog(L"VerticalFileSwitcher::editCategoryFile - 创建默认分类文件失败\n");
+				MessageBox(_hParent, L"创建默认分类文件失败", L"错误", MB_OK | MB_ICONERROR);
+				return;
+			}
+		}
+		
+		// 使用系统默认编辑器打开JSON文件
+		HINSTANCE hResult = ::ShellExecute(_hParent, L"edit", categoryJsonPath.c_str(), NULL, NULL, SW_SHOW);
+		
+		if (reinterpret_cast<INT_PTR>(hResult) <= 32)
+		{
+			// ShellExecute返回值为32以下表示错误
+			DWORD error = ::GetLastError();
+			wstring errorMsg = L"打开编辑器失败，错误代码: " + to_wstring(error);
+			debugLog(L"VerticalFileSwitcher::editCategoryFile - %s\n", errorMsg.c_str());
+			MessageBox(_hParent, errorMsg.c_str(), L"打开失败", MB_OK | MB_ICONERROR);
+		}
+		else
+		{
+			debugLog(L"VerticalFileSwitcher::editCategoryFile - 成功打开分类JSON文件: %s\n", categoryJsonPath.c_str());
+			// 成功打开后提示用户
+			MessageBox(_hParent, 
+				L"分类配置文件已打开。\n\n"
+				L"修改完成后点击'刷新分类'菜单项以重新加载分类。", 
+				L"提示", MB_OK | MB_ICONINFORMATION);
+		}
+	}
+	catch (const exception& e)
+	{
+		debugLog(L"VerticalFileSwitcher::editCategoryFile - 异常: %S\n", e.what());
+		MessageBox(_hParent, L"编辑分类文件时发生错误", L"错误", MB_OK | MB_ICONERROR);
+	}
+	
+	debugLog(L"VerticalFileSwitcher::editCategoryFile - 完成\n");
+}
+
+void VerticalFileSwitcher::refreshCategory()
+{
+	debugLog(L"VerticalFileSwitcher::refreshCategory - 开始刷新分类\n");
+	
+	try 
+	{
+		// 获取分类管理器实例
+		CategoryManager* pCategoryManager = getCategoryManager();
+		if (!pCategoryManager)
+		{
+			debugLog(L"VerticalFileSwitcher::refreshCategory - 错误: 分类管理器为空\n");
+			MessageBox(_hParent, L"分类管理器未初始化", L"错误", MB_OK | MB_ICONERROR);
+			return;
+		}
+		
+		debugLog(L"VerticalFileSwitcher::refreshCategory - 重新加载分类文件\n");
+		
+		// 重新加载分类文件
+		if (pCategoryManager->loadConfig())
+		{
+			debugLog(L"VerticalFileSwitcher::refreshCategory - 分类重新加载成功\n");
+			
+			// 刷新显示
+			_fileListView.reload();
+			startColumnSort();
+			
+			// 获取分类统计信息
+			const auto& categories = pCategoryManager->getCategories();
+			const auto totalCategories = categories.size();
+			int totalFilesCategorized = 0;
+			
+			for (const auto& category : categories)
+			{
+				totalFilesCategorized += static_cast<int>(pCategoryManager->getFilesByCategory(category.id).size());
+			}
+			
+			// 显示成功信息
+			wstring successMsg = L"分类刷新成功！\n\n";
+			successMsg += L"分类数量: " + to_wstring(totalCategories) + L"\n";
+			successMsg += L"已分类文件: " + to_wstring(totalFilesCategorized);
+			
+			debugLog(L"VerticalFileSwitcher::refreshCategory - %s\n", successMsg.c_str());
+			MessageBox(_hParent, successMsg.c_str(), L"成功", MB_OK | MB_ICONINFORMATION);
+		}
+		else
+		{
+			debugLog(L"VerticalFileSwitcher::refreshCategory - 分类重新加载失败\n");
+			MessageBox(_hParent, L"分类文件加载失败，请检查categories.json文件格式是否正确", L"错误", MB_OK | MB_ICONERROR);
+		}
+	}
+	catch (const exception& e)
+	{
+		debugLog(L"VerticalFileSwitcher::refreshCategory - 异常: %S\n", e.what());
+		MessageBox(_hParent, L"刷新分类时发生错误", L"错误", MB_OK | MB_ICONERROR);
+	}
+	
+debugLog(L"VerticalFileSwitcher::refreshCategory - 完成\n");
 }
 
 LRESULT VerticalFileSwitcher::listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -599,12 +866,13 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			int width = LOWORD(lParam);
             int height = HIWORD(lParam);
 			
-			// 调整文件列表视图大小
-		int listViewHeight = height - 100; // 减去顶部控件的高度（分类按钮栏和下拉框）
-		if (listViewHeight > 0)
-		{
-			::SetWindowPos(_fileListView.getHSelf(), NULL, 0, 100, width, listViewHeight, SWP_NOZORDER);
-		}
+			// 调整文件列表视图大小 - 超紧凑布局
+			int topOffset = 25; // 进一步减少分类按钮栏的实际高度
+			int listViewHeight = height - topOffset;
+			if (listViewHeight > 0)
+			{
+				::SetWindowPos(_fileListView.getHSelf(), NULL, 0, topOffset, width, listViewHeight, SWP_NOZORDER);
+			}
             break;
         }
         
@@ -702,12 +970,12 @@ void VerticalFileSwitcher::createCategoryButtons()
 	if (categories.empty())
 		return;
 	
-	// 创建分类按钮栏（用于过滤查看文件）
-	int buttonX = 5;
-	int buttonY = 5;  // 调整为从顶部开始，因为删除了字体控件
-	int buttonWidth = 80;  // 增大按钮宽度从60到80
-	int buttonHeight = 28; // 增大按钮高度从20到28
-	int buttonSpacing = 8; // 增大按钮间距从5到8
+	// 创建分类按钮栏（用于过滤查看文件）- 增大按钮和字体
+	int buttonX = 5;        // 左边距
+	int buttonY = 5;        // 顶部偏移
+	int buttonWidth = 90;   // 增大按钮宽度
+	int buttonHeight = 28;  // 增大按钮高度
+	int buttonSpacing = 5;  // 按钮间距
 	
 	for (size_t i = 0; i < categories.size(); ++i)
 	{
@@ -735,9 +1003,9 @@ void VerticalFileSwitcher::createCategoryButtons()
 				LOGFONT lf;
 				if (GetObject(hFont, sizeof(LOGFONT), &lf))
 				{
-					lf.lfHeight = 16;  // 设置为16号字体，比原来的更大
-					lf.lfWeight = FW_NORMAL; // 正常粗细
-					wcscpy_s(lf.lfFaceName, L"宋体"); // 使用宋体字体
+					lf.lfHeight = -18;  // 增大字体到18号（负值表示逻辑单位）
+					lf.lfWeight = FW_BOLD; // 加粗字体
+					wcscpy_s(lf.lfFaceName, L"微软雅黑"); // 使用微软雅黑字体
 					
 					HFONT hNewFont = ::CreateFontIndirect(&lf);
 					if (hNewFont)
@@ -1214,10 +1482,43 @@ void VerticalFileSwitcher::initFileListContextMenu()
     const auto& categories = _categoryManager.getCategories();
     debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 获取到分类数量: %d", categories.size());
     
-    // 检查分类数据
+    // 检查分类数据，如果为空则重新初始化
     if (categories.empty())
     {
-        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 警告：分类列表为空，检查CategoryManager是否正确初始化");
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 警告：分类列表为空，重新初始化CategoryManager");
+        
+        // 获取exe路径并构建绝对路径
+        wchar_t exePath[MAX_PATH];
+        if (GetModuleFileNameW(NULL, exePath, MAX_PATH)) {
+            // 获取exe所在目录
+            PathRemoveFileSpecW(exePath);
+            
+            std::wstring absConfigPath = std::wstring(exePath) + L"\\bin\\categories.json";
+            debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 使用exe路径重新初始化: %s", absConfigPath.c_str());
+            _categoryManager.initialize(absConfigPath);
+        } else {
+            debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 获取exe路径失败，使用默认路径");
+            _categoryManager.initialize(L"bin\\categories.json");
+        }
+        
+        // 重新获取分类数据
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 重新获取分类数据");
+        const auto& categoriesAfterInit = _categoryManager.getCategories();
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 重新初始化后分类数量: %d", categoriesAfterInit.size());
+        
+        if (categoriesAfterInit.empty())
+        {
+            debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 错误：重新初始化后分类仍为空，创建默认分类");
+            // 手动创建默认分类
+            FileCategory defaultCategory;
+            defaultCategory.id = L"default";
+            defaultCategory.name = L"全部";
+            defaultCategory.description = L"默认分类";
+            defaultCategory.order = 0;
+            
+            _categoryManager.addCategory(defaultCategory);
+            debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 默认分类已添加");
+        }
     }
     
     // 添加所有分类到菜单

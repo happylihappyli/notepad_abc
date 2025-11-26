@@ -134,6 +134,7 @@ private:
     std::vector<FileCategory> m_categories;           // 分类列表
     std::vector<FileCategoryMapping> m_fileMappings;   // 文件与分类的映射
     std::wstring m_configPath;                         // 配置文件路径
+    std::wstring m_fileMappingsPath;                    // 文件映射单独保存路径
     
 public:
     CategoryManager();
@@ -256,6 +257,16 @@ public:
      * @brief 获取默认分类名称
      */
     static std::wstring getDefaultCategoryName() { return L"全部"; }
+    
+    /**
+     * @brief 保存文件映射到单独的JSON文件
+     */
+    bool saveFileMappings();
+    
+    /**
+     * @brief 从单独的JSON文件加载文件映射
+     */
+    bool loadFileMappings();
     
 private:
     /**

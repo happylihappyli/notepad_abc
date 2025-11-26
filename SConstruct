@@ -7,6 +7,7 @@ Notepad++ SCons构建脚本
 import os
 import sys
 import time
+import subprocess
 from datetime import datetime
 
 # 强制Python使用UTF-8编码
@@ -21,19 +22,71 @@ if sys.platform == 'win32':
     os.environ['PYTHONIOENCODING'] = 'utf-8'
     os.environ['PYTHONUTF8'] = '1'
 
+# 在构建开始时终止可能正在运行的notepad_abc进程
+def kill_running_processes():
+    """终止正在运行的notepad_abc进程"""
+    print("检查并终止正在运行的notepad_abc进程...")
+    try:
+        # 首先尝试使用taskkill命令终止进程
+        result = subprocess.run(['taskkill', '/f', '/im', 'notepad_abc.exe'], 
+                              capture_output=True, text=True, encoding='utf-8')
+        if result.returncode == 0:
+            print("成功终止正在运行的notepad_abc进程")
+        else:
+            # 如果没有找到进程，这不是错误
+            if "notepad_abc.exe" in result.stderr:
+                print("没有发现正在运行的notepad_abc进程")
+            else:
+                print(f"终止进程时出现警告: {result.stderr}")
+    except Exception as e:
+        print(f"终止进程时出错: {str(e)}")
+        
+    # 添加额外的检查，确保进程确实被终止
+    try:
+        # 等待一段时间确保进程被完全终止
+        time.sleep(1)
+        
+        # 再次检查是否还有进程在运行
+        check_result = subprocess.run(['tasklist', '/fi', 'imagename eq notepad_abc.exe'], 
+                                    capture_output=True, text=True, encoding='utf-8')
+        if 'notepad_abc.exe' in check_result.stdout and 'No tasks are running' not in check_result.stdout:
+            print("警告: 仍有notepad_abc进程在运行，尝试强制终止...")
+            # 使用更强的终止方式
+            subprocess.run(['taskkill', '/f', '/t', '/im', 'notepad_abc.exe'], 
+                         capture_output=True, text=True, encoding='utf-8')
+            time.sleep(2)  # 等待更长时间
+            
+            # 最后再检查一次
+            final_check = subprocess.run(['tasklist', '/fi', 'imagename eq notepad_abc.exe'], 
+                                       capture_output=True, text=True, encoding='utf-8')
+            if 'notepad_abc.exe' in final_check.stdout and 'No tasks are running' not in final_check.stdout:
+                print("警告: 仍然无法终止notepad_abc进程")
+            else:
+                print("成功终止所有notepad_abc进程")
+        else:
+            print("确认没有notepad_abc进程在运行")
+    except Exception as e:
+        print(f"检查进程状态时出错: {str(e)}")
+
+# 调用函数终止进程
+kill_running_processes()
+
 # 显示开始时间
 print("开始构建时间:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
+# 设置项目路径（使用标准的Python方式）
+project_root = os.path.abspath('.')
+
+# 导入SCons标准函数
+import SCons.Environment
+
 # 获取环境变量
-env = Environment()
+env = SCons.Environment.Environment()
 
 # 设置基本环境变量
 env['TARGET_ARCH'] = 'x86_64'  # 默认为64位
 env['MSVC_VERSION'] = '14.3'   # VS2022
 env['MSVS_VERSION'] = '2022'
-
-# 设置项目路径
-project_root = Dir('.').abspath
 src_dir = os.path.join(project_root, 'PowerEditor', 'src')
 scintilla_dir = os.path.join(project_root, 'scintilla')
 lexilla_dir = os.path.join(project_root, 'lexilla')
@@ -329,8 +382,14 @@ def build_dependencies(env, build_type):
     print("依赖库构建完成")
     return lexilla_lib, scintilla_lib
 
-# 获取构建类型
-build_type = ARGUMENTS.get('build', 'Release')
+# 获取构建类型（从命令行参数或环境变量）
+build_type = 'Release'  # 默认为Release构建
+if len(sys.argv) > 1:
+    for arg in sys.argv[1:]:
+        if arg.startswith('--build='):
+            build_type = arg.split('=', 1)[1]
+        elif arg == '--debug':
+            build_type = 'Debug'
 
 # 构建依赖库
 lexilla_lib, scintilla_lib = build_dependencies(env, build_type)

@@ -128,6 +128,11 @@ public:
 	CategoryManager* getCategoryManager() { return &_categoryManager; }
 	const CategoryManager* getCategoryManager() const { return &_categoryManager; }
 
+	// 新增的分类相关方法
+	void showCategoryMenu();
+	void editCategoryFile();
+	void refreshCategory();
+
 private:
 	bool registerWindowClass(HINSTANCE hInst);
 

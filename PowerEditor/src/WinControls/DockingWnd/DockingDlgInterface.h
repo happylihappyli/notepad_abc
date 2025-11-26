@@ -23,10 +23,9 @@
 #include <array>
 #include <assert.h>
 #include <shlwapi.h>
-#include "Common.h"
+#include "..\..\MISC\Common\Common.h"  // 修复Common.h的包含路径
 #include "StaticDialog.h"
-#include "NppDarkMode.h"
-
+#include "..\..\NppDarkMode.h"  // 修复NppDarkMode.h的包含路径
 
 
 class DockingDlgInterface : public StaticDialog

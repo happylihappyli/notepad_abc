@@ -14,3 +14,5 @@ bin/categories.json
 /test
 /fix
 PowerEditor/src/WinControls/VerticalFileSwitcher/VerticalFileSwitcher.res
+/PowerEditor/visual.net/x64/Release
+/scintilla/win32/Intermediates/x64/Release

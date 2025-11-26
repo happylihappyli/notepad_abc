@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Categories>
+    <Category name="工作文件" icon="workspace.png" color="#FF5733">
+        <Extensions>.cpp;.h;.c;.hpp;.cc;.cxx</Extensions>
+        <Description>C/C++ 开发文件</Description>
+    </Category>
+    <Category name="文档文件" icon="document.png" color="#3498DB">
+        <Extensions>.txt;.md;.doc;.docx;.pdf</Extensions>
+        <Description>各种文档文件</Description>
+    </Category>
+    <Category name="网页文件" icon="web.png" color="#2ECC71">
+        <Extensions>.html;.htm;.css;.js;.php;.asp</Extensions>
+        <Description>Web 开发文件</Description>
+    </Category>
+    <Category name="数据文件" icon="data.png" color="#F39C12">
+        <Extensions>.json;.xml;.csv;.sql;.xlsx</Extensions>
+        <Description>数据交换文件</Description>
+    </Category>
+    <Category name="配置文件" icon="config.png" color="#9B59B6">
+        <Extensions>.ini;.cfg;.conf;.properties;.yaml;.yml</Extensions>
+        <Description>配置文件</Description>
+    </Category>
+</Categories>

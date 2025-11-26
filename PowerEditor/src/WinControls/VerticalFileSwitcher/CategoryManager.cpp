@@ -3,15 +3,19 @@
 #include "CategoryManager.h"
 #include <fstream>
 #include <algorithm>
-#include <filesystem>
 #include <windows.h>
-#include "Parameters.h"
+#include <shlwapi.h> // 包含 PathRemoveFileSpecW, PathCombineW 和 PathCanonicalizeW 的声明
+#pragma comment(lib, "shlwapi.lib") // 链接 shlwapi 库
 
-namespace fs = std::filesystem;
+
 
 CategoryManager::CategoryManager() {
     // 默认配置文件路径
-    m_configPath = L"categories.json";
+    m_configPath = L"..\\bin\\categories.json";
+    
+    // 添加调试信息
+    std::wstring debugMsg = L"CategoryManager: 构造函数调用，初始配置路径: " + m_configPath + L"\n";
+    OutputDebugStringW(debugMsg.c_str());
 }
 
 /**
@@ -23,7 +27,27 @@ void CategoryManager::initialize(const std::wstring& configPath) {
     }
     
     // 调试信息：开始初始化
-    std::wstring debugMsg = L"CategoryManager: 开始初始化，配置文件路径: " + m_configPath + L"\n";
+    std::wstring debugMsg = L"CategoryManager: 开始初始化，原始配置文件路径: " + m_configPath + L"\n";
+    OutputDebugStringW(debugMsg.c_str());
+    
+    // 尝试将路径转换为绝对路径
+    std::wstring resolvedPath = normalizePath(m_configPath);
+    debugMsg = L"CategoryManager: 解析后的配置文件路径: " + resolvedPath + L"\n";
+    OutputDebugStringW(debugMsg.c_str());
+    
+    // 更新为解析后的路径
+    if (!resolvedPath.empty()) {
+        m_configPath = resolvedPath;
+    }
+    
+    // 设置文件映射的单独保存路径（在bin目录下）
+    size_t lastBackslash = m_configPath.find_last_of(L'\\');
+    if (lastBackslash != std::wstring::npos) {
+        m_fileMappingsPath = m_configPath.substr(0, lastBackslash + 1) + L"fileMappings.json";
+    } else {
+        m_fileMappingsPath = L"fileMappings.json";
+    }
+    debugMsg = L"CategoryManager: 文件映射保存路径: " + m_fileMappingsPath + L"\n";
     OutputDebugStringW(debugMsg.c_str());
     
     // 确保配置目录存在
@@ -32,9 +56,12 @@ void CategoryManager::initialize(const std::wstring& configPath) {
     OutputDebugStringW(debugMsg.c_str());
     
     // 加载配置，如果失败则创建默认分类
+    OutputDebugStringW(L"CategoryManager: 开始加载配置文件\n");
     if (!loadConfig()) {
         OutputDebugStringW(L"CategoryManager: 配置加载失败，创建默认分类\n");
         createDefaultCategories();
+        debugMsg = L"CategoryManager: 默认分类创建完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
         if (saveConfig()) {
             OutputDebugStringW(L"CategoryManager: 默认分类保存成功\n");
         } else {
@@ -42,62 +69,213 @@ void CategoryManager::initialize(const std::wstring& configPath) {
         }
     } else {
         OutputDebugStringW(L"CategoryManager: 配置加载成功\n");
+        debugMsg = L"CategoryManager: 配置加载成功，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+    }
+    
+    // 加载文件映射（从单独的文件）
+    OutputDebugStringW(L"CategoryManager: 开始加载文件映射\n");
+    loadFileMappings();
+    
+    // 调试信息：显示加载的分类数量
+    debugMsg = L"CategoryManager: 初始化完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+    OutputDebugStringW(debugMsg.c_str());
+    
+    // 输出所有分类信息用于调试
+    for (const auto& category : m_categories) {
+        debugMsg = L"CategoryManager: 分类信息 - ID: " + category.id + L", 名称: " + category.name + L", 描述: " + category.description + L", 顺序: " + std::to_wstring(category.order) + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
     }
 }
 
 /**
  * @brief 加载分类配置
+ * @return bool 加载是否成功
  */
 bool CategoryManager::loadConfig() {
     try {
         // 将相对路径转换为绝对路径
-        fs::path configPath(m_configPath);
-        if (configPath.is_relative()) {
-            configPath = fs::absolute(configPath);
+        std::wstring fullPath = m_configPath;
+        
+        // 调试信息：显示原始路径
+        std::wstring debugMsg = L"CategoryManager: loadConfig 开始，原始路径: " + m_configPath + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
+        // 检查文件是否存在
+        DWORD fileAttributes = GetFileAttributesW(m_configPath.c_str());
+        if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
+            DWORD error = GetLastError();
+            debugMsg = L"CategoryManager: 文件不存在或无法访问，错误码: " + std::to_wstring(error) + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+            
+            // 尝试使用exe路径构建完整路径
+            wchar_t exePath[MAX_PATH];
+            if (GetModuleFileNameW(NULL, exePath, MAX_PATH)) {
+                // 获取exe所在目录
+                PathRemoveFileSpecW(exePath);
+                
+                std::wstring fullConfigPath = std::wstring(exePath) + L"\\" + m_configPath;
+                debugMsg = L"CategoryManager: 尝试exe路径: " + fullConfigPath + L"\n";
+                OutputDebugStringW(debugMsg.c_str());
+                
+                fileAttributes = GetFileAttributesW(fullConfigPath.c_str());
+                if (fileAttributes != INVALID_FILE_ATTRIBUTES) {
+                    fullPath = fullConfigPath;
+                    debugMsg = L"CategoryManager: exe路径有效\n";
+                    OutputDebugStringW(debugMsg.c_str());
+                } else {
+                    error = GetLastError();
+                    debugMsg = L"CategoryManager: exe路径也不存在，错误码: " + std::to_wstring(error) + L"\n";
+                    OutputDebugStringW(debugMsg.c_str());
+                }
+            }
+        } else {
+            debugMsg = L"CategoryManager: 原始路径有效\n";
+            OutputDebugStringW(debugMsg.c_str());
         }
         
-        std::ifstream file(configPath);
+        // 尝试打开文件
+        std::ifstream file(fullPath, std::ios::in);
         if (!file.is_open()) {
-            return false;
+            debugMsg = L"CategoryManager: 无法打开文件: " + fullPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+            
+            // 尝试不同的打开模式
+            file.open(fullPath, std::ios::in | std::ios::binary);
+            if (!file.is_open()) {
+                debugMsg = L"CategoryManager: 无法以二进制模式打开文件: " + fullPath + L"\n";
+                OutputDebugStringW(debugMsg.c_str());
+                return false;
+            } else {
+                debugMsg = L"CategoryManager: 以二进制模式成功打开文件: " + fullPath + L"\n";
+                OutputDebugStringW(debugMsg.c_str());
+            }
+        } else {
+            debugMsg = L"CategoryManager: 成功打开文件: " + fullPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
         }
         
         // 检查文件是否为空
         file.seekg(0, std::ios::end);
-        if (file.tellg() == 0) {
-            file.close();
-            return false; // 文件为空，加载失败
-        }
+        std::streampos fileSize = file.tellg();
         file.seekg(0, std::ios::beg); // 重置文件指针
         
-        json config;
-        file >> config;
+        debugMsg = L"CategoryManager: 文件大小: " + std::to_wstring(fileSize) + L" 字节\n";
+        OutputDebugStringW(debugMsg.c_str());
         
-        // 清空现有数据
+        if (fileSize == 0) {
+            file.close();
+            debugMsg = L"CategoryManager: 文件为空\n";
+            OutputDebugStringW(debugMsg.c_str());
+            return false; // 文件为空，加载失败
+        }
+        
+        // 读取文件内容到字符串
+        std::string fileContent((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+        file.close();
+        
+        debugMsg = L"CategoryManager: 读取到文件内容长度: " + std::to_wstring(fileContent.length()) + L" 字符\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
+        // 检查是否包含BOM标记并移除
+        if (fileContent.length() >= 3 && 
+            static_cast<unsigned char>(fileContent[0]) == 0xEF &&
+            static_cast<unsigned char>(fileContent[1]) == 0xBB &&
+            static_cast<unsigned char>(fileContent[2]) == 0xBF) {
+            fileContent = fileContent.substr(3); // 移除BOM
+            debugMsg = L"CategoryManager: 移除了UTF-8 BOM标记\n";
+            OutputDebugStringW(debugMsg.c_str());
+        }
+        
+        // 输出文件内容的前200个字符用于调试
+        if (!fileContent.empty()) {
+            std::string preview = fileContent.substr(0, (std::min)(size_t(200), fileContent.length()));
+            debugMsg = L"CategoryManager: 文件内容预览: " + std::wstring(preview.begin(), preview.end()) + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+        }
+        
+        // 解析JSON
+        json config = json::parse(fileContent);
+        
+        // 调试信息：显示JSON解析结果
+        debugMsg = L"CategoryManager: JSON解析成功\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
+        // 检查JSON结构
+        if (config.is_object()) {
+            debugMsg = L"CategoryManager: JSON是对象类型\n";
+            OutputDebugStringW(debugMsg.c_str());
+            
+            if (config.contains("categories")) {
+                debugMsg = L"CategoryManager: JSON包含categories键\n";
+                OutputDebugStringW(debugMsg.c_str());
+                
+                auto categories = config["categories"];
+                if (categories.is_array()) {
+                    debugMsg = L"CategoryManager: categories是数组类型，大小: " + std::to_wstring(categories.size()) + L"\n";
+                    OutputDebugStringW(debugMsg.c_str());
+                } else {
+                    debugMsg = L"CategoryManager: categories不是数组类型\n";
+                    OutputDebugStringW(debugMsg.c_str());
+                }
+            } else {
+                debugMsg = L"CategoryManager: JSON不包含categories键\n";
+                OutputDebugStringW(debugMsg.c_str());
+                
+                // 输出所有键名用于调试
+                for (auto it = config.begin(); it != config.end(); ++it) {
+                    std::string key = it.key();
+                    debugMsg = L"CategoryManager: JSON键名: " + std::wstring(key.begin(), key.end()) + L"\n";
+                    OutputDebugStringW(debugMsg.c_str());
+                }
+            }
+        } else {
+            debugMsg = L"CategoryManager: JSON不是对象类型\n";
+            OutputDebugStringW(debugMsg.c_str());
+        }
+        
+        // 清空现有数据（只清空分类，文件映射单独加载）
         m_categories.clear();
-        m_fileMappings.clear();
         
         // 加载分类
         if (config.contains("categories")) {
+            debugMsg = L"CategoryManager: JSON包含categories键\n";
+            OutputDebugStringW(debugMsg.c_str());
+            
             for (const auto& catJson : config["categories"]) {
                 FileCategory category;
                 category.fromJson(catJson);
                 m_categories.push_back(category);
+                debugMsg = L"CategoryManager: 加载分类: " + category.name + L" (ID: " + category.id + L")\n";
+                OutputDebugStringW(debugMsg.c_str());
             }
+        } else {
+            debugMsg = L"CategoryManager: JSON不包含categories键\n";
+            OutputDebugStringW(debugMsg.c_str());
         }
         
-        // 加载文件映射
-        if (config.contains("fileMappings")) {
-            for (const auto& mappingJson : config["fileMappings"]) {
-                FileCategoryMapping mapping;
-                mapping.fromJson(mappingJson);
-                m_fileMappings.push_back(mapping);
-            }
-        }
+        // 注意：文件映射不再从这里加载，而是从单独的fileMappings.json文件加载
         
+        debugMsg = L"CategoryManager: loadConfig 完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
         return true;
     }
-    catch (const std::exception&) {
-        // 加载失败，返回false
+    catch (const json::exception& e) {
+        // JSON解析异常
+        std::string errorMsg = "CategoryManager: JSON解析异常: " + std::string(e.what()) + "\n";
+        OutputDebugStringA(errorMsg.c_str());
+        return false;
+    }
+    catch (const std::exception& e) {
+        // 其他异常
+        std::string errorMsg = "CategoryManager: 异常: " + std::string(e.what()) + "\n";
+        OutputDebugStringA(errorMsg.c_str());
+        return false;
+    }
+    catch (...) {
+        // 未知异常
+        OutputDebugStringA("CategoryManager: 未知异常\n");
         return false;
     }
 }
@@ -116,40 +294,23 @@ bool CategoryManager::saveConfig() {
         
         json config;
         
-        // 保存分类
+        // 保存分类（文件映射单独保存）
         json categoriesArray = json::array();
         for (const auto& category : m_categories) {
             categoriesArray.push_back(category.toJson());
         }
         config["categories"] = categoriesArray;
         
-        // 保存文件映射
-        json mappingsArray = json::array();
-        for (const auto& mapping : m_fileMappings) {
-            mappingsArray.push_back(mapping.toJson());
-        }
-        config["fileMappings"] = mappingsArray;
-        
-        // 将相对路径转换为绝对路径
-        fs::path configPath(m_configPath);
-        if (configPath.is_relative()) {
-            // 使用当前工作目录作为基础路径
-            fs::path currentDir = fs::current_path();
-            configPath = currentDir / configPath;
-        }
-        
-        // 调试信息：显示最终配置路径
-        std::wstring debugMsg = L"CategoryManager: 最终配置路径: " + configPath.wstring() + L"\n";
-        OutputDebugStringW(debugMsg.c_str());
+        // 注意：文件映射不再保存到这里，而是保存到单独的fileMappings.json文件
         
         // 生成JSON字符串
         std::string jsonString = config.dump(4); // 缩进4个空格，便于阅读
         
         // 以二进制模式打开文件，写入UTF-8 BOM
-        std::ofstream file(configPath, std::ios::binary | std::ios::trunc);
+        std::ofstream file(m_configPath, std::ios::binary | std::ios::trunc);
         if (!file.is_open()) {
             // 调试信息：文件打开失败
-            debugMsg = L"CategoryManager: 无法打开配置文件: " + configPath.wstring() + L"\n";
+            std::wstring debugMsg = L"CategoryManager: 无法打开配置文件: " + m_configPath + L"\n";
             OutputDebugStringW(debugMsg.c_str());
             return false;
         }
@@ -313,7 +474,7 @@ bool CategoryManager::setFileCategory(const std::wstring& filePath, const std::w
     
     // 添加新的映射
     m_fileMappings.push_back(FileCategoryMapping(normalizedPath, categoryId));
-    return saveConfig();
+    return saveFileMappings();
 }
 
 /**
@@ -344,7 +505,7 @@ bool CategoryManager::removeFileCategory(const std::wstring& filePath) {
     
     if (it != m_fileMappings.end()) {
         m_fileMappings.erase(it, m_fileMappings.end());
-        return saveConfig();
+        return saveFileMappings();
     }
     
     return false;
@@ -420,55 +581,49 @@ void CategoryManager::createDefaultCategories() {
  */
 bool CategoryManager::ensureConfigDirectory() const {
     try {
-        fs::path configPath(m_configPath);
-        
         // 调试信息：显示原始配置路径
         std::wstring debugMsg = L"CategoryManager: 原始配置路径: " + m_configPath + L"\n";
         OutputDebugStringW(debugMsg.c_str());
         
-        // 将相对路径转换为绝对路径
-        if (configPath.is_relative()) {
-            // 使用当前工作目录作为基础路径
-            fs::path currentDir = fs::current_path();
-            configPath = currentDir / configPath;
-            debugMsg = L"CategoryManager: 转换为绝对路径: " + configPath.wstring() + L"\n";
+        // 从路径中提取目录
+        size_t lastBackslash = m_configPath.find_last_of(L'\\');
+        size_t lastForwardSlash = m_configPath.find_last_of(L'/');
+        size_t lastSeparator = std::max(lastBackslash, lastForwardSlash);
+        
+        if (lastSeparator != std::wstring::npos) {
+            std::wstring directory = m_configPath.substr(0, lastSeparator);
+            
+            debugMsg = L"CategoryManager: 需要创建的目录: " + directory + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+            
+            // 尝试创建目录
+            if (CreateDirectoryW(directory.c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS) {
+                debugMsg = L"CategoryManager: 目录已存在或创建成功: " + directory + L"\n";
+                OutputDebugStringW(debugMsg.c_str());
+            } else {
+                DWORD error = GetLastError();
+                debugMsg = L"CategoryManager: 创建目录失败，错误码: " + std::to_wstring(error) + L"\n";
+                OutputDebugStringW(debugMsg.c_str());
+            }
+        } else {
+            debugMsg = L"CategoryManager: 无法从路径中提取目录: " + m_configPath + L"\n";
             OutputDebugStringW(debugMsg.c_str());
         }
         
-        fs::path configDir = configPath.parent_path();
-        
-        // 调试信息：显示配置路径和目录信息
-        debugMsg = L"CategoryManager: 配置路径: " + configPath.wstring() + L", 配置目录: " + configDir.wstring() + L"\n";
-        OutputDebugStringW(debugMsg.c_str());
-        
-        // 检查配置目录是否为空（配置文件在当前目录）
-        if (configDir.empty()) {
-            OutputDebugStringW(L"CategoryManager: 配置文件在当前目录，不需要创建目录\n");
-            return true;
+        // 检查文件是否存在
+        DWORD fileAttributes = GetFileAttributesW(m_configPath.c_str());
+        if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
+            debugMsg = L"CategoryManager: 配置文件不存在: " + m_configPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+        } else {
+            debugMsg = L"CategoryManager: 配置文件存在: " + m_configPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
         }
         
-        // 检查目录是否等于当前工作目录
-        fs::path currentDir = fs::current_path();
-        debugMsg = L"CategoryManager: 当前工作目录: " + currentDir.wstring() + L"\n";
-        OutputDebugStringW(debugMsg.c_str());
-        
-        // 如果目录不存在，则创建目录
-        if (!fs::exists(configDir)) {
-            OutputDebugStringW(L"CategoryManager: 配置目录不存在，正在创建目录\n");
-            bool result = fs::create_directories(configDir);
-            if (result) {
-                OutputDebugStringW(L"CategoryManager: 配置目录创建成功\n");
-            } else {
-                OutputDebugStringW(L"CategoryManager: 配置目录创建失败\n");
-            }
-            return result;
-        }
-        
-        OutputDebugStringW(L"CategoryManager: 配置目录已存在\n");
         return true;
     }
-    catch (const std::exception&) {
-        std::string errorMsg = "CategoryManager: ensureConfigDirectory异常\n";
+    catch (const std::exception& e) {
+        std::string errorMsg = "CategoryManager: ensureConfigDirectory异常: " + std::string(e.what()) + "\n";
         OutputDebugStringA(errorMsg.c_str());
         return false;
     }
@@ -476,15 +631,214 @@ bool CategoryManager::ensureConfigDirectory() const {
 
 /**
  * @brief 从文件路径生成标准化的路径
+ * 修复版本：使用exe路径而不是当前工作目录来解析相对路径
  */
 std::wstring CategoryManager::normalizePath(const std::wstring& path) const {
-    try {
-        fs::path normalized(path);
-        normalized = fs::absolute(normalized);
-        normalized = normalized.lexically_normal();
-        return normalized.wstring();
+    if (path.empty()) {
+        return path;
     }
-    catch (const std::exception&) {
-        return path; // 如果标准化失败，返回原路径
+    
+    // 调试信息：显示原始输入路径
+    std::wstring debugMsg = L"CategoryManager::normalizePath - 输入: '" + path + L"'\n";
+    OutputDebugStringW(debugMsg.c_str());
+    
+    // 检查是否是绝对路径
+    if (path.find(L':') != std::wstring::npos) {
+        // 绝对路径，直接返回
+        debugMsg = L"CategoryManager::normalizePath - 检测为绝对路径，返回: '" + path + L"'\n";
+        OutputDebugStringW(debugMsg.c_str());
+        return path;
+    }
+    
+    // 相对路径，需要相对于exe路径转换为绝对路径
+    wchar_t exePath[MAX_PATH];
+    if (GetModuleFileNameW(NULL, exePath, MAX_PATH) > 0) {
+        debugMsg = L"CategoryManager::normalizePath - exe路径: '" + std::wstring(exePath) + L"'\n";
+        OutputDebugStringW(debugMsg.c_str());
+        
+        // 获取exe所在目录
+        wchar_t exeDir[MAX_PATH];
+        exeDir[0] = L'\0';
+        // PathRemoveFileSpecW会就地修改缓冲区，所以先复制一份
+        if (wcscpy_s(exeDir, exePath) == 0 && PathRemoveFileSpecW(exeDir)) {
+            debugMsg = L"CategoryManager::normalizePath - exe目录: '" + std::wstring(exeDir) + L"'\n";
+            OutputDebugStringW(debugMsg.c_str());
+            
+            // 使用PathCombine相对于exe目录解析相对路径
+            wchar_t combinedPath[MAX_PATH];
+            if (PathCombineW(combinedPath, exeDir, path.c_str())) {
+                debugMsg = L"CategoryManager::normalizePath - 组合路径: '" + std::wstring(combinedPath) + L"'\n";
+                OutputDebugStringW(debugMsg.c_str());
+                
+                // 使用PathCanonicalize规范化路径（处理..和.符号）
+                wchar_t canonicalPath[MAX_PATH];
+                if (PathCanonicalizeW(canonicalPath, combinedPath)) {
+                    std::wstring result = canonicalPath;
+                    debugMsg = L"CategoryManager::normalizePath - 规范化后路径: '" + result + L"'\n";
+                    OutputDebugStringW(debugMsg.c_str());
+                    return result;
+                } else {
+                    // PathCanonicalize失败，使用PathCombine的结果
+                    std::wstring result = combinedPath;
+                    debugMsg = L"CategoryManager::normalizePath - PathCanonicalize失败，使用组合路径: '" + result + L"'\n";
+                    OutputDebugStringW(debugMsg.c_str());
+                    return result;
+                }
+            } else {
+                // PathCombine失败，尝试简单方案
+                debugMsg = L"CategoryManager::normalizePath - PathCombine失败\n";
+                OutputDebugStringW(debugMsg.c_str());
+                
+                std::wstring normalized = path;
+                // 标准化路径分隔符
+                for (auto& ch : normalized) {
+                    if (ch == L'/') {
+                        ch = L'\\';
+                    }
+                }
+                
+                std::wstring dirStr = exeDir;
+                if (!dirStr.empty() && dirStr.back() == L'\\') {
+                    dirStr.pop_back();
+                }
+                
+                std::wstring result = dirStr + L"\\" + normalized;
+                debugMsg = L"CategoryManager::normalizePath - 使用简单拼接: '" + result + L"'\n";
+                OutputDebugStringW(debugMsg.c_str());
+                return result;
+            }
+        } else {
+            // 获取exe目录失败
+            debugMsg = L"CategoryManager::normalizePath - 获取exe目录失败\n";
+            OutputDebugStringW(debugMsg.c_str());
+        }
+    } else {
+        // 获取exe路径失败
+        debugMsg = L"CategoryManager::normalizePath - 获取exe路径失败\n";
+        OutputDebugStringW(debugMsg.c_str());
+    }
+    
+    // 所有方法都失败，返回原始路径
+    debugMsg = L"CategoryManager::normalizePath - 返回原始路径: '" + path + L"'\n";
+    OutputDebugStringW(debugMsg.c_str());
+    return path;
+}
+
+/**
+ * @brief 保存文件映射到单独的JSON文件
+ */
+bool CategoryManager::saveFileMappings() {
+    try {
+        // 确保配置目录存在
+        if (!ensureConfigDirectory()) {
+            OutputDebugStringW(L"CategoryManager: 配置目录创建失败\n");
+            return false;
+        }
+        
+        json mappingsArray = json::array();
+        for (const auto& mapping : m_fileMappings) {
+            mappingsArray.push_back(mapping.toJson());
+        }
+        
+        json config;
+        config["fileMappings"] = mappingsArray;
+        
+        // 生成JSON字符串
+        std::string jsonString = config.dump(4);
+        
+        // 以二进制模式打开文件，写入UTF-8 BOM
+        std::ofstream file(m_fileMappingsPath, std::ios::binary | std::ios::trunc);
+        if (!file.is_open()) {
+            std::wstring debugMsg = L"CategoryManager: 无法打开文件映射文件: " + m_fileMappingsPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+            return false;
+        }
+        
+        // 写入UTF-8 BOM标记
+        const unsigned char bom[] = {0xEF, 0xBB, 0xBF};
+        file.write(reinterpret_cast<const char*>(bom), 3);
+        
+        // 写入JSON内容
+        file << jsonString;
+        file.close();
+        
+        std::wstring debugMsg = L"CategoryManager: 文件映射保存成功，文件: " + m_fileMappingsPath + L", 映射数量: " + std::to_wstring(m_fileMappings.size()) + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+        return true;
+    }
+    catch (const std::exception& e) {
+        std::string errorMsg = "CategoryManager: 保存文件映射时发生异常: " + std::string(e.what()) + "\n";
+        OutputDebugStringA(errorMsg.c_str());
+        return false;
+    }
+}
+
+/**
+ * @brief 从单独的JSON文件加载文件映射
+ */
+bool CategoryManager::loadFileMappings() {
+    try {
+        // 清空现有映射
+        m_fileMappings.clear();
+        
+        // 检查文件是否存在
+        DWORD fileAttributes = GetFileAttributesW(m_fileMappingsPath.c_str());
+        if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
+            std::wstring debugMsg = L"CategoryManager: 文件映射文件不存在: " + m_fileMappingsPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+            return false; // 文件不存在，但不算错误
+        }
+        
+        // 打开文件
+        std::ifstream file(m_fileMappingsPath, std::ios::in | std::ios::binary);
+        if (!file.is_open()) {
+            std::wstring debugMsg = L"CategoryManager: 无法打开文件映射文件: " + m_fileMappingsPath + L"\n";
+            OutputDebugStringW(debugMsg.c_str());
+            return false;
+        }
+        
+        // 读取文件内容
+        std::string fileContent((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+        file.close();
+        
+        if (fileContent.empty()) {
+            OutputDebugStringW(L"CategoryManager: 文件映射文件为空\n");
+            return false;
+        }
+        
+        // 检查并移除BOM
+        if (fileContent.length() >= 3 && 
+            static_cast<unsigned char>(fileContent[0]) == 0xEF &&
+            static_cast<unsigned char>(fileContent[1]) == 0xBB &&
+            static_cast<unsigned char>(fileContent[2]) == 0xBF) {
+            fileContent = fileContent.substr(3);
+        }
+        
+        // 解析JSON
+        json config = json::parse(fileContent);
+        
+        // 加载文件映射
+        if (config.contains("fileMappings")) {
+            for (const auto& mappingJson : config["fileMappings"]) {
+                FileCategoryMapping mapping;
+                mapping.fromJson(mappingJson);
+                m_fileMappings.push_back(mapping);
+            }
+        }
+        
+        std::wstring debugMsg = L"CategoryManager: 文件映射加载成功，映射数量: " + std::to_wstring(m_fileMappings.size()) + L"\n";
+        OutputDebugStringW(debugMsg.c_str());
+        return true;
+    }
+    catch (const json::exception& e) {
+        std::string errorMsg = "CategoryManager: JSON解析异常: " + std::string(e.what()) + "\n";
+        OutputDebugStringA(errorMsg.c_str());
+        return false;
+    }
+    catch (const std::exception& e) {
+        std::string errorMsg = "CategoryManager: 加载文件映射时发生异常: " + std::string(e.what()) + "\n";
+        OutputDebugStringA(errorMsg.c_str());
+        return false;
     }
 }

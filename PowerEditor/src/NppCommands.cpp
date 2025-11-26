@@ -98,6 +98,51 @@ void Notepad_plus::command(int id)
 		}
 		break;
 
+		case IDM_VIEW_DOCLIST_CATEGORY_MENU:
+		{
+			debugLog(L"显示分类菜单\n");
+			if (_pDocumentListPanel)
+			{
+				_pDocumentListPanel->showCategoryMenu();
+				debugLog(L"分类菜单显示完成\n");
+			}
+			else
+			{
+				debugLog(L"错误: 文档列表面板未初始化，无法显示分类菜单\n");
+			}
+		}
+		break;
+
+		case IDM_VIEW_DOCLIST_EDIT_CATEGORY:
+		{
+			debugLog(L"编辑分类文件\n");
+			if (_pDocumentListPanel)
+			{
+				_pDocumentListPanel->editCategoryFile();
+				debugLog(L"分类文件编辑完成\n");
+			}
+			else
+			{
+				debugLog(L"错误: 文档列表面板未初始化，无法编辑分类文件\n");
+			}
+		}
+		break;
+
+		case IDM_VIEW_DOCLIST_REFRESH_CATEGORY:
+		{
+			debugLog(L"刷新分类\n");
+			if (_pDocumentListPanel)
+			{
+				_pDocumentListPanel->refreshCategory();
+				debugLog(L"分类刷新完成\n");
+			}
+			else
+			{
+				debugLog(L"错误: 文档列表面板未初始化，无法刷新分类\n");
+			}
+		}
+		break;
+
 		case IDM_EDIT_INSERT_DATETIME_SHORT:
 		case IDM_EDIT_INSERT_DATETIME_LONG:
 		{
@@ -1019,6 +1064,131 @@ void Notepad_plus::command(int id)
 				wchar_t buffer[256];
 		swprintf(buffer, 256, L"检查_pDocumentListPanel指针是否有效: %p\n", _pDocumentListPanel);
 		debugLog(buffer);
+				if (_pDocumentListPanel)
+				{
+					debugLog(L"文档列表面板创建成功\n");
+					_pDocumentListPanel->setClosed(false);
+				}
+				else
+				{
+					debugLog(L"错误: launchDocumentListPanel()后_pDocumentListPanel指针无效\n");
+				}
+			}
+		}
+		break;
+
+		case IDM_VIEW_DOCUMENT_LIST:
+		{
+			debugLog(L"开始处理文档分类列表命令\n");
+			wchar_t buffer[256];
+			swprintf(buffer, 256, L"_pDocumentListPanel 指针状态: %p\n", _pDocumentListPanel);
+			debugLog(buffer);
+			if (_pDocumentListPanel)
+			{
+				wchar_t buffer[256];
+				swprintf(buffer, 256, L"文档列表面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
+				debugLog(buffer);
+				if (!_pDocumentListPanel->isClosed())
+				{
+					debugLog(L"隐藏文档列表面板\n");
+					_pDocumentListPanel->display(false);
+					_pDocumentListPanel->setClosed(true);
+					checkMenuItem(IDM_VIEW_DOCUMENT_LIST, false);
+					_toolBar.setCheck(IDM_VIEW_DOCUMENT_LIST, false);
+				}
+				else
+				{
+					debugLog(L"准备显示文档列表面板\n");
+					checkMenuItem(IDM_VIEW_DOCUMENT_LIST, true);
+					_toolBar.setCheck(IDM_VIEW_DOCUMENT_LIST, true);
+					debugLog(L"调用launchDocumentListPanel()\n");
+					launchDocumentListPanel();
+					wchar_t buffer[256];
+					swprintf(buffer, 256, L"检查_pDocumentListPanel指针是否有效: %p\n", _pDocumentListPanel);
+					debugLog(buffer);
+					if (_pDocumentListPanel)
+					{
+						debugLog(L"文档列表面板创建成功\n");
+						_pDocumentListPanel->setClosed(false);
+					}
+					else
+					{
+						debugLog(L"错误: launchDocumentListPanel()后_pDocumentListPanel指针无效\n");
+					}
+				}
+			}
+			else
+			{
+				debugLog(L"文档列表面板不存在，准备创建\n");
+				checkMenuItem(IDM_VIEW_DOCUMENT_LIST, true);
+				_toolBar.setCheck(IDM_VIEW_DOCUMENT_LIST, true);
+				debugLog(L"调用launchDocumentListPanel()\n");
+				launchDocumentListPanel();
+				wchar_t buffer[256];
+				swprintf(buffer, 256, L"检查_pDocumentListPanel指针是否有效: %p\n", _pDocumentListPanel);
+				debugLog(buffer);
+				if (_pDocumentListPanel)
+				{
+					debugLog(L"文档列表面板创建成功\n");
+					_pDocumentListPanel->setClosed(false);
+				}
+				else
+				{
+					debugLog(L"错误: launchDocumentListPanel()后_pDocumentListPanel指针无效\n");
+				}
+			}
+		}
+		break;
+
+		case IDM_VIEW_DOCUMENT_CATEGORY:
+		{
+			debugLog(L"开始处理文档分类菜单命令\n");
+			wchar_t buffer[256];
+			swprintf(buffer, 256, L"_pDocumentListPanel 指针状态: %p\n", _pDocumentListPanel);
+			debugLog(buffer);
+			if (_pDocumentListPanel)
+			{
+				wchar_t buffer[256];
+				swprintf(buffer, 256, L"文档列表面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
+				debugLog(buffer);
+				if (!_pDocumentListPanel->isClosed())
+				{
+					debugLog(L"文档列表面板已打开，切换到分类视图\n");
+					// 这里可以添加切换到分类视图的逻辑
+					// 目前只是显示面板
+					_pDocumentListPanel->display(true);
+				}
+				else
+				{
+					debugLog(L"准备显示文档列表面板\n");
+					checkMenuItem(IDM_VIEW_DOCUMENT_CATEGORY, true);
+					_toolBar.setCheck(IDM_VIEW_DOCUMENT_CATEGORY, true);
+					debugLog(L"调用launchDocumentListPanel()\n");
+					launchDocumentListPanel();
+					wchar_t buffer[256];
+					swprintf(buffer, 256, L"检查_pDocumentListPanel指针是否有效: %p\n", _pDocumentListPanel);
+					debugLog(buffer);
+					if (_pDocumentListPanel)
+					{
+						debugLog(L"文档列表面板创建成功\n");
+						_pDocumentListPanel->setClosed(false);
+					}
+					else
+					{
+						debugLog(L"错误: launchDocumentListPanel()后_pDocumentListPanel指针无效\n");
+					}
+				}
+			}
+			else
+			{
+				debugLog(L"文档列表面板不存在，准备创建\n");
+				checkMenuItem(IDM_VIEW_DOCUMENT_CATEGORY, true);
+				_toolBar.setCheck(IDM_VIEW_DOCUMENT_CATEGORY, true);
+				debugLog(L"调用launchDocumentListPanel()\n");
+				launchDocumentListPanel();
+				wchar_t buffer[256];
+				swprintf(buffer, 256, L"检查_pDocumentListPanel指针是否有效: %p\n", _pDocumentListPanel);
+				debugLog(buffer);
 				if (_pDocumentListPanel)
 				{
 					debugLog(L"文档列表面板创建成功\n");

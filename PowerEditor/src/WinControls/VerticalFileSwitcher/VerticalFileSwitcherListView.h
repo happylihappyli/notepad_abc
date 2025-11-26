@@ -75,10 +75,10 @@ public:
 	void redrawItems();
 	void ensureVisibleCurrentItem() const {
 		// 添加调试信息
-		debugLog(L"测试 VerticalFileSwitcherListView::ensureVisibleCurrentItem() called with _currentIndex=%d\n", _currentIndex);
+		//debugLog(L"测试 VerticalFileSwitcherListView::ensureVisibleCurrentItem() called with _currentIndex=%d\n", _currentIndex);
 		ListView_EnsureVisible(_hSelf, _currentIndex, false);
 		// 添加调试信息
-		debugLog(L"VerticalFileSwitcherListView::ensureVisibleCurrentItem() finished\n");
+		//sdebugLog(L"VerticalFileSwitcherListView::ensureVisibleCurrentItem() finished\n");
 	};
 
 	void setBackgroundColor(COLORREF bgColour) {

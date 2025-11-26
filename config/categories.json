@@ -1,4 +1,4 @@
-﻿{
+{
     "categories": [
         {
             "description": "未分类的文件",
@@ -31,14 +31,5 @@
             "order": 4
         }
     ],
-    "fileMappings": [
-        {
-            "categoryId": "life",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-律师维权.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\test_dll.zig"
-        }
-    ]
+    "fileMappings": []
 }

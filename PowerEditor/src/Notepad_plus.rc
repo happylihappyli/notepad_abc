@@ -846,6 +846,12 @@ BEGIN
         MENUITEM "Folder as Workspace",   IDM_VIEW_FILEBROWSER
         MENUITEM "Document Map",          IDM_VIEW_DOC_MAP
         MENUITEM "Document List",         IDM_VIEW_DOCLIST
+        POPUP "文档分类"
+        BEGIN
+            MENUITEM "显示分类菜单",        IDM_VIEW_DOCLIST_CATEGORY_MENU
+            MENUITEM "编辑分类文件",        IDM_VIEW_DOCLIST_EDIT_CATEGORY
+            MENUITEM "刷新分类",           IDM_VIEW_DOCLIST_REFRESH_CATEGORY
+        END
         MENUITEM "Function List",         IDM_VIEW_FUNC_LIST
         MENUITEM SEPARATOR
         MENUITEM "Synchronize Vertical Scrolling",      IDM_VIEW_SYNSCROLLV
