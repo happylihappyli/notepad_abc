@@ -1,6 +1,8 @@
 #include <shlwapi.h>
 #include <stdexcept>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 #include "VerticalFileSwitcherListView.h"
 #include "VerticalFileSwitcher_rc.h"
 #include "Buffer.h"
@@ -238,30 +240,9 @@ void VerticalFileSwitcherListView::initList()
 		// 新增：设置分类列的数据
 		if (isCategoryColumn)
 		{
-			// 获取文件分类信息
+			// 获取文件分类信息（带自动分类逻辑）
 			std::wstring filePath = fileNameStatus._fn;
-			std::wstring fileCategoryName;
-			
-			if (_categoryManager)
-			{
-				// 获取文件的分类ID
-				std::wstring categoryId = _categoryManager->getFileCategory(filePath);
-				
-				// 根据分类ID获取分类名称
-				FileCategory* category = _categoryManager->getCategoryById(categoryId);
-				if (category)
-				{
-					fileCategoryName = category->name;
-				}
-				else
-				{
-					fileCategoryName = _categoryManager->getDefaultCategoryName();
-				}
-			}
-			else
-			{
-				fileCategoryName = L"未分类";
-			}
+			std::wstring fileCategoryName = getFileCategoryName(filePath);
 			
 			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPWSTR)fileCategoryName.c_str());
 			debugLog(L"VerticalFileSwitcherListView::initList - 为文件 %s 设置分类列数据: %s", filePath.c_str(), fileCategoryName.c_str());
@@ -450,30 +431,9 @@ void VerticalFileSwitcherListView::reload()
 		// 新增：设置分类列的数据
 		if (isCategoryColumn)
 		{
-			// 获取文件分类信息
+			// 获取文件分类信息（带自动分类逻辑）
 			std::wstring filePath = fileNameStatus._fn;
-			std::wstring fileCategoryName;
-			
-			if (_categoryManager)
-			{
-				// 获取文件的分类ID
-				std::wstring categoryId = _categoryManager->getFileCategory(filePath);
-				
-				// 根据分类ID获取分类名称
-				FileCategory* category = _categoryManager->getCategoryById(categoryId);
-				if (category)
-				{
-					fileCategoryName = category->name;
-				}
-				else
-				{
-					fileCategoryName = _categoryManager->getDefaultCategoryName();
-				}
-			}
-			else
-			{
-				fileCategoryName = L"未分类";
-			}
+			std::wstring fileCategoryName = getFileCategoryName(filePath);
 			
 			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPWSTR)fileCategoryName.c_str());
 			debugLog(L"VerticalFileSwitcherListView::reload - 为文件 %s 设置分类列数据: %s", filePath.c_str(), fileCategoryName.c_str());
@@ -580,30 +540,9 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 			// 设置分类列的数据
 			if (isCategoryColumn)
 			{
-				// 获取文件分类信息
+				// 获取文件分类信息（带自动分类逻辑）
 				std::wstring filePath = tlfs->_fn;
-				std::wstring fileCategoryName;
-				
-				if (_categoryManager)
-				{
-					// 获取文件的分类ID
-					std::wstring categoryId = _categoryManager->getFileCategory(filePath);
-					
-					// 根据分类ID获取分类名称
-					FileCategory* category = _categoryManager->getCategoryById(categoryId);
-					if (category)
-					{
-						fileCategoryName = category->name;
-					}
-					else
-					{
-						fileCategoryName = _categoryManager->getDefaultCategoryName();
-					}
-				}
-				else
-				{
-					fileCategoryName = L"未分类";
-				}
+				std::wstring fileCategoryName = getFileCategoryName(filePath);
 				
 				ListView_SetItemText(_hSelf, i, ++colIndex, (LPWSTR)fileCategoryName.c_str());
 			}
@@ -710,30 +649,9 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 	// 设置分类列的数据
 	if (isCategoryColumn)
 	{
-		// 获取文件分类信息
+		// 获取文件分类信息（带自动分类逻辑）
 		std::wstring filePath = buf->getFullPathName();
-		std::wstring fileCategoryName;
-		
-		if (_categoryManager)
-		{
-			// 获取文件的分类ID
-			std::wstring categoryId = _categoryManager->getFileCategory(filePath);
-			
-			// 根据分类ID获取分类名称
-			FileCategory* category = _categoryManager->getCategoryById(categoryId);
-			if (category)
-			{
-				fileCategoryName = category->name;
-			}
-			else
-			{
-				fileCategoryName = _categoryManager->getDefaultCategoryName();
-			}
-		}
-		else
-		{
-			fileCategoryName = L"未分类";
-		}
+		std::wstring fileCategoryName = getFileCategoryName(filePath);
 		
 		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, (LPWSTR)fileCategoryName.c_str());
 	}
@@ -981,6 +899,60 @@ void VerticalFileSwitcherListView::showContextMenu(int x, int y)
         
         debugLog(L"VerticalFileSwitcherListView::showContextMenu - 统一右键菜单已显示");
     }
+}
+
+// 获取文件分类名称（带自动分类逻辑）
+std::wstring VerticalFileSwitcherListView::getFileCategoryName(const std::wstring& filePath)
+{
+	std::wstring fileCategoryName;
+	
+	if (_categoryManager)
+	{
+		// 获取文件的分类ID
+		std::wstring categoryId = _categoryManager->getFileCategory(filePath);
+		
+		// 检查是否需要自动分类（.js或.py文件且没有分类）
+		if (categoryId == _categoryManager->getDefaultCategoryId())
+		{
+			// 获取文件扩展名
+			std::wstring ext = ::PathFindExtension(filePath.c_str());
+			// 转换为小写进行比较
+			std::wstring extLower = ext;
+			std::transform(extLower.begin(), extLower.end(), extLower.begin(), ::towlower);
+			
+			// 如果是.js或.py文件，自动分类到"编程"
+			if (extLower == L".js" || extLower == L".py")
+			{
+				// 查找"编程"分类
+				FileCategory* programmingCategory = _categoryManager->getCategoryByName(L"编程");
+				if (programmingCategory)
+				{
+					// 自动设置分类
+					_categoryManager->addFileToCategory(filePath, L"编程");
+					fileCategoryName = L"编程";
+					debugLog(L"VerticalFileSwitcherListView::getFileCategoryName - 自动分类文件 %s 到编程分类", filePath.c_str());
+					return fileCategoryName;
+				}
+			}
+		}
+		
+		// 根据分类ID获取分类名称
+		FileCategory* category = _categoryManager->getCategoryById(categoryId);
+		if (category)
+		{
+			fileCategoryName = category->name;
+		}
+		else
+		{
+			fileCategoryName = _categoryManager->getDefaultCategoryName();
+		}
+	}
+	else
+	{
+		fileCategoryName = L"未分类";
+	}
+	
+	return fileCategoryName;
 }
 
 // 处理文件分类变更

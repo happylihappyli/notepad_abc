@@ -117,6 +117,9 @@ public:
 	void onFileCategoryChange(const std::wstring& categoryName);
 	void onTabColorChange(int colorIndex);
 
+	// 获取文件分类名称（带自动分类逻辑）
+	std::wstring getFileCategoryName(const std::wstring& filePath);
+	
 	// 添加设置Notepad++主窗口句柄的方法
 	void setNppMainWnd(HWND nppMainWnd) { _nppMainWnd = nppMainWnd; }
 
