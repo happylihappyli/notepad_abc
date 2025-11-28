@@ -839,11 +839,27 @@ LRESULT Notepad_plus::init(HWND hwnd)
 			{
 				// 对于正常启动，也检查文档列表的保持状态
 				// 如果_docListKeepState为true，强制显示面板，即使pdi._isVisible为false
-				if (isInternalFunc && pdi._internalID == IDM_VIEW_DOCLIST && nppGUI._docListKeepState)
+				if (isInternalFunc && pdi._internalID == IDM_VIEW_DOCLIST)
 				{
-					showPanel = true;
-					// 强制设置可见性，确保面板被显示
-					pdi._isVisible = true;
+					// 如果_docListKeepState为true，强制显示面板
+					if (nppGUI._docListKeepState)
+					{
+						showPanel = true;
+						// 强制设置可见性，确保面板被显示
+						pdi._isVisible = true;
+					}
+					// 如果_docListKeepState为false，但这是首次启动或没有docking配置，也默认显示
+					else
+					{
+						// 检查是否已经有docking配置，如果没有，说明是首次启动
+						bool isFirstLaunch = dmd._pluginDockInfo.size() <= 1; // 如果只有很少的配置，可能是首次启动
+						if (isFirstLaunch)
+						{
+							showPanel = true;
+							pdi._isVisible = true;
+							nppGUI._docListKeepState = true; // 设置为true，确保下次启动也显示
+						}
+					}
 				}
 			}
 
@@ -863,9 +879,8 @@ LRESULT Notepad_plus::init(HWND hwnd)
 		}
 	}
 
-	// 文档列表默认显示：如果_docListKeepState为true（默认值），就显示文档列表
-	// 即使_internalFuncIDs中没有包含，只要_docListKeepState为true，也要显示
-	// 如果_docListKeepState为false，但这是首次启动（没有docking配置），也默认显示
+	// 文档列表默认显示：根据_docListKeepState配置决定是否显示
+	// 如果_docListKeepState为true，或者这是首次启动，就显示文档列表
 	bool shouldShowDocList = nppGUI._docListKeepState;
 	if (!shouldShowDocList)
 	{
@@ -892,12 +907,20 @@ LRESULT Notepad_plus::init(HWND hwnd)
 			}
 		}
 		
-		// 如果应该显示文档列表，强制显示面板
-		// 无论是否在_internalFuncIDs中，或者面板是否已创建，都要确保显示
-		if (!_pDocumentListPanel)
+		// 如果应该显示文档列表，但还没有在_internalFuncIDs中，说明docking状态恢复时没有包含
+		// 需要强制显示面板
+		if (!inInternalFuncIDs)
 		{
-			debugLog(L"Notepad_plus::init() - 自动启动文档列表面板（_docListKeepState=true）\n");
-			launchDocumentListPanel();
+			debugLog(L"Notepad_plus::init() - 自动启动文档列表面板（_docListKeepState=true，但docking状态中未包含）\n");
+			if (!_pDocumentListPanel)
+			{
+				launchDocumentListPanel();
+			}
+			else
+			{
+				_pDocumentListPanel->display(true);
+				_pDocumentListPanel->setClosed(false);
+			}
 			// 自动勾选菜单项
 			if (_pDocumentListPanel && !_pDocumentListPanel->isClosed())
 			{
@@ -905,9 +928,9 @@ LRESULT Notepad_plus::init(HWND hwnd)
 				_toolBar.setCheck(IDM_VIEW_DOCLIST, true);
 			}
 		}
-		else
+		else if (_pDocumentListPanel && _pDocumentListPanel->isClosed())
 		{
-			// 如果面板已创建，无论是否关闭，都重新显示
+			// 如果面板已创建但被关闭，重新显示
 			debugLog(L"Notepad_plus::init() - 重新显示文档列表面板（_docListKeepState=true）\n");
 			_pDocumentListPanel->display(true);
 			_pDocumentListPanel->setClosed(false);
