@@ -838,9 +838,12 @@ LRESULT Notepad_plus::init(HWND hwnd)
 			else
 			{
 				// 对于正常启动，也检查文档列表的保持状态
+				// 如果_docListKeepState为true，强制显示面板，即使pdi._isVisible为false
 				if (isInternalFunc && pdi._internalID == IDM_VIEW_DOCLIST && nppGUI._docListKeepState)
 				{
 					showPanel = true;
+					// 强制设置可见性，确保面板被显示
+					pdi._isVisible = true;
 				}
 			}
 
@@ -860,24 +863,56 @@ LRESULT Notepad_plus::init(HWND hwnd)
 		}
 	}
 
-	// 如果配置了文档列表保持状态，自动创建VerticalFileSwitcher
-	if (nppGUI._docListKeepState)
+	// 文档列表默认显示：如果_docListKeepState为true（默认值），就显示文档列表
+	// 即使_internalFuncIDs中没有包含，只要_docListKeepState为true，也要显示
+	// 如果_docListKeepState为false，但这是首次启动（没有docking配置），也默认显示
+	bool shouldShowDocList = nppGUI._docListKeepState;
+	if (!shouldShowDocList)
+	{
+		// 首次启动时，即使_docListKeepState为false（可能是配置文件不存在或未设置），也默认显示文档列表
+		// 检查是否已经有docking配置，如果没有，说明是首次启动
+		bool isFirstLaunch = dmd._pluginDockInfo.empty();
+		if (isFirstLaunch)
+		{
+			shouldShowDocList = true;
+			nppGUI._docListKeepState = true; // 设置为true，确保下次启动也显示
+		}
+	}
+	
+	if (shouldShowDocList)
 	{
 		// 检查是否在内部函数ID列表中包含了文档列表
-		bool shouldLaunchDocList = false;
+		bool inInternalFuncIDs = false;
 		for (size_t i = 0, len = _internalFuncIDs.size(); i < len; ++i)
 		{
 			if (_internalFuncIDs[i] == IDM_VIEW_DOCLIST)
 			{
-				shouldLaunchDocList = true;
+				inInternalFuncIDs = true;
 				break;
 			}
 		}
 		
-		if (shouldLaunchDocList)
+		// 如果应该显示文档列表，强制显示面板
+		// 无论是否在_internalFuncIDs中，或者面板是否已创建，都要确保显示
+		if (!_pDocumentListPanel)
 		{
 			debugLog(L"Notepad_plus::init() - 自动启动文档列表面板（_docListKeepState=true）\n");
 			launchDocumentListPanel();
+			// 自动勾选菜单项
+			if (_pDocumentListPanel && !_pDocumentListPanel->isClosed())
+			{
+				checkMenuItem(IDM_VIEW_DOCLIST, true);
+				_toolBar.setCheck(IDM_VIEW_DOCLIST, true);
+			}
+		}
+		else
+		{
+			// 如果面板已创建，无论是否关闭，都重新显示
+			debugLog(L"Notepad_plus::init() - 重新显示文档列表面板（_docListKeepState=true）\n");
+			_pDocumentListPanel->display(true);
+			_pDocumentListPanel->setClosed(false);
+			checkMenuItem(IDM_VIEW_DOCLIST, true);
+			_toolBar.setCheck(IDM_VIEW_DOCLIST, true);
 		}
 	}
 

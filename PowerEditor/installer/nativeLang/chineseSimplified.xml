@@ -1582,6 +1582,7 @@ Notepad++ 会备份旧的 “shortcuts.xml”，并将其保存为 “shortcuts.
 			<PanelTitle name="文档列表"/>
 			<ColumnName name="文件名"/>
 			<ColumnExt name="扩展名"/>
+			<ColumnCategory name="分类"/>
 			<ColumnPath name="路径"/>
 			<ListGroups name="按视图分组"/>
 			<Settings name="设置"/>

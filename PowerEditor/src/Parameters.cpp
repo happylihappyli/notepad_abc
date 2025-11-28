@@ -6134,7 +6134,8 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			_nppGUI._multiInstSetting = (MultiInstSetting)val;
 
 			_nppGUI._clipboardHistoryPanelKeepState = parseYesNoBoolAttribute(L"clipboardHistory");
-			_nppGUI._docListKeepState = parseYesNoBoolAttribute(L"documentList");
+			// 文档列表默认显示，如果配置文件中没有设置，使用默认值true
+			_nppGUI._docListKeepState = parseYesNoBoolAttribute(L"documentList", true);
 			_nppGUI._charPanelKeepState = parseYesNoBoolAttribute(L"characterPanel");
 			_nppGUI._fileBrowserKeepState = parseYesNoBoolAttribute(L"folderAsWorkspace");
 			_nppGUI._projectPanelKeepState = parseYesNoBoolAttribute(L"projectPanels");
@@ -6218,7 +6219,10 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 				_nppGUI._fileSwitcherWithoutPathColumn = (lstrcmp(optNamePath, L"yes") == 0);
 
 			if (element->Attribute(L"fileSwitcherPathWidth", &i))
-			_nppGUI._fileSwitcherPathWidth = i;
+				_nppGUI._fileSwitcherPathWidth = i;
+
+			if (element->Attribute(L"fileSwitcherCategoryWidth", &i))
+				_nppGUI._fileSwitcherCategoryWidth = i;
 
 		if (element->Attribute(L"fileSwitcherFontSize", &i))
 			_nppGUI._fileSwitcherFontSize = i;

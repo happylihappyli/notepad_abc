@@ -1032,6 +1032,11 @@ void Notepad_plus::command(int id)
 					_pDocumentListPanel->setClosed(true);
 					checkMenuItem(IDM_VIEW_DOCLIST, false);
 					_toolBar.setCheck(IDM_VIEW_DOCLIST, false);
+					// 更新保持状态为false
+					NppParameters::getInstance().getNppGUI()._docListKeepState = false;
+					// 保存docking参数，确保状态被保存
+					saveDockingParams();
+					NppParameters::getInstance().saveConfig_xml();
 				}
 				else
 				{
@@ -1047,6 +1052,11 @@ void Notepad_plus::command(int id)
 					{
 						debugLog(L"文档列表面板创建成功\n");
 						_pDocumentListPanel->setClosed(false);
+						// 更新保持状态为true
+						NppParameters::getInstance().getNppGUI()._docListKeepState = true;
+						// 保存docking参数，确保状态被保存
+						saveDockingParams();
+						NppParameters::getInstance().saveConfig_xml();
 					}
 					else
 					{
@@ -1068,6 +1078,11 @@ void Notepad_plus::command(int id)
 				{
 					debugLog(L"文档列表面板创建成功\n");
 					_pDocumentListPanel->setClosed(false);
+					// 更新保持状态为true
+					NppParameters::getInstance().getNppGUI()._docListKeepState = true;
+					// 保存docking参数，确保状态被保存
+					saveDockingParams();
+					NppParameters::getInstance().saveConfig_xml();
 				}
 				else
 				{

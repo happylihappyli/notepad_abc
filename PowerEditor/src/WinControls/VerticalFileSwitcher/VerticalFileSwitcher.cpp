@@ -746,9 +746,15 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 						// 在列表视图头部右键，显示不包含文档分类的菜单
 						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
 						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
-						::TrackPopupMenu(_hGlobalMenu, 
-							NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-							pt.x, pt.y, 0, _hSelf, NULL);
+						UINT flags = TPM_LEFTALIGN | TPM_RETURNCMD;
+						if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
+							flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
+						UINT cmd = ::TrackPopupMenu(_hGlobalMenu, flags, pt.x, pt.y, 0, _hSelf, NULL);
+						if (cmd != 0)
+						{
+							// 发送命令消息，而不是让系统自动处理
+							::PostMessage(_hSelf, WM_COMMAND, cmd, 0);
+						}
 						return TRUE;
 					}
 
@@ -774,9 +780,15 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 						// 在文件列表上右键，显示包含文档分类的菜单
 						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
 						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
-						::TrackPopupMenu(_hFileListMenu, 
-							NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-							pt.x, pt.y, 0, _hSelf, NULL);
+						UINT flags = TPM_LEFTALIGN | TPM_RETURNCMD;
+						if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
+							flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
+						UINT cmd = ::TrackPopupMenu(_hFileListMenu, flags, pt.x, pt.y, 0, _hSelf, NULL);
+						if (cmd != 0)
+						{
+							// 发送命令消息，而不是让系统自动处理
+							::PostMessage(_hSelf, WM_COMMAND, cmd, 0);
+						}
 					}
 					return TRUE;
 				}
@@ -824,10 +836,28 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					Header_GetItem(hwndHD, test->iItem, &hdi);
 
 					// storing column width data
-					if (hdi.pszText == pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT))
-						nppParams.getNppGUI()._fileSwitcherExtWidth = hdi.cxy;
-					else if (hdi.pszText == pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH))
-						nppParams.getNppGUI()._fileSwitcherPathWidth = hdi.cxy;
+					wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
+					wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
+					wstring categoryStr = pNativeSpeaker->getAttrNameStr(L"Category", FS_ROOTNODE, FS_CLMNCATEGORY);
+					
+					// 需要将DPI缩放后的宽度转换回原始宽度
+					int unscaledWidth = nppParams._dpiManager.unscaleX(hdi.cxy);
+					
+					if (hdi.pszText == extStr)
+					{
+						nppParams.getNppGUI()._fileSwitcherExtWidth = unscaledWidth;
+					}
+					else if (hdi.pszText == pathStr)
+					{
+						nppParams.getNppGUI()._fileSwitcherPathWidth = unscaledWidth;
+					}
+					else if (hdi.pszText == categoryStr)
+					{
+						nppParams.getNppGUI()._fileSwitcherCategoryWidth = unscaledWidth;
+					}
+
+					// 保存配置
+					nppParams.saveConfig_xml();
 
 					return TRUE;
 				}
@@ -866,8 +896,8 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			int width = LOWORD(lParam);
             int height = HIWORD(lParam);
 			
-			// 调整文件列表视图大小 - 超紧凑布局
-			int topOffset = 25; // 进一步减少分类按钮栏的实际高度
+			// 调整文件列表视图大小 - 考虑增大的分类按钮栏
+			int topOffset = 45; // 增大顶部偏移以适应更大的分类按钮
 			int listViewHeight = height - topOffset;
 			if (listViewHeight > 0)
 			{
@@ -888,14 +918,26 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
             
             if (isInListView) {
                 // 在文件列表上右键，显示包含文档分类的菜单
-                ::TrackPopupMenu(_hFileListMenu, 
-                    NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-                    pt.x, pt.y, 0, _hSelf, NULL);
+                UINT flags = TPM_LEFTALIGN | TPM_RETURNCMD;
+                if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
+                    flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
+                UINT cmd = ::TrackPopupMenu(_hFileListMenu, flags, pt.x, pt.y, 0, _hSelf, NULL);
+                if (cmd != 0)
+                {
+                    // 发送命令消息，而不是让系统自动处理
+                    ::PostMessage(_hSelf, WM_COMMAND, cmd, 0);
+                }
             } else {
                 // 在列表视图外（如头部）右键，显示不包含文档分类的菜单
-                ::TrackPopupMenu(_hGlobalMenu, 
-                    NppParameters::getInstance().getNativeLangSpeaker()->isRTL() ? TPM_RIGHTALIGN | TPM_LAYOUTRTL : TPM_LEFTALIGN,
-                    pt.x, pt.y, 0, _hSelf, NULL);
+                UINT flags = TPM_LEFTALIGN | TPM_RETURNCMD;
+                if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
+                    flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
+                UINT cmd = ::TrackPopupMenu(_hGlobalMenu, flags, pt.x, pt.y, 0, _hSelf, NULL);
+                if (cmd != 0)
+                {
+                    // 发送命令消息，而不是让系统自动处理
+                    ::PostMessage(_hSelf, WM_COMMAND, cmd, 0);
+                }
             }
             return TRUE;
         }
@@ -973,9 +1015,9 @@ void VerticalFileSwitcher::createCategoryButtons()
 	// 创建分类按钮栏（用于过滤查看文件）- 增大按钮和字体
 	int buttonX = 5;        // 左边距
 	int buttonY = 5;        // 顶部偏移
-	int buttonWidth = 90;   // 增大按钮宽度
-	int buttonHeight = 28;  // 增大按钮高度
-	int buttonSpacing = 5;  // 按钮间距
+	int buttonWidth = 120;  // 进一步增大按钮宽度
+	int buttonHeight = 35;  // 进一步增大按钮高度
+	int buttonSpacing = 8;  // 增大按钮间距
 	
 	for (size_t i = 0; i < categories.size(); ++i)
 	{
@@ -1003,7 +1045,7 @@ void VerticalFileSwitcher::createCategoryButtons()
 				LOGFONT lf;
 				if (GetObject(hFont, sizeof(LOGFONT), &lf))
 				{
-					lf.lfHeight = -18;  // 增大字体到18号（负值表示逻辑单位）
+					lf.lfHeight = -20;  // 进一步增大字体到20号（负值表示逻辑单位）
 					lf.lfWeight = FW_BOLD; // 加粗字体
 					wcscpy_s(lf.lfFaceName, L"微软雅黑"); // 使用微软雅黑字体
 					

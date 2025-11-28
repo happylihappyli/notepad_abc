@@ -107,7 +107,12 @@ void VerticalFileSwitcherListView::initList()
 	if (isExtColumn)
 		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
 	if (isCategoryColumn)
-		nameWidth -= nppParams._dpiManager.scaleX(100); // 减去分类列宽度
+		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherCategoryWidth); // 使用保存的分类列宽度
+
+	// 限制第一列（文件名列）的最大宽度为300像素（考虑DPI缩放）
+	const int maxNameWidth = nppParams._dpiManager.scaleX(300);
+	if (nameWidth > maxNameWidth)
+		nameWidth = maxNameWidth;
 
 	//add columns
 	wstring nameStr = pNativeSpeaker->getAttrNameStr(L"Name", FS_ROOTNODE, FS_CLMNNAME);
@@ -121,7 +126,7 @@ void VerticalFileSwitcherListView::initList()
 	if (isCategoryColumn)
 	{
 		wstring categoryStr = pNativeSpeaker->getAttrNameStr(L"Category", FS_ROOTNODE, FS_CLMNCATEGORY);
-		int categoryWidth = nppParams._dpiManager.scaleX(100); // 默认分类列宽度
+		int categoryWidth = nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherCategoryWidth); // 使用保存的分类列宽度
 		insertColumn(categoryStr.c_str(), categoryWidth, ++colIndex); //3rd column
 		debugLog(L"VerticalFileSwitcherListView::initList() - 添加分类列，宽度: %d", categoryWidth);
 	}
@@ -311,6 +316,13 @@ void VerticalFileSwitcherListView::reload()
 	int colIndex = 0;
 	if (isExtColumn)
 		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
+	if (isCategoryColumn)
+		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherCategoryWidth); // 使用保存的分类列宽度
+
+	// 限制第一列（文件名列）的最大宽度为300像素（考虑DPI缩放）
+	const int maxNameWidth = nppParams._dpiManager.scaleX(300);
+	if (nameWidth > maxNameWidth)
+		nameWidth = maxNameWidth;
 
 	//add columns
 	wstring nameStr = pNativeSpeaker->getAttrNameStr(L"Name", FS_ROOTNODE, FS_CLMNNAME);
@@ -324,7 +336,7 @@ void VerticalFileSwitcherListView::reload()
 	if (isCategoryColumn)
 	{
 		wstring categoryStr = pNativeSpeaker->getAttrNameStr(L"Category", FS_ROOTNODE, FS_CLMNCATEGORY);
-		int categoryWidth = nppParams._dpiManager.scaleX(100); // 默认分类列宽度
+		int categoryWidth = nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherCategoryWidth); // 使用保存的分类列宽度
 		insertColumn(categoryStr.c_str(), categoryWidth, ++colIndex); //3rd column
 		debugLog(L"VerticalFileSwitcherListView::reload() - 添加分类列，宽度: %d", categoryWidth);
 	}
@@ -730,8 +742,10 @@ void VerticalFileSwitcherListView::resizeColumns(int totalWidth)
 	NppParameters& nppParams = NppParameters::getInstance();
 	// 强制只显示文件名和扩展名两列，忽略路径列配置
 	bool isExtColumn = true;  // 总是显示扩展名列
+	bool isCategoryColumn = true; // 总是显示分类列
 
 	const int extWidthDyn = nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherExtWidth);
+	const int categoryWidthDyn = nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherCategoryWidth);
 	int totalColWidthDynExceptName = 0;
 	int colIndex = 0;
 
@@ -740,7 +754,11 @@ void VerticalFileSwitcherListView::resizeColumns(int totalWidth)
 		totalColWidthDynExceptName += extWidthDyn;
 		ListView_SetColumnWidth(_hSelf, ++colIndex, extWidthDyn);
 	}
-	// 注释掉路径列的宽度调整，确保只显示两列
+	if (isCategoryColumn)
+	{
+		totalColWidthDynExceptName += categoryWidthDyn;
+		ListView_SetColumnWidth(_hSelf, ++colIndex, categoryWidthDyn);
+	}
 
 	const auto style = ::GetWindowLongPtr(_hSelf, GWL_STYLE);
 	if ((style & WS_VSCROLL) == WS_VSCROLL)
@@ -748,7 +766,13 @@ void VerticalFileSwitcherListView::resizeColumns(int totalWidth)
 		totalColWidthDynExceptName += ::GetSystemMetrics(SM_CXVSCROLL);
 	}
 
-	ListView_SetColumnWidth(_hSelf, 0, totalWidth - totalColWidthDynExceptName);
+	// 计算第一列宽度，但限制最大值为300像素（考虑DPI缩放）
+	int nameWidth = totalWidth - totalColWidthDynExceptName;
+	const int maxNameWidth = nppParams._dpiManager.scaleX(300);
+	if (nameWidth > maxNameWidth)
+		nameWidth = maxNameWidth;
+
+	ListView_SetColumnWidth(_hSelf, 0, nameWidth);
 }
 
 std::vector<BufferViewInfo> VerticalFileSwitcherListView::getSelectedFiles(bool reverse) const

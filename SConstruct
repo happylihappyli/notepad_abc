@@ -215,8 +215,12 @@ def configure_build_options(env, build_type='Release'):
     return env
 
 # 配置链接选项 - 基于CMakeLists.txt
-def configure_link_options(env):
-    """配置链接选项"""
+def configure_link_options(env, subsystem='WINDOWS'):
+    """配置链接选项
+    Args:
+        env: SCons环境对象
+        subsystem: 子系统类型，'WINDOWS' 或 'CONSOLE'
+    """
     # 链接库 - 基于Visual Studio项目文件的完整依赖链
     # 注意：oleaut32.lib必须在comsuppw.lib之前链接，以正确解析依赖关系
     libs = [
@@ -244,6 +248,11 @@ def configure_link_options(env):
         'odbc32.lib',             # ODBC库（添加缺失的依赖）
         'odbccp32.lib',           # ODBC安装程序库（添加缺失的依赖）
         'comsuppw.lib',           # COM支持库（关键：解决GetErrorInfo等符号）
+        # 标准C/ C++运行时库（保持 /MD 风格）
+        'ucrt.lib',
+        'vcruntime.lib',
+        'msvcrt.lib',
+        'msvcprt.lib',
         'libscintilla.lib',       # Scintilla库
         'liblexilla.lib',         # Lexilla库
     ]
@@ -258,21 +267,35 @@ def configure_link_options(env):
         os.path.join(os.environ.get('VCToolsInstallDir', 'C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.39.33519\\lib\\x64')),
     ]
     
+    # 根据子系统类型设置SUBSYSTEM链接标志
+    if subsystem.upper() == 'CONSOLE':
+        subsystem_flag = '/SUBSYSTEM:CONSOLE,6.00'  # 控制台子系统，显示控制台窗口
+        # 控制台版本需要使用wWinMain作为入口点，否则链接器会寻找main函数
+        # 注意：/ENTRY必须放在/SUBSYSTEM之前才能生效
+        entry_point_flag = '/ENTRY:wWinMain'
+    else:
+        subsystem_flag = '/SUBSYSTEM:WINDOWS,6.00'  # Windows子系统，只显示图形界面
+        entry_point_flag = None  # Windows版本默认使用wWinMain，不需要显式指定
+    
     # 链接标志 - 基于Visual Studio项目文件的完整链接器选项
-    linkflags = [
-        # '/NODEFAULTLIB:msvcprt.lib',     # 允许使用动态Release C++标准库
-        # '/NODEFAULTLIB:ucrt.lib',         # 允许使用动态Release UCRT
-        # '/NODEFAULTLIB:vcruntime.lib',    # 允许使用动态Release C++运行时
-        '/SUBSYSTEM:WINDOWS,6.00',  # 指定子系统版本，与Visual Studio一致
+    linkflags = []
+    
+    # 如果是控制台版本，先添加入口点选项（必须在SUBSYSTEM之前）
+    if entry_point_flag:
+        linkflags.append(entry_point_flag)
+    
+    # 添加子系统标志
+    linkflags.append(subsystem_flag)
+    
+    # 继续添加其他链接标志
+    linkflags.extend([
         '/VERSION:1.0',
         '/DYNAMICBASE',              # 启用ASLR
         '/NXCOMPAT',                 # 启用数据执行保护
         '/LARGEADDRESSAWARE',        # 启用大地址感知
         '/MANIFEST',                 # 启用清单文件
-        '/MANIFESTUAC:level=\'asInvoker\' uiAccess=\'false\'',  # UAC设置
         '/manifest:embed',           # 嵌入清单
-        '/manifestinput:PowerEditor\\src\\notepad_abc.exe.manifest',  # 清单输入文件
-        '/manifestinput:PowerEditor\\src\\dpiAware.manifest',        # DPI感知清单
+        '/manifestinput:' + os.path.join(src_dir, 'notepad_abc.exe.manifest'),  # 清单输入文件（已包含DPI和UAC设置）
         '/DEBUG',                    # 调试信息
         '/PDB:notepadPlus.pdb',      # PDB文件
         '/TLBOUT:/TLBID',            # 类型库输出
@@ -281,7 +304,7 @@ def configure_link_options(env):
         '/IMPLIB:notepad_abc.lib',   # 导入库
         '/MACHINE:X64',              # 目标机器架构
         '/CETCOMPAT:NO',             # CET兼容性
-    ]
+    ])
     
     # 应用链接设置
     env.Append(LIBS=libs)

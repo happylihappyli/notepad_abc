@@ -100,10 +100,11 @@ env = Environment()
 # 设置构建类型和目标架构
 build_type = ARGUMENTS.get('build', 'Release')  # 默认为Release构建
 target_arch = ARGUMENTS.get('arch', 'x64')       # 默认为x64架构
+subsystem = ARGUMENTS.get('subsystem', 'WINDOWS')  # 默认为WINDOWS子系统
 
 # 配置构建选项
 env = configure_build_options(env, build_type)
-env = configure_link_options(env)
+env = configure_link_options(env, subsystem)
 
 # 添加Lexilla和Scintilla包含目录 - 基于Visual Studio配置
 env.Append(CPPPATH=[
@@ -131,8 +132,11 @@ env.Append(LIBPATH=[
     obj_dir,  # 当前构建目录
 ])
 
-# 设置目标文件名
-target_name = 'notepad_abc.exe'
+# 设置目标文件名 - 根据子系统类型设置不同的文件名
+if subsystem.upper() == 'CONSOLE':
+    target_name = 'notepad_abc_console.exe'  # 控制台版本
+else:
+    target_name = 'notepad_abc.exe'  # Windows版本（默认）
 
 # 源文件列表 - 基于CMakeLists.txt
 src_files = [
