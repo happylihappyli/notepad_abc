@@ -370,10 +370,10 @@ public:
 		return E_NOTIMPL;
 	}
 
-	FileDialogEventHandler(IFileDialog* dlg, const std::vector<Filter>& filterSpec, int fileIndex, int wildcardIndex, bool isSaveAsCopy)
+	FileDialogEventHandler(IFileDialog* dlg, const std::vector<Filter>& filterSpec, int fileIndex, int wildcardIndex, bool isSaveAsCopy, bool isSaveDialog)
 		: _cRef(1), _dialog(dlg), _customize(dlg), _filterSpec(filterSpec), _currentType(fileIndex + 1),
 		_lastSelectedType(fileIndex + 1), _wildcardType(wildcardIndex >= 0 ? wildcardIndex + 1 : 0),
-		_isSaveAsCopy(isSaveAsCopy)
+		_isSaveAsCopy(isSaveAsCopy), _isSaveDialog(isSaveDialog)
 	{
 		installHooks();
 	}
@@ -513,8 +513,9 @@ private:
 		if (!doesDirectoryExist(getAbsPath(fileName).c_str()))
 		{
 			// Name is a file path.
-			// Add file extension if missing.
-			if (!hasExt(fileName))
+			// 只在保存对话框中自动添加扩展名，打开对话框不自动添加
+			// 这样用户在打开文件时输入的文件名不会被自动修改
+			if (_isSaveDialog && !hasExt(fileName))
 				nameChanged |= changeExt(fileName, _currentType - 1);
 		}
 		// Update the edit box text.
@@ -670,6 +671,7 @@ private:
 	UINT _lastSelectedType = 0;  // Last selected non-wildcard file type.
 	UINT _wildcardType = 0;  // Wildcard *.* file type index (usually 1).
 	bool _isSaveAsCopy = false;
+	bool _isSaveDialog = false;  // Whether this is a save dialog (true) or open dialog (false)
 };
 std::unordered_map<HWND, FileDialogEventHandler*> FileDialogEventHandler::s_handleMap;
 
@@ -700,8 +702,10 @@ public:
 
 		// Init the event handler.
 		// Pass the initially selected file type.
+		// Determine if this is a save dialog by checking the CLSID
+		bool isSaveDialog = (id == CLSID_FileSaveDialog);
 		if (SUCCEEDED(hr))
-			_events.Attach(new FileDialogEventHandler(_dialog, _filterSpec, _fileTypeIndex, _wildcardIndex, (_savingAsCopyInfo & SAVE_AS_COPY_DLG) != 0));
+			_events.Attach(new FileDialogEventHandler(_dialog, _filterSpec, _fileTypeIndex, _wildcardIndex, (_savingAsCopyInfo & SAVE_AS_COPY_DLG) != 0, isSaveDialog));
 
 		// If "assign type" is OFF, then change the file type to *.*
 		if (_enableFileTypeCheckbox && !_fileTypeCheckboxValue && _wildcardIndex >= 0)

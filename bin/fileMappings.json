@@ -55,6 +55,34 @@
         {
             "categoryId": "programming",
             "filePath": "E:\\GitHub3\\www.funnyai.com\\html\\qlearn.html"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-应用题.txt"
+        },
+        {
+            "categoryId": "life",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-律师维权.txt"
+        },
+        {
+            "categoryId": "life",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\打官司有关\\计划-公积金.txt"
+        },
+        {
+            "categoryId": "work",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-咖啡事业.txt"
+        },
+        {
+            "categoryId": "life",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-健康.txt"
+        },
+        {
+            "categoryId": "work",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-公司.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot我的世界.txt"
         }
     ]
 }

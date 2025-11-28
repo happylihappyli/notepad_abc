@@ -908,7 +908,16 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
         
 		case WM_CONTEXTMENU:
         {
-            // 检查是否在文件列表上右键
+            // 检查消息是否来自列表视图控件
+            // 如果来自列表视图，NM_RCLICK已经处理了，这里不需要再次处理
+            HWND hwndFrom = reinterpret_cast<HWND>(wParam);
+            if (hwndFrom == _fileListView.getHSelf())
+            {
+                // 来自列表视图的WM_CONTEXTMENU，NM_RCLICK已经处理，直接返回
+                return TRUE;
+            }
+            
+            // 检查是否在文件列表上右键（通过鼠标位置）
             POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
             RECT listRect;
             ::GetWindowRect(_fileListView.getHSelf(), &listRect);
