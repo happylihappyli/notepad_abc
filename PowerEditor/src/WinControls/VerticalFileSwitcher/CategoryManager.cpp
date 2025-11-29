@@ -40,16 +40,6 @@ void CategoryManager::initialize(const std::wstring& configPath) {
         m_configPath = resolvedPath;
     }
     
-    // 设置文件映射的单独保存路径（在bin目录下）
-    size_t lastBackslash = m_configPath.find_last_of(L'\\');
-    if (lastBackslash != std::wstring::npos) {
-        m_fileMappingsPath = m_configPath.substr(0, lastBackslash + 1) + L"fileMappings.json";
-    } else {
-        m_fileMappingsPath = L"fileMappings.json";
-    }
-    debugMsg = L"CategoryManager: 文件映射保存路径: " + m_fileMappingsPath + L"\n";
-    OutputDebugStringW(debugMsg.c_str());
-    
     // 确保配置目录存在
     bool dirResult = ensureConfigDirectory();
     debugMsg = L"CategoryManager: ensureConfigDirectory 返回结果: " + std::to_wstring(dirResult) + L"\n";
@@ -72,10 +62,6 @@ void CategoryManager::initialize(const std::wstring& configPath) {
         debugMsg = L"CategoryManager: 配置加载成功，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
         OutputDebugStringW(debugMsg.c_str());
     }
-    
-    // 加载文件映射（从单独的文件）
-    OutputDebugStringW(L"CategoryManager: 开始加载文件映射\n");
-    loadFileMappings();
     
     // 调试信息：显示加载的分类数量
     debugMsg = L"CategoryManager: 初始化完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
@@ -235,8 +221,9 @@ bool CategoryManager::loadConfig() {
             OutputDebugStringW(debugMsg.c_str());
         }
         
-        // 清空现有数据（只清空分类，文件映射单独加载）
+        // 清空现有数据
         m_categories.clear();
+        m_fileMappings.clear();
         
         // 加载分类
         if (config.contains("categories")) {
@@ -255,7 +242,14 @@ bool CategoryManager::loadConfig() {
             OutputDebugStringW(debugMsg.c_str());
         }
         
-        // 注意：文件映射不再从这里加载，而是从单独的fileMappings.json文件加载
+        // 加载文件映射
+        if (config.contains("fileMappings")) {
+            for (const auto& mappingJson : config["fileMappings"]) {
+                FileCategoryMapping mapping;
+                mapping.fromJson(mappingJson);
+                m_fileMappings.push_back(mapping);
+            }
+        }
         
         debugMsg = L"CategoryManager: loadConfig 完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
         OutputDebugStringW(debugMsg.c_str());
@@ -294,14 +288,19 @@ bool CategoryManager::saveConfig() {
         
         json config;
         
-        // 保存分类（文件映射单独保存）
+        // 保存分类
         json categoriesArray = json::array();
         for (const auto& category : m_categories) {
             categoriesArray.push_back(category.toJson());
         }
         config["categories"] = categoriesArray;
         
-        // 注意：文件映射不再保存到这里，而是保存到单独的fileMappings.json文件
+        // 保存文件映射
+        json mappingsArray = json::array();
+        for (const auto& mapping : m_fileMappings) {
+            mappingsArray.push_back(mapping.toJson());
+        }
+        config["fileMappings"] = mappingsArray;
         
         // 生成JSON字符串
         std::string jsonString = config.dump(4); // 缩进4个空格，便于阅读
@@ -474,7 +473,7 @@ bool CategoryManager::setFileCategory(const std::wstring& filePath, const std::w
     
     // 添加新的映射
     m_fileMappings.push_back(FileCategoryMapping(normalizedPath, categoryId));
-    return saveFileMappings();
+    return saveConfig();
 }
 
 /**
@@ -505,7 +504,7 @@ bool CategoryManager::removeFileCategory(const std::wstring& filePath) {
     
     if (it != m_fileMappings.end()) {
         m_fileMappings.erase(it, m_fileMappings.end());
-        return saveFileMappings();
+        return saveConfig();
     }
     
     return false;
@@ -658,9 +657,8 @@ std::wstring CategoryManager::normalizePath(const std::wstring& path) const {
         
         // 获取exe所在目录
         wchar_t exeDir[MAX_PATH];
-        exeDir[0] = L'\0';
-        // PathRemoveFileSpecW会就地修改缓冲区，所以先复制一份
-        if (wcscpy_s(exeDir, exePath) == 0 && PathRemoveFileSpecW(exeDir)) {
+        wcscpy_s(exeDir, MAX_PATH, exePath);
+        if (PathRemoveFileSpecW(exeDir)) {
             debugMsg = L"CategoryManager::normalizePath - exe目录: '" + std::wstring(exeDir) + L"'\n";
             OutputDebugStringW(debugMsg.c_str());
             
@@ -722,123 +720,4 @@ std::wstring CategoryManager::normalizePath(const std::wstring& path) const {
     debugMsg = L"CategoryManager::normalizePath - 返回原始路径: '" + path + L"'\n";
     OutputDebugStringW(debugMsg.c_str());
     return path;
-}
-
-/**
- * @brief 保存文件映射到单独的JSON文件
- */
-bool CategoryManager::saveFileMappings() {
-    try {
-        // 确保配置目录存在
-        if (!ensureConfigDirectory()) {
-            OutputDebugStringW(L"CategoryManager: 配置目录创建失败\n");
-            return false;
-        }
-        
-        json mappingsArray = json::array();
-        for (const auto& mapping : m_fileMappings) {
-            mappingsArray.push_back(mapping.toJson());
-        }
-        
-        json config;
-        config["fileMappings"] = mappingsArray;
-        
-        // 生成JSON字符串
-        std::string jsonString = config.dump(4);
-        
-        // 以二进制模式打开文件，写入UTF-8 BOM
-        std::ofstream file(m_fileMappingsPath, std::ios::binary | std::ios::trunc);
-        if (!file.is_open()) {
-            std::wstring debugMsg = L"CategoryManager: 无法打开文件映射文件: " + m_fileMappingsPath + L"\n";
-            OutputDebugStringW(debugMsg.c_str());
-            return false;
-        }
-        
-        // 写入UTF-8 BOM标记
-        const unsigned char bom[] = {0xEF, 0xBB, 0xBF};
-        file.write(reinterpret_cast<const char*>(bom), 3);
-        
-        // 写入JSON内容
-        file << jsonString;
-        file.close();
-        
-        std::wstring debugMsg = L"CategoryManager: 文件映射保存成功，文件: " + m_fileMappingsPath + L", 映射数量: " + std::to_wstring(m_fileMappings.size()) + L"\n";
-        OutputDebugStringW(debugMsg.c_str());
-        return true;
-    }
-    catch (const std::exception& e) {
-        std::string errorMsg = "CategoryManager: 保存文件映射时发生异常: " + std::string(e.what()) + "\n";
-        OutputDebugStringA(errorMsg.c_str());
-        return false;
-    }
-}
-
-/**
- * @brief 从单独的JSON文件加载文件映射
- */
-bool CategoryManager::loadFileMappings() {
-    try {
-        // 清空现有映射
-        m_fileMappings.clear();
-        
-        // 检查文件是否存在
-        DWORD fileAttributes = GetFileAttributesW(m_fileMappingsPath.c_str());
-        if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-            std::wstring debugMsg = L"CategoryManager: 文件映射文件不存在: " + m_fileMappingsPath + L"\n";
-            OutputDebugStringW(debugMsg.c_str());
-            return false; // 文件不存在，但不算错误
-        }
-        
-        // 打开文件
-        std::ifstream file(m_fileMappingsPath, std::ios::in | std::ios::binary);
-        if (!file.is_open()) {
-            std::wstring debugMsg = L"CategoryManager: 无法打开文件映射文件: " + m_fileMappingsPath + L"\n";
-            OutputDebugStringW(debugMsg.c_str());
-            return false;
-        }
-        
-        // 读取文件内容
-        std::string fileContent((std::istreambuf_iterator<char>(file)),
-                               std::istreambuf_iterator<char>());
-        file.close();
-        
-        if (fileContent.empty()) {
-            OutputDebugStringW(L"CategoryManager: 文件映射文件为空\n");
-            return false;
-        }
-        
-        // 检查并移除BOM
-        if (fileContent.length() >= 3 && 
-            static_cast<unsigned char>(fileContent[0]) == 0xEF &&
-            static_cast<unsigned char>(fileContent[1]) == 0xBB &&
-            static_cast<unsigned char>(fileContent[2]) == 0xBF) {
-            fileContent = fileContent.substr(3);
-        }
-        
-        // 解析JSON
-        json config = json::parse(fileContent);
-        
-        // 加载文件映射
-        if (config.contains("fileMappings")) {
-            for (const auto& mappingJson : config["fileMappings"]) {
-                FileCategoryMapping mapping;
-                mapping.fromJson(mappingJson);
-                m_fileMappings.push_back(mapping);
-            }
-        }
-        
-        std::wstring debugMsg = L"CategoryManager: 文件映射加载成功，映射数量: " + std::to_wstring(m_fileMappings.size()) + L"\n";
-        OutputDebugStringW(debugMsg.c_str());
-        return true;
-    }
-    catch (const json::exception& e) {
-        std::string errorMsg = "CategoryManager: JSON解析异常: " + std::string(e.what()) + "\n";
-        OutputDebugStringA(errorMsg.c_str());
-        return false;
-    }
-    catch (const std::exception& e) {
-        std::string errorMsg = "CategoryManager: 加载文件映射时发生异常: " + std::string(e.what()) + "\n";
-        OutputDebugStringA(errorMsg.c_str());
-        return false;
-    }
 }

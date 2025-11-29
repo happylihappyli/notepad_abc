@@ -927,6 +927,13 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			return TRUE;
 		}
 
+		case NPPM_INTERNAL_SAVEDOCKINGPARAMS:
+		{
+			saveDockingParams();
+			nppParam.saveConfig_xml();
+			return TRUE;
+		}
+
 		case NPPM_INTERNAL_CHANGETABBARICONSET:
 		{
 			_mainDocTab.changeIconSet(static_cast<unsigned char>(lParam));

@@ -731,7 +731,9 @@ public:
 		if (SUCCEEDED(hr) && _initialFileName)
 		{
 			wstring newFileName = _initialFileName;
-			if (_fileTypeIndex >= 0 && _fileTypeIndex < static_cast<int>(_filterSpec.size()))
+			// 只在保存对话框中自动添加扩展名，打开对话框不自动添加
+			// 这样用户在打开文件时输入的文件名不会被自动修改
+			if (isSaveDialog && _fileTypeIndex >= 0 && _fileTypeIndex < static_cast<int>(_filterSpec.size()))
 			{
 				if (!hasExt(newFileName))
 				{

@@ -121,6 +121,8 @@ LRESULT DockingSplitter::runProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 		{
 			::ReleaseCapture();
 			_isLeftButtonDown = FALSE;
+			// 通知 DockingManager 拖动结束，需要保存配置
+			::SendMessage(_hMessage, DMM_LBUTTONUP, 0, reinterpret_cast<LPARAM>(_hSelf));
 			break;
 		}
 		case WM_MOUSEMOVE:

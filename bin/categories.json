@@ -39,6 +39,26 @@
         {
             "categoryId": "programming",
             "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\test_dll.zig"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod_new.js"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod_gdscript.js"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod.js"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "F:\\www\\www.funnyai.com\\common\\mod_csharp.js"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "C:\\Users\\happyli\\Downloads\\关节 Python 函数库-251109\\面向过程编程\\test.py"
         }
     ]
 }

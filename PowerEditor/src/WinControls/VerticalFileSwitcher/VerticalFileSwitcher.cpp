@@ -744,8 +744,9 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					{
 						colHeaderRClick = true;
 						// 在列表视图头部右键，显示不包含文档分类的菜单
-						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
-						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
+						// 使用鼠标当前位置，确保菜单跟随鼠标
+						POINT pt;
+						::GetCursorPos(&pt);
 						UINT flags = TPM_LEFTALIGN | TPM_RETURNCMD;
 						if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
 							flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
@@ -778,8 +779,9 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 					if (nbSelectedFiles() >= 1)
 					{
 						// 在文件列表上右键，显示包含文档分类的菜单
-						POINT pt = { GET_X_LPARAM(lpnmitem->ptAction.x), GET_Y_LPARAM(lpnmitem->ptAction.y) };
-						::ClientToScreen(lpnmitem->hdr.hwndFrom, &pt);
+						// 使用鼠标当前位置，确保菜单跟随鼠标
+						POINT pt;
+						::GetCursorPos(&pt);
 						UINT flags = TPM_LEFTALIGN | TPM_RETURNCMD;
 						if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
 							flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
@@ -896,8 +898,8 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			int width = LOWORD(lParam);
             int height = HIWORD(lParam);
 			
-			// 调整文件列表视图大小 - 考虑增大的分类按钮栏
-			int topOffset = 45; // 增大顶部偏移以适应更大的分类按钮
+			// 调整文件列表视图大小 - 考虑分类按钮栏
+			int topOffset = 38; // 顶部偏移以适应分类按钮（减小）
 			int listViewHeight = height - topOffset;
 			if (listViewHeight > 0)
 			{
@@ -1021,12 +1023,12 @@ void VerticalFileSwitcher::createCategoryButtons()
 	if (categories.empty())
 		return;
 	
-	// 创建分类按钮栏（用于过滤查看文件）- 增大按钮和字体
+	// 创建分类按钮栏（用于过滤查看文件）
 	int buttonX = 5;        // 左边距
 	int buttonY = 5;        // 顶部偏移
-	int buttonWidth = 120;  // 进一步增大按钮宽度
-	int buttonHeight = 35;  // 进一步增大按钮高度
-	int buttonSpacing = 8;  // 增大按钮间距
+	int buttonWidth = 80;   // 按钮宽度（减小）
+	int buttonHeight = 28;  // 按钮高度（减小）
+	int buttonSpacing = 5;  // 按钮间距
 	
 	for (size_t i = 0; i < categories.size(); ++i)
 	{
@@ -1046,16 +1048,16 @@ void VerticalFileSwitcher::createCategoryButtons()
 		{
 			_categoryButtons.push_back(hButton);
 			
-			// 设置分类按钮的字体（使用更大的字号）
+			// 设置分类按钮的字体（使用稍小的字号）
 			HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
 			if (hFont)
 			{
-				// 获取当前字体信息并创建一个更大字号的字体
+				// 获取当前字体信息并创建一个稍小字号的字体
 				LOGFONT lf;
 				if (GetObject(hFont, sizeof(LOGFONT), &lf))
 				{
-					lf.lfHeight = -20;  // 进一步增大字体到20号（负值表示逻辑单位）
-					lf.lfWeight = FW_BOLD; // 加粗字体
+					lf.lfHeight = -14;  // 字体大小14号（负值表示逻辑单位）
+					lf.lfWeight = FW_NORMAL; // 正常字体（不加粗）
 					wcscpy_s(lf.lfFaceName, L"微软雅黑"); // 使用微软雅黑字体
 					
 					HFONT hNewFont = ::CreateFontIndirect(&lf);
@@ -1602,16 +1604,7 @@ void VerticalFileSwitcher::initFileListContextMenu()
     ::InsertMenu(_hFileListMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     ::InsertMenu(_hFileListMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
     
-    // 添加字体大小菜单
-    HMENU hFontSizeMenu = ::CreatePopupMenu();
-    wstring fontSizeStr = L"设置字体"; //pNativeSpeaker->getAttrNameStr(L"Font Size", FS_ROOTNODE, FS_FONTSIZE);
-    ::InsertMenu(hFontSizeMenu, FONTSIZE_6, MF_BYCOMMAND | MF_STRING, FONTSIZE_6, L"6");
-    ::InsertMenu(hFontSizeMenu, FONTSIZE_8, MF_BYCOMMAND | MF_STRING, FONTSIZE_8, L"8");
-    ::InsertMenu(hFontSizeMenu, FONTSIZE_10, MF_BYCOMMAND | MF_STRING, FONTSIZE_10, L"10");
-    ::InsertMenu(hFontSizeMenu, FONTSIZE_12, MF_BYCOMMAND | MF_STRING, FONTSIZE_12, L"12");
-    ::InsertMenu(hFontSizeMenu, FONTSIZE_14, MF_BYCOMMAND | MF_STRING, FONTSIZE_14, L"14");
-    ::InsertMenu(hFontSizeMenu, FONTSIZE_16, MF_BYCOMMAND | MF_STRING, FONTSIZE_16, L"16");
-    ::InsertMenu(_hFileListMenu, FONTSIZE_ID, MF_BYCOMMAND | MF_POPUP, reinterpret_cast<UINT_PTR>(hFontSizeMenu), fontSizeStr.c_str());
+    // 字体设置菜单已移除，因为设置对话框里面可以设置字体
 
     bool isExtColumn = nppGUI._fileSwitcherWithoutExtColumn;
     ::CheckMenuItem(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
@@ -1645,6 +1638,12 @@ void VerticalFileSwitcher::initFileListContextMenu()
     
     // 添加标签颜色菜单项
     ::AppendMenu(_hFileListMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"标签颜色");
+    
+    ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
+    
+    // 添加关闭当前文件菜单项（放在标签颜色之后）
+    wstring closeCurrentFileStr = L"关闭当前文件";
+    ::AppendMenu(_hFileListMenu, MF_STRING, IDM_DOCLIST_CLOSE_CURRENT, closeCurrentFileStr.c_str());
     
     ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
     ::AppendMenu(_hFileListMenu, MF_STRING, 1001, L"打开文件所在目录");
@@ -1728,37 +1727,7 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 		}
 		break;
 		
-		// 字体大小菜单处理
-		case FONTSIZE_6:
-			setFontSize(6);
-			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 6;
-			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
-			break;
-		case FONTSIZE_8:
-			setFontSize(8);
-			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 8;
-			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
-			break;
-		case FONTSIZE_10:
-			setFontSize(10);
-			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 10;
-			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
-			break;
-		case FONTSIZE_12:
-			setFontSize(12);
-			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 12;
-			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
-			break;
-		case FONTSIZE_14:
-			setFontSize(14);
-			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 14;
-			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
-			break;
-		case FONTSIZE_16:
-			setFontSize(16);
-			NppParameters::getInstance().getNppGUI()._fileSwitcherFontSize = 16;
-			_fileListView.reload(); // 重新加载文件列表以确保字体大小改变后列表内容正确显示
-			break;
+		// 字体大小菜单处理已移除，因为设置对话框里面可以设置字体
 		
 		// 设置菜单处理
 		case IDM_SETTINGS_VFS:
@@ -1827,6 +1796,62 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			}
 		}
 		break;
+		
+		// 关闭当前文件菜单处理
+		case IDM_DOCLIST_CLOSE_CURRENT:
+		{
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 关闭当前文件命令被触发");
+			
+			// 获取当前选中的文件
+			int selectedCount = nbSelectedFiles();
+			if (selectedCount > 0)
+			{
+				// 如果有选中的文件，关闭第一个选中的文件
+				int selectedIndex = ListView_GetSelectionMark(_fileListView.getHSelf());
+				if (selectedIndex >= 0)
+				{
+					LVITEM item{};
+					item.mask = LVIF_PARAM;
+					item.iItem = selectedIndex;
+					ListView_GetItem(_fileListView.getHSelf(), &item);
+					TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
+					
+					if (tlfs)
+					{
+						closeDoc(tlfs);
+						debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭选中的文件");
+					}
+				}
+			}
+			else
+			{
+				// 如果没有选中的文件，关闭当前活动的文件
+				BufferID currentBufID = reinterpret_cast<BufferID>(::SendMessage(_hParent, NPPM_GETCURRENTBUFFERID, 0, 0));
+				if (currentBufID != BUFFER_INVALID)
+				{
+					int currentView = static_cast<int>(::SendMessage(_hParent, NPPM_GETCURRENTVIEW, 0, 0));
+					
+					// 在文件列表中查找当前文件
+					int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
+					for (int i = 0; i < nbItem; ++i)
+					{
+						LVITEM item{};
+						item.mask = LVIF_PARAM;
+						item.iItem = i;
+						ListView_GetItem(_fileListView.getHSelf(), &item);
+						TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
+						
+						if (tlfs && static_cast<BufferID>(tlfs->_bufID) == currentBufID && tlfs->_iView == currentView)
+						{
+							closeDoc(tlfs);
+							debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭当前活动的文件");
+							break;
+						}
+					}
+				}
+			}
+		}
+		break;
 
 	}
 }
@@ -1875,7 +1900,7 @@ void VerticalFileSwitcher::closeDoc(TaskLstFnStatus *tlfs) const
 		
 	int docPosInfo = static_cast<int32_t>(::SendMessage(_hParent, NPPM_GETPOSFROMBUFFERID, reinterpret_cast<WPARAM>(bufferID), view));
 	int view2set = docPosInfo >> 30;
-	int index2Switch = (docPosInfo << 2) > 2;
+	int index2Switch = (docPosInfo << 2) >> 2;  // 修复：应该使用右移而不是比较
 
 	::SendMessage(_hParent, NPPM_INTERNAL_CLOSEDOC, view2set, index2Switch);
 }

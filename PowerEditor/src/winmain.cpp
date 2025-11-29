@@ -416,7 +416,9 @@ static bool SetDPIAwarenessSafe()
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ PWSTR pCmdLine, _In_ int /*nShowCmd*/)
 {
-	// 创建控制台窗口用于调试输出
+	// 控制台窗口默认不显示，可以通过Help菜单中的"显示调试控制台"来显示
+	// 如果需要默认显示，可以取消下面的注释
+	/*
 	if (AllocConsole()) {
 		// 设置控制台编码为UTF-8，解决中文显示问号问题
 		SetConsoleOutputCP(CP_UTF8);
@@ -431,6 +433,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 		wprintf(L"程序版本: %hs\n", "1.0.0"); // 临时版本号
 		wprintf(L"编译时间: %hs\n\n", __DATE__ " " __TIME__);
 	}
+	*/
 
 	g_nppStartTimePoint = std::chrono::steady_clock::now();
 

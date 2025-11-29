@@ -57,6 +57,9 @@
 // 编辑分类JSON菜单ID
 #define	IDM_EDIT_CATEGORY_JSON 3101
 
+// 关闭当前文件菜单ID
+#define	IDM_DOCLIST_CLOSE_CURRENT 3102
+
 // 设置对话框ID
 #define	IDD_DOCLIST_SETTINGS 3050
 // 输入对话框ID

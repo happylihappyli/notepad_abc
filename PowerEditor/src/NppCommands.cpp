@@ -18,6 +18,7 @@
 #include <regex>
 #include <shlwapi.h>
 #include <windows.h>
+#include <stdio.h>
 #include "Notepad_plus_Window.h"
 #include "EncodingMapper.h"
 #include "ShortcutMapper.h"
@@ -57,13 +58,23 @@ void debugLog(const wchar_t* format, ...) {
 	writeLog(L"npp_debug.log", buffer);
 	// 输出到调试窗口
 	OutputDebugStringW(buffer);
+	
 	// 输出到控制台，方便查看调试信息
-	// 使用WriteConsoleW直接输出宽字符到控制台，解决中文显示问号问题
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hConsole != INVALID_HANDLE_VALUE) {
-		DWORD charsWritten;
-		WriteConsoleW(hConsole, buffer, wcslen(buffer), &charsWritten, NULL);
-		WriteConsoleW(hConsole, L"\n", 1, &charsWritten, NULL);
+	// 检查控制台是否存在
+	HWND hConsoleWnd = GetConsoleWindow();
+	if (hConsoleWnd != NULL) {
+		// 控制台存在，尝试输出到控制台
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		if (hConsole != INVALID_HANDLE_VALUE && hConsole != NULL) {
+			DWORD charsWritten;
+			// 检查控制台句柄是否有效
+			DWORD consoleMode;
+			if (GetConsoleMode(hConsole, &consoleMode)) {
+				// 控制台句柄有效，可以写入
+				WriteConsoleW(hConsole, buffer, wcslen(buffer), &charsWritten, NULL);
+				WriteConsoleW(hConsole, L"\n", 1, &charsWritten, NULL);
+			}
+		}
 	}
 	
 	va_end(args);
@@ -3766,6 +3777,48 @@ void Notepad_plus::command(int id)
 
 					delete[] selectedStr;
 				}
+			}
+		}
+		break;
+
+		case IDM_SHOW_CONSOLE:
+		{
+			// 显示调试控制台
+			// 检查控制台是否已经存在
+			HWND hConsoleWnd = GetConsoleWindow();
+			if (hConsoleWnd == NULL) {
+				// 控制台不存在，创建新的控制台
+				if (AllocConsole()) {
+					// 设置控制台编码为UTF-8，解决中文显示问号问题
+					SetConsoleOutputCP(CP_UTF8);
+					SetConsoleCP(CP_UTF8);
+					// 重定向标准输出到控制台
+					freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
+					freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
+					// 设置控制台标题
+					SetConsoleTitle(L"Notepad++ 调试控制台");
+					
+					// 重新获取控制台句柄，确保它是有效的
+					HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+					if (hConsole != INVALID_HANDLE_VALUE && hConsole != NULL) {
+						DWORD charsWritten;
+						// 输出启动信息
+						WriteConsoleW(hConsole, L"=== Notepad++ 调试控制台已打开 ===\n", 
+							wcslen(L"=== Notepad++ 调试控制台已打开 ===\n"), &charsWritten, NULL);
+						wchar_t versionMsg[256];
+						swprintf_s(versionMsg, 256, L"程序版本: %hs\n", "1.0.0");
+						WriteConsoleW(hConsole, versionMsg, wcslen(versionMsg), &charsWritten, NULL);
+						wchar_t timeMsg[256];
+						swprintf_s(timeMsg, 256, L"编译时间: %hs\n\n", __DATE__ " " __TIME__);
+						WriteConsoleW(hConsole, timeMsg, wcslen(timeMsg), &charsWritten, NULL);
+						WriteConsoleW(hConsole, L"控制台已就绪，调试信息将显示在这里...\n", 
+							wcslen(L"控制台已就绪，调试信息将显示在这里...\n"), &charsWritten, NULL);
+					}
+				}
+			} else {
+				// 控制台已存在，只需显示它
+				ShowWindow(hConsoleWnd, SW_SHOW);
+				SetForegroundWindow(hConsoleWnd);
 			}
 		}
 		break;

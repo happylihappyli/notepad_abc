@@ -278,6 +278,28 @@ LRESULT DockingManager::runProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 			{
 				_vContainer[i]->SetActive(IsChild(_vContainer[i]->getHSelf(), ::GetFocus()));
 			}
+			
+			// 如果消息来自分隔条，保存 docking 参数
+			if (lParam != 0)
+			{
+				// 检查是否是分隔条窗口
+				for (int iCont = 0; iCont < DOCKCONT_MAX; ++iCont)
+				{
+					if (_vSplitter[iCont]->getHSelf() == reinterpret_cast<HWND>(lParam))
+					{
+						// 更新并保存 docking 参数
+						NppGUI& nppGUI = (NppParameters::getInstance()).getNppGUI();
+						nppGUI._dockingData._leftWidth = getDockedContSize(CONT_LEFT);
+						nppGUI._dockingData._rightWidth = getDockedContSize(CONT_RIGHT);
+						nppGUI._dockingData._topHeight = getDockedContSize(CONT_TOP);
+						nppGUI._dockingData._bottomHeight = getDockedContSize(CONT_BOTTOM);
+						
+						// 通知主窗口保存配置
+						::SendMessage(_hParent, NPPM_INTERNAL_SAVEDOCKINGPARAMS, 0, 0);
+						break;
+					}
+				}
+			}
 			return TRUE;
 		}
 

@@ -1348,6 +1348,7 @@ BEGIN
         MENUITEM "Set Updater Proxy...",           IDM_CONFUPDATERPROXY
         MENUITEM SEPARATOR
         MENUITEM "Debug Info...",                  IDM_DEBUGINFO
+        MENUITEM "显示调试控制台",                  IDM_SHOW_CONSOLE
         MENUITEM "About Notepad++",                IDM_ABOUT
     END
 
