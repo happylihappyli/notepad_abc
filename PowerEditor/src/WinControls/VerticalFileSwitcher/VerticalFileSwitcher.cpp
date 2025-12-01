@@ -1,4 +1,4 @@
-﻿#include "VerticalFileSwitcher.h"
+#include "VerticalFileSwitcher.h"
 #include "menuCmdID.h"
 #include "Parameters.h"
 #include "resource.h"
@@ -933,10 +933,16 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
                 if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
                     flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
                 UINT cmd = ::TrackPopupMenu(_hFileListMenu, flags, pt.x, pt.y, 0, _hSelf, NULL);
+                debugLog(L"VerticalFileSwitcher::WM_CONTEXTMENU - 文件列表右键菜单命令: %d", cmd);
                 if (cmd != 0)
                 {
                     // 发送命令消息，而不是让系统自动处理
+                    debugLog(L"VerticalFileSwitcher::WM_CONTEXTMENU - 发送WM_COMMAND消息: %d", cmd);
                     ::PostMessage(_hSelf, WM_COMMAND, cmd, 0);
+                }
+                else
+                {
+                    debugLog(L"VerticalFileSwitcher::WM_CONTEXTMENU - 菜单命令为0，可能是用户取消了菜单");
                 }
             } else {
                 // 在列表视图外（如头部）右键，显示不包含文档分类的菜单
@@ -944,10 +950,16 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
                 if (NppParameters::getInstance().getNativeLangSpeaker()->isRTL())
                     flags |= TPM_RIGHTALIGN | TPM_LAYOUTRTL;
                 UINT cmd = ::TrackPopupMenu(_hGlobalMenu, flags, pt.x, pt.y, 0, _hSelf, NULL);
+                debugLog(L"VerticalFileSwitcher::WM_CONTEXTMENU - 全局右键菜单命令: %d", cmd);
                 if (cmd != 0)
                 {
                     // 发送命令消息，而不是让系统自动处理
+                    debugLog(L"VerticalFileSwitcher::WM_CONTEXTMENU - 发送WM_COMMAND消息: %d", cmd);
                     ::PostMessage(_hSelf, WM_COMMAND, cmd, 0);
+                }
+                else
+                {
+                    debugLog(L"VerticalFileSwitcher::WM_CONTEXTMENU - 菜单命令为0，可能是用户取消了菜单");
                 }
             }
             return TRUE;
@@ -955,8 +967,11 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
 		case WM_COMMAND:
 		{
+			UINT cmdID = LOWORD(wParam);
+			debugLog(L"VerticalFileSwitcher::WM_COMMAND - 接收到命令: %d", cmdID);
+			
 			// 处理设置按钮点击事件
-			if (LOWORD(wParam) == IDM_SETTINGS_VFS)// IDC_SETTINGS_BUTTON_VFS)
+			if (cmdID == IDM_SETTINGS_VFS)// IDC_SETTINGS_BUTTON_VFS)
 			{
 				// 显示设置对话框
 				showSettingsDialog();
@@ -965,20 +980,20 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			}
 			
 			// 处理分类按钮点击事件（用于过滤查看文件）
-			if (LOWORD(wParam) >= CATEGORY_BUTTON_START && LOWORD(wParam) <= CATEGORY_BUTTON_END)
+			if (cmdID >= CATEGORY_BUTTON_START && cmdID <= CATEGORY_BUTTON_END)
 			{
 				// 分类按钮点击 - 过滤整个文件列表
-				int buttonIndex = LOWORD(wParam) - CATEGORY_BUTTON_START;
+				int buttonIndex = cmdID - CATEGORY_BUTTON_START;
 				if (buttonIndex >= 0 && buttonIndex < static_cast<int>(_categoryButtons.size()))
 				{
 					onCategoryButtonClick(_categoryButtons[buttonIndex]);
 				}
 			}
 			// 处理文件右键菜单的分类选择
-			else if (LOWORD(wParam) >= CATEGORY_MENU_START && LOWORD(wParam) <= CATEGORY_MENU_END)
+			else if (cmdID >= CATEGORY_MENU_START && cmdID <= CATEGORY_MENU_END)
 			{
 				// 文件右键菜单的分类选择 - 设置单个文件的分类
-				int categoryIndex = LOWORD(wParam) - CATEGORY_MENU_START;
+				int categoryIndex = cmdID - CATEGORY_MENU_START;
 				const auto& categories = _categoryManager.getCategories();
 				
 				if (categoryIndex >= 0 && categoryIndex < static_cast<int>(categories.size()))
@@ -990,9 +1005,30 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				}
 			}
 			else
+		{
+			debugLog(L"VerticalFileSwitcher::WM_COMMAND - 调用popupMenuCmd处理命令: %d", cmdID);
+			
+			// 添加调用前的调试信息
+			debugLog(L"VerticalFileSwitcher::WM_COMMAND - 开始调用popupMenuCmd函数");
+			
+			try
 			{
-				popupMenuCmd(LOWORD(wParam));
+				// 调用popupMenuCmd函数
+				popupMenuCmd(cmdID);
+				debugLog(L"VerticalFileSwitcher::WM_COMMAND - popupMenuCmd函数调用成功");
 			}
+			catch (const std::exception& e)
+			{
+				debugLog(L"VerticalFileSwitcher::WM_COMMAND - popupMenuCmd函数调用异常: %hs", e.what());
+			}
+			catch (...)
+			{
+				debugLog(L"VerticalFileSwitcher::WM_COMMAND - popupMenuCmd函数调用未知异常");
+			}
+			
+			// 添加调用后的调试信息
+			debugLog(L"VerticalFileSwitcher::WM_COMMAND - popupMenuCmd函数调用完成");
+		}
 			break;
 		}
 
@@ -1654,9 +1690,19 @@ void VerticalFileSwitcher::initFileListContextMenu()
 
 void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 {
+	// 添加函数入口调试信息
+	debugLog(L"VerticalFileSwitcher::popupMenuCmd - 函数被调用，命令ID: %d", cmdID);
+	
+	// 检查命令ID是否有效
+	if (cmdID == 0) {
+		debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 命令ID为0，无效命令");
+		return;
+	}
+	
 	// 处理标签颜色菜单点击
 	if (cmdID >= TAB_COLOR_MENU_START && cmdID < TAB_COLOR_MENU_START + 10)
 	{
+		debugLog(L"VerticalFileSwitcher::popupMenuCmd - 处理标签颜色菜单，命令ID: %d", cmdID);
 		// 获取颜色索引
 		int colorIndex = cmdID - TAB_COLOR_MENU_START;
 		
@@ -1668,31 +1714,55 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 	}
 	
 	// 处理分类菜单点击
+	// 注意：分类菜单的范围是3060-3160，但文件操作命令如关闭当前文件(3102)也在这个范围内
+	// 需要先检查是否是文件操作命令，再检查分类菜单
 	if (cmdID >= CATEGORY_MENU_START && cmdID < CATEGORY_MENU_START + 100)
 	{
-		// 获取分类索引
-		size_t categoryIndex = cmdID - CATEGORY_MENU_START;
-		const auto& categories = _categoryManager.getCategories();
+		// 检查是否是文件操作命令（这些命令应该进入switch语句）
+		bool isFileOperation = false;
 		
-		if (categoryIndex < categories.size())
+		// 定义文件操作命令的范围
+		const UINT FILE_OPERATION_START = 3100;
+		const UINT FILE_OPERATION_END = 3200;
+		
+		if (cmdID >= FILE_OPERATION_START && cmdID <= FILE_OPERATION_END)
 		{
-			const auto& selectedCategory = categories[categoryIndex];
-			
-			if (selectedCategory.name == L"全部")
-			{
-				// 选择"全部"分类，清除过滤
-				_fileListView.clearCategoryFilter();
-			}
-			else
-			{
-				// 设置当前分类进行过滤
-				_fileListView.setCurrentCategory(selectedCategory.name);
-			}
-			
-			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 分类已更改为: %s", selectedCategory.name.c_str());
+			// 这是文件操作命令，应该进入switch语句处理
+			isFileOperation = true;
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 检测到文件操作命令，命令ID: %d，跳过分类菜单处理", cmdID);
 		}
-		return;
+		
+		if (!isFileOperation)
+		{
+			// 这是真正的分类菜单命令
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 处理分类菜单，命令ID: %d", cmdID);
+			// 获取分类索引
+			size_t categoryIndex = cmdID - CATEGORY_MENU_START;
+			const auto& categories = _categoryManager.getCategories();
+			
+			if (categoryIndex < categories.size())
+			{
+				const auto& selectedCategory = categories[categoryIndex];
+				
+				if (selectedCategory.name == L"全部")
+				{
+					// 选择"全部"分类，清除过滤
+					_fileListView.clearCategoryFilter();
+				}
+				else
+				{
+					// 设置当前分类进行过滤
+					_fileListView.setCurrentCategory(selectedCategory.name);
+				}
+				
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 分类已更改为: %s", selectedCategory.name.c_str());
+			}
+			return;
+		}
 	}
+	
+	// 添加switch语句前的调试信息
+	debugLog(L"VerticalFileSwitcher::popupMenuCmd - 进入switch语句，命令ID: %d", cmdID);
 	
 	switch (cmdID)
 	{
@@ -1800,21 +1870,79 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 		// 关闭当前文件菜单处理
 		case IDM_DOCLIST_CLOSE_CURRENT:
 		{
-			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 关闭当前文件命令被触发");
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 关闭当前文件命令被触发，命令ID: %d", IDM_DOCLIST_CLOSE_CURRENT);
 			
 			// 获取当前选中的文件
 			int selectedCount = nbSelectedFiles();
-			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 选中文件数量: %d\n", selectedCount);
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 选中文件数量: %d", selectedCount);
 			
 			if (selectedCount > 0)
 			{
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 有选中文件，执行关闭选中文件逻辑");
 				// 如果有选中的文件，关闭第一个选中的文件
 				// 使用遍历方式查找第一个选中的项，更可靠
 				int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 文件列表总项数: %d", nbItem);
+				
+				bool foundSelected = false;
 				for (int i = 0; i < nbItem; ++i)
 				{
 					int isSelected = ListView_GetItemState(_fileListView.getHSelf(), i, LVIS_SELECTED);
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 检查索引 %d 是否选中: %d", i, isSelected);
+					
 					if (isSelected & LVIS_SELECTED)
+					{
+						debugLog(L"VerticalFileSwitcher::popupMenuCmd - 索引 %d 被选中，尝试获取文件信息", i);
+						LVITEM item{};
+						item.mask = LVIF_PARAM;
+						item.iItem = i;
+						if (ListView_GetItem(_fileListView.getHSelf(), &item))
+						{
+							TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
+							
+							if (tlfs)
+							{
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 找到选中的文件，索引: %d, bufferID: %p", i, tlfs->_bufID);
+								closeDoc(tlfs);
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭选中的文件");
+								foundSelected = true;
+								break;
+							}
+							else
+							{
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: tlfs 指针为空");
+							}
+						}
+						else
+						{
+							debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 无法获取ListView项");
+						}
+					}
+				}
+				
+				if (!foundSelected)
+				{
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 警告: 选中文件数量为 %d，但未找到选中的文件项", selectedCount);
+				}
+			}
+			else
+			{
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 没有选中文件，执行关闭当前活动文件逻辑");
+				// 如果没有选中的文件，关闭当前活动的文件
+				BufferID currentBufID = reinterpret_cast<BufferID>(::SendMessage(_hParent, NPPM_GETCURRENTBUFFERID, 0, 0));
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 当前活动的文件 bufferID: %p", currentBufID);
+				
+				if (currentBufID != BUFFER_INVALID)
+				{
+					int currentView = static_cast<int>(::SendMessage(_hParent, NPPM_GETCURRENTVIEW, 0, 0));
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 当前视图: %d", currentView);
+					
+					// 在文件列表中查找当前文件
+					int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 文件列表项数: %d", nbItem);
+					
+					bool foundCurrent = false;
+					for (int i = 0; i < nbItem; ++i)
 					{
 						LVITEM item{};
 						item.mask = LVIF_PARAM;
@@ -1825,56 +1953,40 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 							
 							if (tlfs)
 							{
-								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 找到选中的文件，索引: %d\n", i);
-								closeDoc(tlfs);
-								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭选中的文件");
-								break;
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 检查文件项 %d: bufferID=%p, view=%d", i, tlfs->_bufID, tlfs->_iView);
+								
+								if (static_cast<BufferID>(tlfs->_bufID) == currentBufID && tlfs->_iView == currentView)
+								{
+									debugLog(L"VerticalFileSwitcher::popupMenuCmd - 找到当前活动的文件，索引: %d", i);
+									closeDoc(tlfs);
+									debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭当前活动的文件");
+									foundCurrent = true;
+									break;
+								}
 							}
+							else
+							{
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 文件项 %d 的tlfs指针为空", i);
+							}
+						}
+						else
+						{
+							debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 无法获取文件项 %d", i);
 						}
 					}
-				}
-			}
-			else
-			{
-				// 如果没有选中的文件，关闭当前活动的文件
-				BufferID currentBufID = reinterpret_cast<BufferID>(::SendMessage(_hParent, NPPM_GETCURRENTBUFFERID, 0, 0));
-				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 当前活动的文件 bufferID: %p\n", currentBufID);
-				
-				if (currentBufID != BUFFER_INVALID)
-				{
-					int currentView = static_cast<int>(::SendMessage(_hParent, NPPM_GETCURRENTVIEW, 0, 0));
-					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 当前视图: %d\n", currentView);
 					
-					// 在文件列表中查找当前文件
-					int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
-					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 文件列表项数: %d\n", nbItem);
-					
-					for (int i = 0; i < nbItem; ++i)
+					if (!foundCurrent)
 					{
-						LVITEM item{};
-						item.mask = LVIF_PARAM;
-						item.iItem = i;
-						if (ListView_GetItem(_fileListView.getHSelf(), &item))
-						{
-							TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
-							
-							if (tlfs && static_cast<BufferID>(tlfs->_bufID) == currentBufID && tlfs->_iView == currentView)
-							{
-								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 找到当前活动的文件，索引: %d\n", i);
-								closeDoc(tlfs);
-								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭当前活动的文件");
-								break;
-							}
-						}
+						debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 未找到当前活动的文件在文件列表中");
 					}
 				}
 				else
 				{
-					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 当前 bufferID 无效\n");
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 当前 bufferID 无效");
 				}
 			}
+			break;
 		}
-		break;
 
 	}
 }

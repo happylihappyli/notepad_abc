@@ -1,4 +1,4 @@
-// 分类管理器实现文件
+﻿// 分类管理器实现文件
 
 #include "CategoryManager.h"
 #include <fstream>

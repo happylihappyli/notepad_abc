@@ -539,35 +539,29 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 			ListView_SetItem(_hSelf, &item);
 			bool isCategoryColumn = true; // 总是显示分类列
 			
-			// if (isExtColumn)
-			// {
-			// 	// 显示扩展名
-			// 	ListView_SetItemText(_hSelf, i, 1, ::PathFindExtension(tlfs->_fn.c_str()));
-			// }
-			
 			// 设置分类列的数据
-		if (isCategoryColumn)
-		{
-			// 获取文件分类信息（带自动分类逻辑）
-			std::wstring filePath = tlfs->_fn;
-			std::wstring fileCategoryName = getFileCategoryName(filePath);
-			
-			// 正确计算分类列的索引：如果扩展名列隐藏，分类列是第二列
-			int categoryColIndex = isExtColumn ? 2 : 1;
-			
-			// 调试日志：检查分类列数据设置
-			debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 文件: %s, 分类名称: %s, 分类列索引: %d, 扩展名列状态: %d", 
-				filePath.c_str(), fileCategoryName.c_str(), categoryColIndex, isExtColumn);
-			
-			// 检查是否错误地设置了扩展名
-			std::wstring ext = ::PathFindExtension(filePath.c_str());
-			if (fileCategoryName == ext)
+			if (isCategoryColumn)
 			{
-				debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 警告：分类列显示的是扩展名而不是分类名称！");
+				// 获取文件分类信息（带自动分类逻辑）
+				std::wstring filePath = tlfs->_fn;
+				std::wstring fileCategoryName = getFileCategoryName(filePath);
+				
+				// 正确计算分类列的索引：如果扩展名列隐藏，分类列是第二列
+				int categoryColIndex = isExtColumn ? 2 : 1;
+				
+				// 调试日志：检查分类列数据设置
+				debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 文件: %s, 分类名称: %s, 分类列索引: %d, 扩展名列状态: %d", 
+					filePath.c_str(), fileCategoryName.c_str(), categoryColIndex, isExtColumn);
+				
+				// 检查是否错误地设置了扩展名
+				std::wstring ext = ::PathFindExtension(filePath.c_str());
+				if (fileCategoryName == ext)
+				{
+					debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 警告：分类列显示的是扩展名而不是分类名称！");
+				}
+				
+				ListView_SetItemText(_hSelf, i, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
 			}
-			
-			ListView_SetItemText(_hSelf, i, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
-		}
 		}
 	}
 }

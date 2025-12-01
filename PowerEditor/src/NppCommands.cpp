@@ -54,8 +54,19 @@ void debugLog(const wchar_t* format, ...) {
 	wchar_t buffer[1024];
 	vswprintf(buffer, sizeof(buffer) / sizeof(wchar_t), format, args);
 	
-	// 写入日志文件
-	writeLog(L"npp_debug.log", buffer);
+	// 获取程序所在目录的绝对路径
+	wchar_t exePath[MAX_PATH] = {0};
+	GetModuleFileNameW(NULL, exePath, MAX_PATH);
+	wstring logPath = exePath;
+	size_t lastSlash = logPath.find_last_of(L"\\");
+	if (lastSlash != wstring::npos) {
+		logPath = logPath.substr(0, lastSlash) + L"\\npp_debug.log";
+	} else {
+		logPath = L"npp_debug.log"; // 备用方案
+	}
+	
+	// 写入日志文件（使用绝对路径）
+	writeLog(logPath.c_str(), buffer);
 	// 输出到调试窗口
 	OutputDebugStringW(buffer);
 	
