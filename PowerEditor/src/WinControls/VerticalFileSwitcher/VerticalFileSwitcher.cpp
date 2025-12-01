@@ -1804,22 +1804,33 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			
 			// 获取当前选中的文件
 			int selectedCount = nbSelectedFiles();
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 选中文件数量: %d\n", selectedCount);
+			
 			if (selectedCount > 0)
 			{
 				// 如果有选中的文件，关闭第一个选中的文件
-				int selectedIndex = ListView_GetSelectionMark(_fileListView.getHSelf());
-				if (selectedIndex >= 0)
+				// 使用遍历方式查找第一个选中的项，更可靠
+				int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
+				for (int i = 0; i < nbItem; ++i)
 				{
-					LVITEM item{};
-					item.mask = LVIF_PARAM;
-					item.iItem = selectedIndex;
-					ListView_GetItem(_fileListView.getHSelf(), &item);
-					TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
-					
-					if (tlfs)
+					int isSelected = ListView_GetItemState(_fileListView.getHSelf(), i, LVIS_SELECTED);
+					if (isSelected & LVIS_SELECTED)
 					{
-						closeDoc(tlfs);
-						debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭选中的文件");
+						LVITEM item{};
+						item.mask = LVIF_PARAM;
+						item.iItem = i;
+						if (ListView_GetItem(_fileListView.getHSelf(), &item))
+						{
+							TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
+							
+							if (tlfs)
+							{
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 找到选中的文件，索引: %d\n", i);
+								closeDoc(tlfs);
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭选中的文件");
+								break;
+							}
+						}
 					}
 				}
 			}
@@ -1827,27 +1838,39 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			{
 				// 如果没有选中的文件，关闭当前活动的文件
 				BufferID currentBufID = reinterpret_cast<BufferID>(::SendMessage(_hParent, NPPM_GETCURRENTBUFFERID, 0, 0));
+				debugLog(L"VerticalFileSwitcher::popupMenuCmd - 当前活动的文件 bufferID: %p\n", currentBufID);
+				
 				if (currentBufID != BUFFER_INVALID)
 				{
 					int currentView = static_cast<int>(::SendMessage(_hParent, NPPM_GETCURRENTVIEW, 0, 0));
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 当前视图: %d\n", currentView);
 					
 					// 在文件列表中查找当前文件
 					int nbItem = ListView_GetItemCount(_fileListView.getHSelf());
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 文件列表项数: %d\n", nbItem);
+					
 					for (int i = 0; i < nbItem; ++i)
 					{
 						LVITEM item{};
 						item.mask = LVIF_PARAM;
 						item.iItem = i;
-						ListView_GetItem(_fileListView.getHSelf(), &item);
-						TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
-						
-						if (tlfs && static_cast<BufferID>(tlfs->_bufID) == currentBufID && tlfs->_iView == currentView)
+						if (ListView_GetItem(_fileListView.getHSelf(), &item))
 						{
-							closeDoc(tlfs);
-							debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭当前活动的文件");
-							break;
+							TaskLstFnStatus *tlfs = (TaskLstFnStatus *)item.lParam;
+							
+							if (tlfs && static_cast<BufferID>(tlfs->_bufID) == currentBufID && tlfs->_iView == currentView)
+							{
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 找到当前活动的文件，索引: %d\n", i);
+								closeDoc(tlfs);
+								debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已关闭当前活动的文件");
+								break;
+							}
 						}
 					}
+				}
+				else
+				{
+					debugLog(L"VerticalFileSwitcher::popupMenuCmd - 错误: 当前 bufferID 无效\n");
 				}
 			}
 		}
@@ -1895,14 +1918,32 @@ void VerticalFileSwitcher::activateDoc(TaskLstFnStatus *tlfs) const
 
 void VerticalFileSwitcher::closeDoc(TaskLstFnStatus *tlfs) const
 {
+	if (!tlfs)
+	{
+		debugLog(L"VerticalFileSwitcher::closeDoc - 错误: tlfs 指针为空\n");
+		return;
+	}
+	
 	int view = tlfs->_iView;
 	BufferID bufferID = static_cast<BufferID>(tlfs->_bufID);
+	
+	debugLog(L"VerticalFileSwitcher::closeDoc - 开始关闭文件, bufferID=%p, view=%d\n", bufferID, view);
 		
 	int docPosInfo = static_cast<int32_t>(::SendMessage(_hParent, NPPM_GETPOSFROMBUFFERID, reinterpret_cast<WPARAM>(bufferID), view));
+	
+	if (docPosInfo == -1)
+	{
+		debugLog(L"VerticalFileSwitcher::closeDoc - 错误: 无法获取文档位置信息 (docPosInfo=-1)\n");
+		return;
+	}
+	
 	int view2set = docPosInfo >> 30;
-	int index2Switch = (docPosInfo << 2) >> 2;  // 修复：应该使用右移而不是比较
-
-	::SendMessage(_hParent, NPPM_INTERNAL_CLOSEDOC, view2set, index2Switch);
+	int index2Switch = docPosInfo & 0x3FFFFFFF;  // 清除高2位，保留低30位作为索引（使用位掩码）
+	
+	debugLog(L"VerticalFileSwitcher::closeDoc - docPosInfo=0x%08X, view2set=%d, index2Switch=%d\n", docPosInfo, view2set, index2Switch);
+	
+	LRESULT result = ::SendMessage(_hParent, NPPM_INTERNAL_CLOSEDOC, view2set, index2Switch);
+	debugLog(L"VerticalFileSwitcher::closeDoc - 关闭文件完成, 返回值=%d\n", result);
 }
 
 int VerticalFileSwitcher::setHeaderOrder(int columnIndex)

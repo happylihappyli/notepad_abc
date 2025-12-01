@@ -1444,11 +1444,20 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			int whichView = ((wParam != MAIN_VIEW) && (wParam != SUB_VIEW)) ? currentView() : static_cast<int32_t>(wParam);
 			int index = static_cast<int32_t>(lParam);
 			
-			// Gotta switch to correct view to get the correct buffer ID
-			switchEditViewTo(whichView);
-
+			// Get the correct DocTabView based on whichView
+			DocTabView* pTabView = (whichView == MAIN_VIEW) ? &_mainDocTab : &_subDocTab;
+			
+			// Check if index is valid
+			if (index < 0 || static_cast<size_t>(index) >= pTabView->nbItem())
+			{
+				return FALSE;
+			}
+			
+			// Get buffer ID from the correct view
+			BufferID bufferID = pTabView->getBufferByIndex(index);
+			
 			// Close the document
-			fileClose(_pDocTab->getBufferByIndex(index), whichView);
+			fileClose(bufferID, whichView);
 			
 			return TRUE;
 		}

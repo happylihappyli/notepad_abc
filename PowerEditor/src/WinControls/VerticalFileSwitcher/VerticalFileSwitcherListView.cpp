@@ -96,8 +96,8 @@ void VerticalFileSwitcherListView::initList()
 	ListView_InsertGroup(_hSelf, -1, &group);
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
-	// 强制只显示文件名、扩展名和分类三列，忽略路径列配置
-	bool isExtColumn = true;  // 总是显示扩展名列
+	// 强制只显示文件名和分类两列，隐藏扩展名列
+	bool isExtColumn = false;  // 隐藏扩展名列
 	bool isCategoryColumn = true; // 总是显示分类列
 
 	RECT rc{};
@@ -109,8 +109,8 @@ void VerticalFileSwitcherListView::initList()
 	if (isCategoryColumn)
 		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherCategoryWidth); // 使用保存的分类列宽度
 
-	// 限制第一列（文件名列）的最大宽度为300像素（考虑DPI缩放）
-	const int maxNameWidth = nppParams._dpiManager.scaleX(300);
+	// 限制第一列（文件名列）的最大宽度为200像素（考虑DPI缩放），调整为更小宽度
+	const int maxNameWidth = nppParams._dpiManager.scaleX(200);
 	if (nameWidth > maxNameWidth)
 		nameWidth = maxNameWidth;
 
@@ -223,10 +223,8 @@ void VerticalFileSwitcherListView::initList()
 		wchar_t fn[MAX_PATH] = { '\0' };
 		wcscpy_s(fn, ::PathFindFileName(fileNameStatus._fn.c_str()));
 
-		if (isExtColumn)
-		{
-			::PathRemoveExtension(fn);
-		}
+		// 修复：文件名保持原样显示，不删除扩展名
+		// 扩展名将在扩展名列中单独显示
 		LVITEM item{};
 		item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_GROUPID;
 		
@@ -306,8 +304,8 @@ void VerticalFileSwitcherListView::reload()
 	ListView_InsertGroup(_hSelf, -1, &group);
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
-	// 强制只显示文件名、扩展名和分类三列，忽略路径列配置
-	bool isExtColumn = true;  // 总是显示扩展名列
+	// 强制只显示文件名和分类两列，隐藏扩展名列
+	bool isExtColumn = false;  // 隐藏扩展名列
 	bool isCategoryColumn = true; // 总是显示分类列
 
 	RECT rc{};
@@ -319,8 +317,8 @@ void VerticalFileSwitcherListView::reload()
 	if (isCategoryColumn)
 		nameWidth -= nppParams._dpiManager.scaleX(nppParams.getNppGUI()._fileSwitcherCategoryWidth); // 使用保存的分类列宽度
 
-	// 限制第一列（文件名列）的最大宽度为300像素（考虑DPI缩放）
-	const int maxNameWidth = nppParams._dpiManager.scaleX(300);
+	// 限制第一列（文件名列）的最大宽度为200像素（考虑DPI缩放），调整为更小宽度
+	const int maxNameWidth = nppParams._dpiManager.scaleX(200);
 	if (nameWidth > maxNameWidth)
 		nameWidth = maxNameWidth;
 
@@ -421,10 +419,8 @@ void VerticalFileSwitcherListView::reload()
 		wchar_t fn[MAX_PATH] = { '\0' };
 		wcscpy_s(fn, ::PathFindFileName(fileNameStatus._fn.c_str()));
 
-		if (isExtColumn)
-		{
-			::PathRemoveExtension(fn);
-		}
+		// 修复：文件名保持原样显示，不删除扩展名
+		// 扩展名将在扩展名列中单独显示
 		LVITEM item{};
 		item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_GROUPID;
 		
@@ -435,11 +431,10 @@ void VerticalFileSwitcherListView::reload()
 		item.lParam = reinterpret_cast<LPARAM>(tl);
 		item.iGroupId = (fileNameStatus._iView == MAIN_VIEW) ? _groupID : _group2ID;
 		ListView_InsertItem(_hSelf, &item);
-		int colIndex2 = 0;
-		if (isExtColumn)
-		{
-			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPTSTR)::PathFindExtension(fileNameStatus._fn.c_str()));
-		}
+		// if (isExtColumn)
+		// {
+		// 	ListView_SetItemText(_hSelf, itemIndex, 1, (LPTSTR)::PathFindExtension(fileNameStatus._fn.c_str()));
+		// }
 		// 新增：设置分类列的数据
 		if (isCategoryColumn)
 		{
@@ -447,7 +442,9 @@ void VerticalFileSwitcherListView::reload()
 			std::wstring filePath = fileNameStatus._fn;
 			std::wstring fileCategoryName = getFileCategoryName(filePath);
 			
-			ListView_SetItemText(_hSelf, itemIndex, ++colIndex2, (LPWSTR)fileCategoryName.c_str());
+			// 正确计算分类列的索引：如果扩展名列隐藏，分类列是第二列
+			int categoryColIndex = isExtColumn ? 2 : 1;
+			ListView_SetItemText(_hSelf, itemIndex, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
 			debugLog(L"VerticalFileSwitcherListView::reload - 为文件 %s 设置分类列数据: %s", filePath.c_str(), fileCategoryName.c_str());
 		}
 		// 注释掉路径列的数据设置，确保只显示三列
@@ -540,24 +537,37 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 			item.pszText = fileNameOnly;
 			
 			ListView_SetItem(_hSelf, &item);
-			int colIndex = 0;
 			bool isCategoryColumn = true; // 总是显示分类列
 			
-			if (isExtColumn)
-			{
-				// 显示扩展名
-				ListView_SetItemText(_hSelf, i, ++colIndex, ::PathFindExtension(tlfs->_fn.c_str()));
-			}
+			// if (isExtColumn)
+			// {
+			// 	// 显示扩展名
+			// 	ListView_SetItemText(_hSelf, i, 1, ::PathFindExtension(tlfs->_fn.c_str()));
+			// }
 			
 			// 设置分类列的数据
-			if (isCategoryColumn)
+		if (isCategoryColumn)
+		{
+			// 获取文件分类信息（带自动分类逻辑）
+			std::wstring filePath = tlfs->_fn;
+			std::wstring fileCategoryName = getFileCategoryName(filePath);
+			
+			// 正确计算分类列的索引：如果扩展名列隐藏，分类列是第二列
+			int categoryColIndex = isExtColumn ? 2 : 1;
+			
+			// 调试日志：检查分类列数据设置
+			debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 文件: %s, 分类名称: %s, 分类列索引: %d, 扩展名列状态: %d", 
+				filePath.c_str(), fileCategoryName.c_str(), categoryColIndex, isExtColumn);
+			
+			// 检查是否错误地设置了扩展名
+			std::wstring ext = ::PathFindExtension(filePath.c_str());
+			if (fileCategoryName == ext)
 			{
-				// 获取文件分类信息（带自动分类逻辑）
-				std::wstring filePath = tlfs->_fn;
-				std::wstring fileCategoryName = getFileCategoryName(filePath);
-				
-				ListView_SetItemText(_hSelf, i, ++colIndex, (LPWSTR)fileCategoryName.c_str());
+				debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 警告：分类列显示的是扩展名而不是分类名称！");
 			}
+			
+			ListView_SetItemText(_hSelf, i, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
+		}
 		}
 	}
 }
@@ -649,13 +659,12 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 	item.lParam = reinterpret_cast<LPARAM>(tl);
 	item.iGroupId = (iView == MAIN_VIEW) ? _groupID : _group2ID;
 	ListView_InsertItem(_hSelf, &item);
-	int colIndex = 0;
 	bool isCategoryColumn = true; // 总是显示分类列
 	
 	if (isExtColumn)
 	{
 		// 显示扩展名
-		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, ::PathFindExtension(buf->getFullPathName()));
+		ListView_SetItemText(_hSelf, _currentIndex, 1, ::PathFindExtension(buf->getFullPathName()));
 	}
 	
 	// 设置分类列的数据
@@ -665,7 +674,9 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 		std::wstring filePath = buf->getFullPathName();
 		std::wstring fileCategoryName = getFileCategoryName(filePath);
 		
-		ListView_SetItemText(_hSelf, _currentIndex, ++colIndex, (LPWSTR)fileCategoryName.c_str());
+		// 正确计算分类列的索引：如果扩展名列隐藏，分类列是第二列
+		int categoryColIndex = isExtColumn ? 2 : 1;
+		ListView_SetItemText(_hSelf, _currentIndex, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
 	}
 	
 	selectCurrentItem();
