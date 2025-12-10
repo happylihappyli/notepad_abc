@@ -25,7 +25,7 @@ trayIconControler::trayIconControler(HWND hwnd, UINT uID, UINT uCBMsg, HICON hic
   _nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
   _nid.uCallbackMessage = uCBMsg;
   _nid.hIcon = hicon;
-  wcscpy_s(_nid.szTip, tip);
+  wcscpy_s(_nid.szTip, 128, tip);
   
   _isIconShown = false;
 }

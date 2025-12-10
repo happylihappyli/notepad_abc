@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <shlwapi.h>
 #include "..\..\MISC\Common\Common.h"  // 修复Common.h的包含路径
-#include "StaticDialog.h"
+#include "../StaticDialog/StaticDialog.h"
 #include "..\..\NppDarkMode.h"  // 修复NppDarkMode.h的包含路径
 
 
@@ -37,15 +37,15 @@ public:
 	void init(HINSTANCE hInst, HWND parent) override {
 		StaticDialog::init(hInst, parent);
 		wchar_t temp[MAX_PATH];
-		::GetModuleFileName(hInst, temp, MAX_PATH);
-		_moduleName = ::PathFindFileName(temp);
+		::GetModuleFileNameW(hInst, temp, MAX_PATH);
+		_moduleName = ::PathFindFileNameW(temp);
 	}
 
 	virtual void create(tTbData* data, bool isRTL = false) {
 		assert(data != nullptr);
 		StaticDialog::create(_dlgID, isRTL);
 		wchar_t temp[MAX_PATH];
-		::GetWindowText(_hSelf, temp, MAX_PATH);
+		::GetWindowTextW(_hSelf, temp, MAX_PATH);
 		_pluginName = temp;
 
 		// user information
@@ -72,10 +72,10 @@ public:
 	virtual void setForegroundColor(COLORREF) {}
 
 	void display(bool toShow = true) const override {
-		// 添加调试信息
+		// Add Debug Information
 		debugLog(L"DockingDlgInterface::display() called with toShow=%d\n", toShow);
 		::SendMessage(_hParent, toShow ? NPPM_DMMSHOW : NPPM_DMMHIDE, 0, reinterpret_cast<LPARAM>(_hSelf));
-		// 添加调试信息
+		// Add Debug Information
 		debugLog(L"DockingDlgInterface::display() finished\n");
 	}
 

@@ -25,6 +25,9 @@
 #include <algorithm>
 #include <tchar.h>
 
+// 包含TiXmlString类的定义
+#include "../../TinyXml/tinystr.h"
+
 #pragma deprecated(PathFileExists)  // Use doesFileExist, doesDirectoryExist or doesPathExist (for file or directory) instead.
 #pragma deprecated(PathIsDirectory) // Use doesDirectoryExist instead.
 

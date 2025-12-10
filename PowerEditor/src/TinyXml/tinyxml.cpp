@@ -89,8 +89,8 @@ void TiXmlBase::PutString( const TIXML_STRING& str, TIXML_STRING* outString )
 			// Easy pass at non-alpha/numeric/symbol
 			// 127 is the delete key. Below 32 is symbolic.
 			wchar_t buf[32];
-			wsprintf( buf, L"&#x%04X;", static_cast<unsigned int>(c & 0xffff) );
-			outString->append( buf, lstrlen( buf ) );
+			swprintf_s( buf, 32, L"&#x%04X;", static_cast<unsigned int>(c & 0xffff) );
+			outString->append( buf, wcslen( buf ) );
 			++i;
 		}
 		else
@@ -526,7 +526,7 @@ int TiXmlElement::QueryDoubleAttribute( const wchar_t* name, double* dval ) cons
 void TiXmlElement::SetAttribute( const wchar_t * name, int val )
 {	
 	wchar_t buf[64];
-	wsprintf( buf, L"%d", val );
+	swprintf_s( buf, 64, L"%d", val );
 	SetAttribute( name, buf );
 }
 
@@ -720,7 +720,8 @@ bool TiXmlDocument::LoadFile( const wchar_t* filename )
 	// Fixed with the StringToBuffer class.
 	value = filename;
 
-	FILE* file = _wfopen( value.c_str (), L"r" );
+	FILE* file = nullptr;
+	_wfopen_s(&file, value.c_str (), L"r");
 
 	if ( file )
 	{
@@ -901,14 +902,14 @@ void TiXmlAttribute::StreamOut( TIXML_OSTREAM * stream ) const
 
 int TiXmlAttribute::QueryIntValue( int* ival ) const
 {
-	if (swscanf( value.c_str(), L"%d", ival ) == 1 )
+	if (swscanf_s( value.c_str(), L"%d", ival ) == 1 )
 		return TIXML_SUCCESS;
 	return TIXML_WRONG_TYPE;
 }
 
 int TiXmlAttribute::QueryDoubleValue( double* dval ) const
 {
-	if (swscanf( value.c_str(), L"%lf", dval ) == 1 )
+	if (swscanf_s( value.c_str(), L"%lf", dval ) == 1 )
 		return TIXML_SUCCESS;
 	return TIXML_WRONG_TYPE;
 }
@@ -916,14 +917,14 @@ int TiXmlAttribute::QueryDoubleValue( double* dval ) const
 void TiXmlAttribute::SetIntValue( int _value )
 {
 	wchar_t buf [64];
-	wsprintf (buf, L"%d", _value);
+	swprintf_s (buf, 64, L"%d", _value);
 	SetValue (buf);
 }
 
 void TiXmlAttribute::SetDoubleValue( double _value )
 {
 	wchar_t buf [64];
-	wsprintf (buf, L"%lf", _value);
+	swprintf_s (buf, 64, L"%lf", _value);
 	SetValue (buf);
 }
 

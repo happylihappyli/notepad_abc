@@ -18,7 +18,7 @@
 #pragma once
 
 #include "ColourPicker.h"
-#include "URLCtrl.h"
+#include "../AboutDlg/URLCtrl.h"
 #include "WordStyleDlgRes.h"
 #include "Parameters.h"
 

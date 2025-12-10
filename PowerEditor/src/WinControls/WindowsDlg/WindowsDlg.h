@@ -18,7 +18,7 @@
 #pragma once
 
 #include "SizeableDlg.h"
-#include "ContextMenu.h"
+#include "../ContextMenu/ContextMenu.h"
 
 class DocTabView;
 class Buffer;

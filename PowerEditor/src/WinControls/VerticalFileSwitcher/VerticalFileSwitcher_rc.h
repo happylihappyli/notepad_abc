@@ -1,4 +1,4 @@
-// This file is part of Notepad++ project
+﻿// This file is part of Notepad++ project
 // Copyright (C)2021 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -20,22 +20,22 @@
 #define	IDD_DOCLIST		3000
 #define	IDC_LIST_DOCLIST    (IDD_DOCLIST + 1)
 
-// 列表视图列ID
+// List View Column ID
 #define	IDC_CLMNNAME_VFS      (IDD_DOCLIST + 2)
 #define	IDC_CLMNEXT_VFS       (IDD_DOCLIST + 3)  
-#define	IDC_CLMNCATEGORY_VFS  (IDD_DOCLIST + 4)  // 分类列ID
+#define	IDC_CLMNCATEGORY_VFS  (IDD_DOCLIST + 4)  // Category Column ID
 
 
-// 分类菜单ID范围
+// Category Menu ID Range
 #define	CATEGORY_MENU_START  3060
 #define	CATEGORY_MENU_END    3070
 #define	CATEGORY_MENU_ID     3059
 
-// 分类按钮ID范围
+// Category Button ID Range
 #define	CATEGORY_BUTTON_START  3070
 #define	CATEGORY_BUTTON_END    3080
 
-// 字体大小菜单ID
+// Font Size Menu ID
 #define	FONTSIZE_6           3080
 #define	FONTSIZE_8           3081
 #define	FONTSIZE_10          3082
@@ -43,29 +43,29 @@
 #define	FONTSIZE_14          3084
 #define	FONTSIZE_16          3085  // 添加缺失的定义
 
-// 标签颜色菜单ID
+// Tab Color菜单ID
 #define	TAB_COLOR_MENU_START  3090
 #define	TAB_COLOR_MENU_END    3100
 #define	TAB_COLOR_MENU_ID     3089
 
-// 设置按钮ID
+// Settings Button ID
 #define	IDC_SETTINGS_BUTTON_VFS 3099
 
-// 设置菜单ID
+// Settings Menu ID
 #define	IDM_SETTINGS_VFS 3100
 
-// 编辑分类JSON菜单ID
+// Edit Category JSON Menu ID
 #define	IDM_EDIT_CATEGORY_JSON 3101
 
-// 关闭当前文件菜单ID
+// Close Current File Menu ID
 #define	IDM_DOCLIST_CLOSE_CURRENT 3102
 
-// 设置对话框ID
+// Settings Dialog ID
 #define	IDD_DOCLIST_SETTINGS 3050
-// 输入对话框ID
+// Input Dialog ID
 #define IDD_DOCLIST_INPUT_DLG 3051
 
-// 设置对话框控件ID
+// Settings Dialog Control ID
 #define	IDC_FONTSIZE_SLIDER 3051
 #define	IDC_FONTSIZE_DISPLAY 3052
 #define	IDC_CATEGORY_LIST 3053

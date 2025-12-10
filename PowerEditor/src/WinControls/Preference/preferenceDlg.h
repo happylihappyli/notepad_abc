@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "ControlsTab.h"
+#include "../TabBar/ControlsTab.h"
 #include "preference_rc.h"
 #include "Parameters.h"
-#include "regExtDlg.h"
-#include "WordStyleDlg.h"
+#include "../../MISC/RegExt/regExtDlg.h"
+#include "../ColourPicker/WordStyleDlg.h"
 
 class MiscSubDlg : public StaticDialog
 {

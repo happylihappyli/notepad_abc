@@ -27,6 +27,7 @@
 #include "Utf8.h"
 #include "Parameters.h"
 #include "Buffer.h"
+#include "../TinyXml/tinystr.h"
 
 using namespace std;
 
@@ -34,13 +35,13 @@ void printInt(int int2print)
 {
 	wchar_t str[32];
 	wsprintf(str, L"%d", int2print);
-	::MessageBox(NULL, str, L"", MB_OK);
+	::MessageBoxW(NULL, str, L"", MB_OK);
 }
 
 
 void printStr(const wchar_t *str2print)
 {
-	::MessageBox(NULL, str2print, L"", MB_OK);
+	::MessageBoxW(NULL, str2print, L"", MB_OK);
 }
 
 wstring commafyInt(size_t n)
@@ -566,6 +567,8 @@ std::string wstring2string(const std::wstring & rwString, UINT codepage)
 	}
 	return std::string();
 }
+
+
 
 
 // Escapes ampersands in file name to use it in menu
@@ -1500,7 +1503,7 @@ HFONT createFont(const wchar_t* fontName, int fontSize, bool isBold, HWND hDestP
 	if (isBold)
 		logFont.lfWeight = FW_BOLD;
 
-	wcscpy_s(logFont.lfFaceName, fontName);
+	wcscpy_s(logFont.lfFaceName, LF_FACESIZE, fontName);
 
 	HFONT newFont = CreateFontIndirect(&logFont);
 

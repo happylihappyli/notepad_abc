@@ -18,7 +18,7 @@
 #pragma once
 
 #include "FunctionCallTip.h"
-#include "tinyxml.h"
+#include "../TinyXml/tinyxml.h"
 
 class ScintillaEditView;
 

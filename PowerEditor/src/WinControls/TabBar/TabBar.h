@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <windows.h>
 #include <commctrl.h>
-#include "Window.h"
+#include "../Window.h"
 #include "dpiManagerV2.h"
 
 //Notification message

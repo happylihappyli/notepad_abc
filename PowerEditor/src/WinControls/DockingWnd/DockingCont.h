@@ -19,8 +19,8 @@
 #include "resource.h"
 #include "Docking.h"
 #include <vector>
-#include "StaticDialog.h"
-#include "Common.h"
+#include "../StaticDialog/StaticDialog.h"
+#include "../../MISC/Common/Common.h"
 
 
 // window styles

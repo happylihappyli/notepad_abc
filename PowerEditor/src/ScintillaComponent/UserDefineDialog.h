@@ -17,10 +17,10 @@
 #pragma once
 
 #include "UserDefineResource.h"
-#include "ControlsTab.h"
-#include "ColourPicker.h"
+#include "../WinControls/TabBar/ControlsTab.h"
+#include "../WinControls/ColourPicker/ColourPicker.h"
 #include "Parameters.h"
-#include "URLCtrl.h"
+#include "../WinControls/AboutDlg/URLCtrl.h"
 #include "SciLexer.h"
 #include <unordered_map>
 

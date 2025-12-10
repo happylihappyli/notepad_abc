@@ -595,7 +595,7 @@ bool loadFromJson(std::vector<PluginUpdateInfo*>& pl, wstring& verStr, const jso
 #ifdef DEBUG
 		catch (const wstring& exceptionStr)
 		{
-			::MessageBox(NULL, exceptionStr.c_str(), L"Exception caught in: PluginsAdmin loadFromJson()", MB_ICONERROR);
+			::MessageBoxW(NULL, exceptionStr.c_str(), L"Exception caught in: PluginsAdmin loadFromJson()", MB_ICONERROR);
 			continue;
 		}
 
@@ -806,7 +806,7 @@ bool PluginsAdminDlg::loadFromPluginInfos()
 
 		// user file name (without ext. to find whole info in available list
 		wchar_t fnNoExt[MAX_PATH]{};
-		wcscpy_s(fnNoExt, i._fileName.c_str());
+		wcscpy_s(fnNoExt, MAX_PATH, i._fileName.c_str());
 		::PathRemoveExtension(fnNoExt);
 
 		int listIndex;

@@ -205,7 +205,7 @@ int PluginsManager::loadPluginFromPath(const wchar_t *pluginFilePath)
 			}
 
 			wchar_t xmlPath[MAX_PATH];
-			wcscpy_s(xmlPath, nppParams.getNppPath().c_str());
+			wcscpy_s(xmlPath, MAX_PATH, nppParams.getNppPath().c_str());
 			PathAppend(xmlPath, L"plugins\\Config");
             PathAppend(xmlPath, pi->_moduleName.c_str());
 			PathRemoveExtension(xmlPath);
@@ -214,7 +214,7 @@ int PluginsManager::loadPluginFromPath(const wchar_t *pluginFilePath)
 			if (!doesFileExist(xmlPath))
 			{
 				lstrcpyn(xmlPath, L"\0", MAX_PATH );
-				wcscpy_s(xmlPath, nppParams.getAppDataNppDir());
+				wcscpy_s(xmlPath, MAX_PATH, nppParams.getAppDataNppDir());
 				PathAppend(xmlPath, L"plugins\\Config");
                 PathAppend(xmlPath, pi->_moduleName.c_str());
 				PathRemoveExtension(xmlPath);
@@ -269,7 +269,7 @@ int PluginsManager::loadPluginFromPath(const wchar_t *pluginFilePath)
 		s += L"\n\n";
 		s += pluginFileName;
 		s += USERMSG;
-		if (::MessageBox(_nppData._nppHandle, s.c_str(), pluginFilePath, MB_YESNO) == IDYES)
+		if (::MessageBoxW(_nppData._nppHandle, s.c_str(), pluginFilePath, MB_YESNO) == IDYES)
 		{
 
 			::DeleteFile(pluginFilePath);
@@ -288,7 +288,7 @@ int PluginsManager::loadPluginFromPath(const wchar_t *pluginFilePath)
 		msg += L"\n\n";
 		msg += pluginFileName;
 		msg += USERMSG;
-		if (::MessageBox(_nppData._nppHandle, msg.c_str(), pluginFilePath, MB_YESNO) == IDYES)
+		if (::MessageBoxW(_nppData._nppHandle, msg.c_str(), pluginFilePath, MB_YESNO) == IDYES)
 		{
 			::DeleteFile(pluginFilePath);
 		}

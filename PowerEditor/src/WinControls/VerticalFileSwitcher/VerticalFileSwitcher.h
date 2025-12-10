@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "DockingDlgInterface.h"
+#include "../DockingWnd/DockingDlgInterface.h"
 #include "VerticalFileSwitcher_rc.h"
 #include "VerticalFileSwitcherListView.h"
 #include "CategoryManager.h"
@@ -38,11 +38,11 @@ public:
 
 	void init(HINSTANCE hInst, HWND parent, HIMAGELIST hImaLst) {
 		_hInst = hInst;
-		_hParent = parent;  // 保存Notepad++主窗口句柄
+		_hParent = parent;  // 保存Notepad++ Main Window Handle
 		_hImaLst = hImaLst;
 	};
 	
-	// 添加一个方法来获取Notepad++主窗口句柄
+	// 添加一个方法来获取Notepad++ Main Window Handle
 	HWND getNppMainWnd() const { return _hParent; }
 
 	void create(tTbData* data, bool isRTL = false);
@@ -96,7 +96,7 @@ public:
 	}
 
 	void updateTabOrder() {
-		// 当tab顺序改变时，总是重新加载文件列表以反映新的tab顺序
+		// When Tab Order Changes, Always Reload File List to Reflect New Tab Order
 		_fileListView.reload();
 	}
 
@@ -118,17 +118,17 @@ public:
 
 	void startColumnSort();
 
-	// 添加display方法的声明
+	// Add display Method Declaration
 	void display(bool toShow = true) const override;
 
-	// 设置对话框相关方法
+	// Settings Dialog Related Methods
 	void showSettingsDialog();
 
-	// 分类管理器访问方法（用于对话框过程）
+	// Category Manager Access Method (for Dialog Procedure)
 	CategoryManager* getCategoryManager() { return &_categoryManager; }
 	const CategoryManager* getCategoryManager() const { return &_categoryManager; }
 
-	// 新增的分类相关方法
+	// Newly Added Category Related Methods
 	void showCategoryMenu();
 	void editCategoryFile();
 	void refreshCategory();
@@ -138,27 +138,27 @@ private:
 
 protected:
 	static LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
-		// 处理WM_NCCREATE消息，这是创建窗口时收到的第一个消息
+		// Handle WM_NCCREATE Message, This is the First Message Received When Creating Window
 		if (message == WM_NCCREATE) {
-			// 从创建参数中获取this指针
+			// Get this Pointer from Creation Parameters
 			LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
 			void* lpThis = lpcs->lpCreateParams;
 			
-			// 将this指针存储在窗口的额外数据中（使用-21替代GWL_USERDATA）
+			// Store this Pointer in Window's Extra Data (Use -21 Instead of GWL_USERDATA)
 			::SetWindowLongPtr(hwnd, -21, reinterpret_cast<LONG_PTR>(lpThis));
 			
-			// 将窗口句柄保存到对象中
+			// Save Window Handle to Object
 			VerticalFileSwitcher* pThis = static_cast<VerticalFileSwitcher*>(lpThis);
 			pThis->_hSelf = hwnd;
 			
-			return TRUE; // 允许创建窗口
+			return TRUE; // Allow Window Creation
 		}
 		
-		// 使用-21替代GWL_USERDATA
+		// Use -21 Instead of GWL_USERDATA
 		VerticalFileSwitcher* pThis = reinterpret_cast<VerticalFileSwitcher*>(::GetWindowLongPtr(hwnd, -21));
 		if (pThis) {
 			LRESULT result = pThis->run_dlgProc(message, wParam, lParam);
-			// 如果消息被处理，返回结果；否则调用默认窗口过程
+			// Return Result if Message is Processed; Otherwise Call Default Window Procedure
 			if (result != 0 || message == WM_CREATE || message == WM_DESTROY) {
 				return result;
 			}
@@ -175,7 +175,7 @@ protected:
 
 	void closeDoc(TaskLstFnStatus *tlfs) const;
 
-	// 内部方法，用于protected部分访问_fileListView
+	// Internal Method, Used for protected Part to Access _fileListView
 	int newItemInternal(BufferID bufferID, int iView) {
 		return _fileListView.newItem(bufferID, iView);
 	}
@@ -206,11 +206,11 @@ protected:
 	intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam);
 
 	void initPopupMenus();
-	void initFileListContextMenu();  // 新增：初始化文件列表右键菜单
+	void initFileListContextMenu();  // New: Initialize File List Right-Click Menu
 	void popupMenuCmd(int cmdID);
 
 	static LRESULT CALLBACK listViewStaticProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
-		// 使用-21替代GWLP_USERDATA
+		// Use -21 Instead of GWLP_USERDATA
 		const auto dlg = (VerticalFileSwitcher*)(::GetWindowLongPtr(hwnd, -21));
 		return (run_listViewProc(dlg->_defaultListViewProc, hwnd, message, wParam, lParam));
 	};
@@ -226,16 +226,16 @@ private:
 	HIMAGELIST _hImaLst = nullptr;
 	WNDPROC _defaultWindowProc = nullptr;
 	HMENU _hGlobalMenu = NULL;
-	HMENU _hFileListMenu = NULL;  // 新增：文件列表右键菜单
+	HMENU _hFileListMenu = NULL;  // 新增：File List Right-Click Menu
 	VerticalFileSwitcherListView _fileListView;
 	CategoryManager _categoryManager; // 分类管理器
-	std::vector<HWND> _categoryButtons; // 分类按钮句柄数组
-	HWND _currentCategoryButton = nullptr; // 当前选中的分类按钮
+	std::vector<HWND> _categoryButtons; // Category Button Handle Array
+	HWND _currentCategoryButton = nullptr; // Currently Selected Category按钮
 
 	static COLORREF _bgColor;
 	static const UINT_PTR _fileSwitcherNotifySubclassID = 42;
 
-	// 将_defaultListViewProc移到public部分，以便在静态方法中访问
-	WNDPROC _defaultListViewProc = nullptr; // 保存列表视图的原始窗口过程
+	// Move _defaultListViewProc to public Part for Access in Static Methods
+	WNDPROC _defaultListViewProc = nullptr; // Save Original Window Procedure of List View
 
 };

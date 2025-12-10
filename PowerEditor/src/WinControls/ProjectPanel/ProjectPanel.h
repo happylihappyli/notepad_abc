@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "DockingDlgInterface.h"
-#include "TreeView.h"
+#include "../DockingWnd/DockingDlgInterface.h"
+#include "../TreeView/TreeView.h"
 #include "ProjectPanel_rc.h"
 
 #define PM_PROJECTPANELTITLE       L"Project Panel"

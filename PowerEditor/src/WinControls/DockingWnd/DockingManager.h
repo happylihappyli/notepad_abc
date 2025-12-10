@@ -19,9 +19,9 @@
 #include <vector>
 #include <windows.h>
 #include <commctrl.h>
-#include "Window.h"
+#include "../Window.h"
 #include "DockingCont.h"
-#include "SplitterContainer.h"
+#include "../SplitterContainer/SplitterContainer.h"
 
 #define DSPC_CLASS_NAME L"dockingManager"
 #define	CONT_MAP_MAX	50

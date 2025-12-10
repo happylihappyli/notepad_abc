@@ -122,8 +122,8 @@ intptr_t CALLBACK AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 			buildTime +=  wmc.char2wchar(__TIME__, CP_ACP);
 
 			NppParameters& nppParam = NppParameters::getInstance();
-			LPCTSTR bitness = nppParam.archType() == IMAGE_FILE_MACHINE_I386 ? L"(32-bit)" : nppParam.archType() == IMAGE_FILE_MACHINE_AMD64 ? L"(64-bit)" : L"(ARM 64-bit)";
-			::SetDlgItemText(_hSelf, IDC_VERSION_BIT, bitness);
+			const wchar_t* bitness = nppParam.archType() == IMAGE_FILE_MACHINE_I386 ? L"(32-bit)" : nppParam.archType() == IMAGE_FILE_MACHINE_AMD64 ? L"(64-bit)" : L"(ARM 64-bit)";
+			::SetDlgItemTextW(_hSelf, IDC_VERSION_BIT, bitness);
 
 			::SendMessage(compileDateHandle, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(buildTime.c_str()));
 			::EnableWindow(compileDateHandle, FALSE);
@@ -189,9 +189,9 @@ intptr_t CALLBACK AboutDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM lPar
 			const int iconSize = _dpiManager.scale(80);
 			if (_hIcon == nullptr)
 			{
-				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_CHAMELEON_DM : IDI_CHAMELEON), iconSize, iconSize, &_hIcon);
-				DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(IDI_WITHUKRAINE), iconSize, iconSize, &_hIcon);
-				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCE(NppDarkMode::isEnabled() ? IDI_TAIWANSSOVEREIGNTY_DM : IDI_TAIWANSSOVEREIGNTY), iconSize, iconSize, &_hIcon);
+				//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCEW(NppDarkMode::isEnabled() ? IDI_CHAMELEON_DM : IDI_CHAMELEON), iconSize, iconSize, &_hIcon);
+			DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCEW(IDI_WITHUKRAINE), iconSize, iconSize, &_hIcon);
+			//DPIManagerV2::loadIcon(_hInst, MAKEINTRESOURCEW(NppDarkMode::isEnabled() ? IDI_TAIWANSSOVEREIGNTY_DM : IDI_TAIWANSSOVEREIGNTY), iconSize, iconSize, &_hIcon);
 			}
 
 			//HICON hIcon = (HICON)::LoadImage(_hInst, MAKEINTRESOURCE(IDI_JESUISCHARLIE), IMAGE_ICON, 64, 64, LR_DEFAULTSIZE);
@@ -293,11 +293,11 @@ intptr_t CALLBACK DebugInfoDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			_debugInfoStr += L"\r\n";
 
 			// Binary path
-			_debugInfoStr += L"Path : ";
-			wchar_t nppFullPath[MAX_PATH]{};
-			::GetModuleFileName(NULL, nppFullPath, MAX_PATH);
-			_debugInfoStr += nppFullPath;
-			_debugInfoStr += L"\r\n";
+		_debugInfoStr += L"Path : ";
+		wchar_t nppFullPath[MAX_PATH]{};
+		::GetModuleFileNameW(NULL, nppFullPath, MAX_PATH);
+		_debugInfoStr += nppFullPath;
+		_debugInfoStr += L"\r\n";
 
 			// Command line as specified for program launch
 			// The _cmdLinePlaceHolder will be replaced later by refreshDebugInfo()
@@ -522,12 +522,12 @@ intptr_t CALLBACK DebugInfoDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM 
 			}
 
 			// Detect WINE
-			PWINEGETVERSION pWGV = nullptr;
-			HMODULE hNtdllModule = GetModuleHandle(L"ntdll.dll");
-			if (hNtdllModule)
-			{
-				pWGV = reinterpret_cast<PWINEGETVERSION>(GetProcAddress(hNtdllModule, "wine_get_version"));
-			}
+		PWINEGETVERSION pWGV = nullptr;
+		HMODULE hNtdllModule = GetModuleHandleW(L"ntdll.dll");
+		if (hNtdllModule)
+		{
+			pWGV = reinterpret_cast<PWINEGETVERSION>(GetProcAddress(hNtdllModule, "wine_get_version"));
+		}
 
 			if (pWGV != nullptr)
 			{
@@ -639,8 +639,8 @@ void DebugInfoDlg::refreshDebugInfo()
 	}
 
 	// Set Debug Info text and leave the text in selected state
-	::SetDlgItemText(_hSelf, IDC_DEBUGINFO_EDIT, _debugInfoDisplay.c_str());
-	::SendDlgItemMessage(_hSelf, IDC_DEBUGINFO_EDIT, EM_SETSEL, 0, _debugInfoDisplay.length() - 1);
+	::SetDlgItemTextW(_hSelf, IDC_DEBUGINFO_EDIT, _debugInfoDisplay.c_str());
+	::SendDlgItemMessageW(_hSelf, IDC_DEBUGINFO_EDIT, EM_SETSEL, 0, _debugInfoDisplay.length() - 1);
 	::SetFocus(::GetDlgItem(_hSelf, IDC_DEBUGINFO_EDIT));
 }
 
@@ -669,7 +669,7 @@ void DoSaveOrNotBox::changeLang()
 	{
 		constexpr unsigned char len = 255;
 		wchar_t text[len]{};
-		::GetDlgItemText(_hSelf, IDC_DOSAVEORNOTTEXT, text, len);
+		::GetDlgItemTextW(_hSelf, IDC_DOSAVEORNOTTEXT, text, len);
 		msg = text;
 	}
 
@@ -677,7 +677,7 @@ void DoSaveOrNotBox::changeLang()
 		msg = defaultMessage;
 
 	msg = stringReplace(msg, L"$STR_REPLACE$", _fn);
-	::SetDlgItemText(_hSelf, IDC_DOSAVEORNOTTEXT, msg.c_str());
+	::SetDlgItemTextW(_hSelf, IDC_DOSAVEORNOTTEXT, msg.c_str());
 }
 
 intptr_t CALLBACK DoSaveOrNotBox::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)
@@ -790,14 +790,14 @@ void DoSaveAllBox::changeLang()
 	{
 		constexpr size_t len = 1024;
 		wchar_t text[len]{};
-		::GetDlgItemText(_hSelf, IDC_DOSAVEALLTEXT, text, len);
+		::GetDlgItemTextW(_hSelf, IDC_DOSAVEALLTEXT, text, len);
 		msg = text;
 	}
 
 	if (msg.empty())
 		msg = defaultMessage;
 
-	::SetDlgItemText(_hSelf, IDC_DOSAVEALLTEXT, msg.c_str());
+	::SetDlgItemTextW(_hSelf, IDC_DOSAVEALLTEXT, msg.c_str());
 }
 
 intptr_t CALLBACK DoSaveAllBox::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam)

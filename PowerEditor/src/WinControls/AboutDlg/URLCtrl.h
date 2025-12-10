@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "Window.h"
-#include "Common.h"
+#include "../Window.h"
+#include "../../MISC/Common/Common.h"
 
 class URLCtrl : public Window {
 public:

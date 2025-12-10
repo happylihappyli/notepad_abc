@@ -20,7 +20,7 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#include "DockingDlgInterface.h"
+#include "../DockingWnd/DockingDlgInterface.h"
 #include "ansiCharPanel_rc.h"
 #include "ListView.h"
 #include "asciiListView.h"

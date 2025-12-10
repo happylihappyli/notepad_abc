@@ -46,7 +46,7 @@ DWORD WINAPI Notepad_plus::monitorFileOnChange(void * params)
 
 	//The folder to watch :
 	wchar_t folderToMonitor[MAX_PATH]{};
-	wcscpy_s(folderToMonitor, fullFileName);
+	wcscpy_s(folderToMonitor, MAX_PATH, fullFileName);
 
 	::PathRemoveFileSpecW(folderToMonitor);
 	
@@ -267,7 +267,7 @@ BufferID Notepad_plus::doOpen(const wstring& fileName, bool isRecursive, bool is
 	bool longFileNameExists = doesFileExist(longFileName);
 	if (isSnapshotMode && !longFileNameExists) // UNTITLED
 	{
-		wcscpy_s(longFileName, targetFileName.c_str());
+		wcscpy_s(longFileName, longFileNameBufferSize, targetFileName.c_str());
 	}
     _lastRecentFileList.remove(longFileName);
 
@@ -388,7 +388,7 @@ BufferID Notepad_plus::doOpen(const wstring& fileName, bool isRecursive, bool is
 					msg = stringReplace(msg, L"$STR_REPLACE1$", longFileName);
 					msg = stringReplace(msg, L"$STR_REPLACE2$", longFileDir);
 				}
-				::MessageBox(_pPublicInterface->getHSelf(), msg.c_str(), title.c_str(), MB_OK);
+				::MessageBoxW(_pPublicInterface->getHSelf(), msg.c_str(), title.c_str(), MB_OK);
 			}
 
 			if (!isCreateFileSuccessful)
@@ -687,7 +687,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 	else if (res == SavingStatus::SaveWritingFailed)
 	{
 		wstring errorMessage = GetLastErrorAsString(GetLastError());
-		::MessageBox(_pPublicInterface->getHSelf(), errorMessage.c_str(), L"Save failed", MB_OK | MB_ICONWARNING);
+		::MessageBoxW(_pPublicInterface->getHSelf(), errorMessage.c_str(), L"Save failed", MB_OK | MB_ICONWARNING);
 	}
 	else if (res == SavingStatus::SaveOpenFailed)
 	{

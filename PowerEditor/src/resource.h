@@ -46,7 +46,7 @@
 //#define IDI_TAIWANSSOVEREIGNTY     105
 //#define IDI_TAIWANSSOVEREIGNTY_DM  106
 #define IDI_WITHUKRAINE            105
-#define IDR_RT_MANIFEST            103
+#define IDR_RT_MANIFEST            1
 #define IDI_ICONABSENT             104
 
 //

@@ -138,7 +138,7 @@ private:
 		std::wstring msg = pluginName;
 		msg += L" just crashed in\r";
 		msg += funcSignature;
-		::MessageBox(NULL, msg.c_str(), L"Plugin Crash", MB_OK|MB_ICONSTOP);
+		::MessageBoxW(NULL, msg.c_str(), L"Plugin Crash", MB_OK|MB_ICONSTOP);
 	}
 
 	void pluginExceptionAlert(const wchar_t *pluginName, const std::exception& e) {
@@ -147,7 +147,7 @@ private:
 		msg += L"\r\n\r\nException reason: ";
 		msg += string2wstring(e.what(), CP_UTF8);
 
-		::MessageBox(NULL, msg.c_str(), L"Plugin Exception", MB_OK);
+		::MessageBoxW(NULL, msg.c_str(), L"Plugin Exception", MB_OK);
 	}
 
 	bool isInLoadedDlls(const wchar_t *fn) const {

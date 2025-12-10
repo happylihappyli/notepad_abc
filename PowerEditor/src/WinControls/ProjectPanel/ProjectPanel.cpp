@@ -523,7 +523,7 @@ bool ProjectPanel::enumWorkSpaceFiles(HTREEITEM tvFrom, const std::vector<wstrin
 wstring ProjectPanel::getRelativePath(const wstring & filePath, const wchar_t *workSpaceFileName)
 {
 	wchar_t wsfn[MAX_PATH] = { '\0' };
-	wcscpy_s(wsfn, workSpaceFileName);
+	wcscpy_s(wsfn, MAX_PATH, workSpaceFileName);
 	::PathRemoveFileSpec(wsfn);
 
 	size_t pos_found = filePath.find(wsfn);
@@ -575,7 +575,7 @@ wstring ProjectPanel::getAbsoluteFilePath(const wchar_t * relativePath)
 		return relativePath;
 
 	wchar_t absolutePath[MAX_PATH] = { '\0' };
-	wcscpy_s(absolutePath, _workSpaceFilePath.c_str());
+	wcscpy_s(absolutePath, MAX_PATH, _workSpaceFilePath.c_str());
 	::PathRemoveFileSpec(absolutePath);
 	::PathAppend(absolutePath, relativePath);
 	return absolutePath;
@@ -1193,7 +1193,7 @@ void ProjectPanel::popupMenuCmd(int cmdID)
 
 				*fn = newValue;
 				wchar_t *strValueLabel = ::PathFindFileName(fn->c_str());
-				wcscpy_s(textBuffer, strValueLabel);
+				wcscpy_s(textBuffer, MAX_PATH, strValueLabel);
 				int iImage = doesFileExist(fn->c_str()) ? INDEX_LEAF : INDEX_LEAF_INVALID;
 				tvItem.iImage = tvItem.iSelectedImage = iImage;
 				SendMessage(_treeView.getHSelf(), TVM_SETITEM, 0, reinterpret_cast<LPARAM>(&tvItem));
@@ -1329,7 +1329,7 @@ void ProjectPanel::addFilesFromDirectory(HTREEITEM hTreeItem)
 	if (_selDirOfFilesFromDirDlg == L"" && _workSpaceFilePath != L"")
 	{
 		wchar_t dir[MAX_PATH] = { '\0' };
-		wcscpy_s(dir, _workSpaceFilePath.c_str());
+		wcscpy_s(dir, MAX_PATH, _workSpaceFilePath.c_str());
 		::PathRemoveFileSpec(dir);
 		_selDirOfFilesFromDirDlg = dir;
 	}

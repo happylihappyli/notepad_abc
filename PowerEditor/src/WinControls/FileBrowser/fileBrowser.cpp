@@ -542,15 +542,15 @@ void FileBrowser::notified(LPNMHDR notification)
 
 		if (notification->idFrom == FB_CMD_AIMFILE)
 		{
-			wcscpy_s(lpttt->szText, _locateCurrentFile.c_str());
+			wcscpy_s(lpttt->szText, 80, _locateCurrentFile.c_str());
 		}
 		else if (notification->idFrom == FB_CMD_FOLDALL)
 		{
-			wcscpy_s(lpttt->szText, _collapseAllFolders.c_str());
+			wcscpy_s(lpttt->szText, 80, _collapseAllFolders.c_str());
 		}
 		else if (notification->idFrom == FB_CMD_EXPANDALL)
 		{
-			wcscpy_s(lpttt->szText, _expandAllFolders.c_str());
+			wcscpy_s(lpttt->szText, 80, _expandAllFolders.c_str());
 		}
 	}
 	else if (notification->hwndFrom == _treeView.getHSelf())
@@ -1018,7 +1018,7 @@ void FileBrowser::addRootFolder(wstring rootFolderPath)
 
 	wchar_t *label = ::PathFindFileName(rootFolderPath.c_str());
 	wchar_t rootLabel[MAX_PATH] = {'\0'};
-	wcscpy_s(rootLabel, label);
+	wcscpy_s(rootLabel, MAX_PATH, label);
 	size_t len = lstrlen(rootLabel);
 	if (rootLabel[len - 1] == '\\')
 		rootLabel[len - 1] = '\0';
@@ -1038,7 +1038,7 @@ HTREEITEM FileBrowser::createFolderItemsFromDirStruct(HTREEITEM hParentItem, con
 	if (directoryStructure._parent == nullptr && hParentItem == nullptr)
 	{
 		wchar_t rootPath[MAX_PATH] = { '\0' };
-		wcscpy_s(rootPath, directoryStructure._rootPath.c_str());
+		wcscpy_s(rootPath, MAX_PATH, directoryStructure._rootPath.c_str());
 		size_t len = lstrlen(rootPath);
 		if (rootPath[len - 1] == '\\')
 			rootPath[len - 1] = '\0';

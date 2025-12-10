@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "Common.h"
+#include "../Common/Common.h"
 
 enum progType {WIN32_PROG, CONSOLE_PROG};
 

@@ -14,8 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// 定义Windows版本宏以启用SHCreateItemFromParsingName函数
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601  // Windows 7或更高版本
+#endif
 
 #include <shobjidl.h>
+#include <shlobj.h>          // 包含Shell API头文件
+#include <shlobj_core.h>     // 包含Shell核心API头文件（包含SHCreateItemFromParsingName）
 #ifdef __MINGW32__
 #include <cwchar>
 #endif
@@ -138,9 +144,15 @@ namespace // anonymous
 	bool setDialogFolder(IFileDialog* dialog, const wchar_t* path)
 	{
 		com_ptr<IShellItem> shellItem;
-		HRESULT hr = SHCreateItemFromParsingName(path,
-			nullptr,
-			IID_PPV_ARGS(&shellItem));
+		PIDLIST_ABSOLUTE pidl = nullptr;
+		
+		// 使用SHParseDisplayName和SHBindToObject替代SHCreateItemFromParsingName
+		HRESULT hr = SHParseDisplayName(path, nullptr, &pidl, 0, nullptr);
+		if (SUCCEEDED(hr) && pidl) {
+			hr = SHBindToObject(nullptr, pidl, nullptr, IID_PPV_ARGS(&shellItem));
+			ILFree(pidl);
+		}
+		
 		if (SUCCEEDED(hr) && shellItem && !::doesDirectoryExist(path))
 		{
 			com_ptr<IShellItem> parentItem;

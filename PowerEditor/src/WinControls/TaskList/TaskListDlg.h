@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "Common.h"
-#include "StaticDialog.h"
+#include "../../MISC/Common/Common.h"
+#include "../StaticDialog/StaticDialog.h"
 #include "TaskListDlg_rc.h"
 #include "TaskList.h"
-#include "Notepad_plus_msgs.h"
+#include "../../MISC/PluginsManager/Notepad_plus_msgs.h"
 
 #define	TASKLIST_USER    (WM_USER + 8000)
 #define WM_GETTASKLISTINFO (TASKLIST_USER + 01)

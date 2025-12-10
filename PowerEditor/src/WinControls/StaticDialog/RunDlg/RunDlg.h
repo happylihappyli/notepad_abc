@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "Common.h"
+#include "../../../MISC/Common/Common.h"
 #include "RunDlg_rc.h"
 
 #define CURRENTWORD_MAXLENGTH 2048

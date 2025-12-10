@@ -117,8 +117,8 @@ void DocumentMap::changeTextDirection(bool isRTL)
 /*
 double ddd = (double)Xlength1/(double)Xlength2;
 char dchar[256];
-sprintf(dchar, "%f", ddd);
-::MessageBoxA(NULL, dchar, "", MB_OK);
+// sprintf(dchar, "%f", ddd);
+		// ::MessageBoxA(NULL, dchar, "", MB_OK); // 已注释掉调试代码
 		
 		// -10    => 1
 		// -9     => 1

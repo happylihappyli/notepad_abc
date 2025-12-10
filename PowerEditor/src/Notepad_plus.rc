@@ -1,4 +1,4 @@
-// This file is part of Notepad++ project
+﻿// This file is part of Notepad++ project
 // Copyright (C)2021 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -848,7 +848,7 @@ BEGIN
         MENUITEM "Folder as Workspace",   IDM_VIEW_FILEBROWSER
         MENUITEM "Document Map",          IDM_VIEW_DOC_MAP
         MENUITEM "Document List",         IDM_VIEW_DOCLIST
-        POPUP "文档分类"
+        POPUP "Document Category"
         BEGIN
             MENUITEM "显示分类菜单",        IDM_VIEW_DOCLIST_CATEGORY_MENU
             MENUITEM "编辑分类文件",        IDM_VIEW_DOCLIST_EDIT_CATEGORY
@@ -1348,7 +1348,7 @@ BEGIN
         MENUITEM "Set Updater Proxy...",           IDM_CONFUPDATERPROXY
         MENUITEM SEPARATOR
         MENUITEM "Debug Info...",                  IDM_DEBUGINFO
-        MENUITEM "显示调试控制台",                  IDM_SHOW_CONSOLE
+        MENUITEM "Show Debug Console",                  IDM_SHOW_CONSOLE
         MENUITEM "About Notepad++",                IDM_ABOUT
     END
 

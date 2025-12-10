@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "Common.h"
+#include "../../MISC/Common/Common.h"
 #include <memory>
 
 // Customizable file dialog.

@@ -16,15 +16,15 @@
 
 #pragma once
 
-#include "tinyxmlA.h"
-#include "tinyxml.h"
+#include "TinyXml/tinyXmlA/tinyxmlA.h"
+#include "TinyXml/tinyxml.h"
 #include "Scintilla.h"
 #include "ScintillaRef.h"
-#include "ToolBar.h"
+#include "WinControls/ToolBar/ToolBar.h"
 #include "UserDefineLangReference.h"
 #include "colors.h"
-#include "shortcut.h"
-#include "ContextMenu.h"
+#include "WinControls/shortcut/shortcut.h"
+#include "WinControls/ContextMenu/ContextMenu.h"
 #include "dpiManager.h"
 #include "NppDarkMode.h"
 #include <assert.h>
@@ -33,7 +33,7 @@
 #include <shlwapi.h>
 #include "ILexer.h"
 #include "Lexilla.h"
-#include "DockingCont.h"
+#include "WinControls/DockingWnd/DockingCont.h"
 
 #ifdef _WIN64
 
@@ -559,11 +559,11 @@ private :
 
 struct SortLexersInAlphabeticalOrder {
 	bool operator() (const LexerStyler& l, const LexerStyler& r) {
-		if (!lstrcmp(l.getLexerDesc(), L"Search result"))
+		if (!lstrcmpW(l.getLexerDesc(), L"Search result"))
 			return false;
-		if (!lstrcmp(r.getLexerDesc(), L"Search result"))
+		if (!lstrcmpW(r.getLexerDesc(), L"Search result"))
 			return true;
-		return lstrcmp(l.getLexerDesc(), r.getLexerDesc()) < 0;
+		return lstrcmpW(l.getLexerDesc(), r.getLexerDesc()) < 0;
 	}
 };
 
@@ -585,7 +585,7 @@ struct LexerStylerArray
 		if (!lexerName) return nullptr;
 		for (size_t i = 0 ; i < _lexerStylerVect.size() ; ++i)
 		{
-			if (!lstrcmp(_lexerStylerVect[i].getLexerName(), lexerName))
+			if (!lstrcmpW(_lexerStylerVect[i].getLexerName(), lexerName))
 				return &(_lexerStylerVect[i]);
 		}
 		return nullptr;
@@ -701,7 +701,7 @@ public:
 	std::wstring toString() const // Return Notepad++ date format : YYYYMMDD
 	{
 		wchar_t dateStr[16];
-		wsprintf(dateStr, L"%04u%02u%02u", _year, _month, _day);
+		wsprintfW(dateStr, L"%04u%02u%02u", _year, _month, _day);
 		return dateStr;
 	}
 
@@ -1207,7 +1207,7 @@ public:
 			}
 
 			for (int i = 0 ; i < SCE_USER_KWLIST_TOTAL ; ++i)
-				wcscpy_s(this->_keywordLists[i], ulc._keywordLists[i]);
+				wcscpy_s(this->_keywordLists[i], max_char, ulc._keywordLists[i]);
 
 			for (int i = 0 ; i < SCE_USER_TOTAL_KEYWORD_GROUPS ; ++i)
 				_isPrefix[i] = ulc._isPrefix[i];
@@ -1396,7 +1396,7 @@ public:
 		for (size_t i = 0; i < _themeList.size(); ++i )
 		{
 			auto& themeNameOnList = getElementFromIndex(i).first;
-			if (lstrcmp(themeName, themeNameOnList.c_str()) == 0)
+			if (lstrcmpW(themeName, themeNameOnList.c_str()) == 0)
 				return true;
 		}
 		return false;
@@ -1668,7 +1668,7 @@ public:
 
 		for (int i = 0 ; i < _nbUserLang ; ++i)
 		{
-			if (!lstrcmp(_userLangArray[i]->_name.c_str(), newName))
+			if (!lstrcmpW(_userLangArray[i]->_name.c_str(), newName))
 				return true;
 		}
 		return false;

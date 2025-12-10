@@ -1,0 +1,253 @@
+=== STDOUT ===
+scons: Reading SConscript files ...
+检查并终止正在运行的notepad_abc进程...
+没有发现正在运行的notepad_abc进程
+确认没有notepad_abc进程在运行
+开始构建时间: 2025-12-04 15:30:51
+使用纯Clang构建环境，不依赖Visual Studio...
+配置使用Clang编译器...
+✅ 直接找到Clang编译器: C:\Program Files\LLVM\bin\clang.exe
+Clang版本信息: clang version 21.1.0
+✅ 已将Clang路径添加到PATH: C:\Program Files\LLVM\bin
+✅ Clang编译器检查通过
+✅ 当前编译器类型: clang
+✅ CXX编译器: clang++
+✅ LINK链接器: $SMARTLINK
+✅ AR归档器: ar
+使用预编译依赖库 (Release)...
+✅ 找到我们构建的依赖库文件（.a格式）:
+   - E:\GitHub3\cpp\notepad_abc\lexilla\bin\liblexilla.a
+   - E:\GitHub3\cpp\notepad_abc\scintilla\bin\libscintilla.a
+检查并终止正在运行的notepad_abc进程...
+没有发现正在运行的notepad_abc进程
+确认没有notepad_abc进程在运行
+构建脚本已加载，支持中文显示
+配置构建选项 - 编译器类型: clang
+⚠️ 警告: 未找到Windows SDK包含路径
+尝试使用系统默认包含路径...
+继续构建，依赖编译器自动查找系统头文件
+⚠️ 警告: 未找到Windows SDK库路径
+尝试使用系统默认库路径...
+继续构建，依赖链接器自动查找系统库
+配置构建选项 - 编译器类型: clang, 构建类型: Release
+使用Clang动态运行时库以匹配预编译库
+Clang发布模式配置完成
+配置链接选项 - 编译器类型: clang
+⚠️ 警告: 未找到Windows SDK库路径
+使用Visual Studio 2022的库路径作为备选方案...
+添加Visual Studio库路径: ['D:\\Code\\VS2022\\Community\\VC\\Tools\\MSVC\\14.29.30133\\lib\\x64', 'D:\\Code\\VS2022\\Community\\VC\\Tools\\MSVC\\14.29.30133\\lib\\onecore\\x64']
+添加C运行时库: ['libcmt.lib', 'libvcruntime.lib', 'libucrt.lib']
+使用简化库列表（包含CRT和C++标准库）: ['kernel32.lib', 'user32.lib', 'gdi32.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'advapi32.lib', 'uuid.lib', 'libcmt.lib', 'libvcruntime.lib', 'libucrt.lib', 'libcpmt.lib', 'msvcprt.lib']
+链接器配置 - 编译器类型: clang, 子系统: WINDOWS
+🔧 链接器配置完成: Release, WINDOWS
+🔧 链接器标志: ['/SUBSYSTEM:WINDOWS', '/MACHINE:X64', '/DYNAMICBASE', '/NXCOMPAT', '/ENTRY:wWinMain']
+🔧 系统库: ['kernel32.lib', 'user32.lib', 'gdi32.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'advapi32.lib', 'uuid.lib', 'libcmt.lib', 'libvcruntime.lib', 'libucrt.lib', 'libcpmt.lib', 'msvcprt.lib']
+🔧 库目录: ['E:\\GitHub3\\cpp\\notepad_abc', 'E:\\GitHub3\\cpp\\notepad_abc\\bin', 'E:\\GitHub3\\cpp\\notepad_abc\\scintilla\\bin', 'E:\\GitHub3\\cpp\\notepad_abc\\obj', 'D:\\Code\\VS2022\\Community\\VC\\Tools\\MSVC\\14.29.30133\\lib\\x64', 'D:\\Code\\VS2022\\Community\\VC\\Tools\\MSVC\\14.29.30133\\lib\\onecore\\x64']
+SConscript配置 - 编译器类型: clang
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\ScintillaComponent\FunctionParser.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\ScintillaComponent\IncrementalSearch.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\ScintillaComponent\ParametersDlg.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\ScintillaComponent\RunMacroDlg.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\ScintillaComponent\ShortcutMapper.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\ScintillaComponent\TaskListDlg.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\ScintillaComponent\WindowsDlg.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\WinControls\DockingWnd\DockingGUIWidget.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\WinControls\Grid\Grid.cpp
+警告: 源文件不存在，已跳过: E:\GitHub3\cpp\notepad_abc\PowerEditor\src\COM\COM.cpp
+开始编译 116 个源文件...
+  编译成功: Notepad_plus.cpp
+  编译成功: Notepad_plus_Window.cpp
+  编译成功: NppBigSwitch.cpp
+  编译成功: NppCommands.cpp
+  编译成功: NppNotification.cpp
+  编译成功: NppIO.cpp
+  编译成功: WinMain.cpp
+  编译成功: Parameters.cpp
+  编译成功: NppDarkMode.cpp
+  编译成功: dpiManagerV2.cpp
+  编译成功: tinystrA.cpp
+  编译成功: tinyxmlA.cpp
+  编译成功: tinyxmlerrorA.cpp
+  编译成功: tinyxmlparserA.cpp
+  编译成功: tinystr.cpp
+  编译成功: tinyxml.cpp
+  编译成功: tinyxmlerror.cpp
+  编译成功: tinyxmlparser.cpp
+  编译成功: Common.cpp
+  编译成功: FileInterface.cpp
+  编译成功: SortLocale.cpp
+  编译成功: MiniDumper.cpp
+  编译成功: Win32Exception.cpp
+  编译成功: PluginsManager.cpp
+  编译成功: Processus.cpp
+  编译成功: regExtDlg.cpp
+  编译成功: md5Dlgs.cpp
+  编译成功: sha1.cpp
+  编译成功: calc_sha1.cpp
+  编译成功: sha-256.cpp
+  编译成功: sha512.cpp
+  编译成功: verifySignedfile.cpp
+  编译成功: Utf8_16.cpp
+  编译成功: EncodingMapper.cpp
+  编译成功: lastRecentFileList.cpp
+  编译成功: lesDlgs.cpp
+  编译成功: ScintillaEditView.cpp
+  编译成功: ScintillaCtrls.cpp
+  编译成功: AutoCompletion.cpp
+  编译成功: SmartHighlighter.cpp
+  编译成功: Buffer.cpp
+  编译成功: DocTabView.cpp
+  编译成功: FindReplaceDlg.cpp
+  编译成功: FunctionCallTip.cpp
+  编译成功: GoToLineDlg.cpp
+  编译成功: Printer.cpp
+  编译成功: xmlMatchedTagsHighlighter.cpp
+  编译成功: AboutDlg.cpp
+  编译成功: URLCtrl.cpp
+  编译成功: AnsiCharPanel.cpp
+  编译成功: ListView.cpp
+  编译成功: clipboardHistoryPanel.cpp
+  编译成功: ColourPicker.cpp
+  编译成功: ContextMenu.cpp
+  编译成功: DockingManager.cpp
+  编译成功: DockingCont.cpp
+  编译成功: DockingSplitter.cpp
+  编译成功: Gripper.cpp
+  编译成功: documentMap.cpp
+  编译成功: documentSnapshot.cpp
+  编译成功: fileBrowser.cpp
+  编译成功: FindCharsInRange.cpp
+  编译成功: DoubleBuffer.cpp
+  编译成功: functionListPanel.cpp
+  编译成功: ShortcutMapper.cpp
+  编译成功: ImageListSet.cpp
+  编译成功: CustomFileDialog.cpp
+  编译成功: pluginsAdmin.cpp
+  编译成功: preferenceDlg.cpp
+  编译成功: ProjectPanel.cpp
+  编译成功: ReadDirectoryChanges.cpp
+  编译成功: ReadFileChanges.cpp
+  编译成功: SplitterContainer.cpp
+  编译成功: StaticDialog.cpp
+  编译成功: RunDlg.cpp
+  编译成功: StatusBar.cpp
+  编译成功: ControlsTab.cpp
+  编译成功: TabBar.cpp
+  编译成功: TaskList.cpp
+  编译成功: TaskListDlg.cpp
+  编译成功: ToolBar.cpp
+  编译成功: ToolTip.cpp
+  编译成功: TreeView.cpp
+  编译成功: trayIconControler.cpp
+  编译成功: VerticalFileSwitcher.cpp
+  编译成功: VerticalFileSwitcherListView.cpp
+  编译成功: WindowsDlg.cpp
+  编译成功: shortcut.cpp
+  编译成功: DarkMode.cpp
+  编译成功: CharDistribution.cpp
+  编译成功: JpCntx.cpp
+  编译成功: LangBulgarianModel.cpp
+  编译成功: LangCyrillicModel.cpp
+  编译成功: LangGreekModel.cpp
+  编译成功: LangHebrewModel.cpp
+  编译成功: LangHungarianModel.cpp
+  编译成功: LangThaiModel.cpp
+  编译成功: nsBig5Prober.cpp
+  编译成功: nsCharSetProber.cpp
+  编译成功: nsEscCharsetProber.cpp
+  编译成功: nsEscSM.cpp
+  编译成功: nsEUCJPProber.cpp
+  编译成功: nsEUCKRProber.cpp
+  编译成功: nsEUCTWProber.cpp
+  编译成功: nsGB2312Prober.cpp
+  编译成功: nsHebrewProber.cpp
+  编译成功: nsLatin1Prober.cpp
+  编译成功: nsMBCSGroupProber.cpp
+  编译成功: nsMBCSSM.cpp
+  编译成功: nsSBCSGroupProber.cpp
+  编译成功: nsSBCharSetProber.cpp
+  编译成功: nsSJISProber.cpp
+  编译成功: nsUniversalDetector.cpp
+  编译成功: nsUTF8Prober.cpp
+  编译成功: BoostRegExSearch.cxx
+  编译成功: UTF8DocumentIterator.cxx
+处理资源文件...
+❌ 资源文件处理失败: Notepad_plus.rc - Builder or other environment method 'RES' not found.
+Check spelling, check external program exists in env['ENV']['PATH'],
+and check that a suitable tool is being loaded
+  生成并编译替代资源文件: E:\GitHub3\cpp\notepad_abc\obj\Notepad_plus_resource_fallback.cpp
+❌ 资源文件处理失败: FindReplaceDlg.rc - Builder or other environment method 'RES' not found.
+Check spelling, check external program exists in env['ENV']['PATH'],
+and check that a suitable tool is being loaded
+  生成并编译替代资源文件: E:\GitHub3\cpp\notepad_abc\obj\FindReplaceDlg_resource_fallback.cpp
+❌ 资源文件处理失败: DockingGUIWidget.rc - Builder or other environment method 'RES' not found.
+Check spelling, check external program exists in env['ENV']['PATH'],
+and check that a suitable tool is being loaded
+  生成并编译替代资源文件: E:\GitHub3\cpp\notepad_abc\obj\DockingGUIWidget_resource_fallback.cpp
+❌ 资源文件处理失败: functionListPanel.rc - Builder or other environment method 'RES' not found.
+Check spelling, check external program exists in env['ENV']['PATH'],
+and check that a suitable tool is being loaded
+  生成并编译替代资源文件: E:\GitHub3\cpp\notepad_abc\obj\functionListPanel_resource_fallback.cpp
+❌ 资源文件处理失败: VerticalFileSwitcher.rc - Builder or other environment method 'RES' not found.
+Check spelling, check external program exists in env['ENV']['PATH'],
+and check that a suitable tool is being loaded
+  生成并编译替代资源文件: E:\GitHub3\cpp\notepad_abc\obj\VerticalFileSwitcher_resource_fallback.cpp
+调试 - lexilla_lib 类型: <class 'str'>
+调试 - scintilla_lib 类型: <class 'str'>
+✅ 使用预编译库: liblexilla.a
+✅ 使用预编译库: libscintilla.a
+✅ 添加预编译库目录: E:\GitHub3\cpp\notepad_abc\lexilla\bin
+✅ 添加额外的库目录路径
+✅ 使用直接库文件路径进行链接
+✅ 直接添加库文件路径到链接器命令
+开始构建 notepad_abc.exe (Release x64)...
+构建开始时间: 2025-12-04 15:30:59
+总对象文件数: 121
+✅ 使用自定义链接器命令生成器
+✅ 预编译库: liblexilla.a, libscintilla.a
+✅ 强制使用自定义链接器命令生成器
+构建脚本准备完毕: 2025-12-04 15:30:59
+
+=== 编码测试: 中文显示正常 ===
+scons: done reading SConscript files.
+scons: Building targets ...
+scons: building associated VariantDir targets: obj
+generate_link_command(["bin\notepad_abc.exe"], ["PowerEditor\src\Notepad_plus.o", "PowerEditor\src\Notepad_plus_Window.o", "PowerEditor\src\NppBigSwitch.o", "PowerEditor\src\NppCommands.o", "PowerEditor\src\NppNotification.o", "PowerEditor\src\NppIO.o", "PowerEditor\src\WinMain.o", "PowerEditor\src\Parameters.o", "PowerEditor\src\NppDarkMode.o", "PowerEditor\src\dpiManagerV2.o", "PowerEditor\src\TinyXml\tinyXmlA\tinystrA.o", "PowerEditor\src\TinyXml\tinyXmlA\tinyxmlA.o", "PowerEditor\src\TinyXml\tinyXmlA\tinyxmlerrorA.o", "PowerEditor\src\TinyXml\tinyXmlA\tinyxmlparserA.o", "PowerEditor\src\TinyXml\tinystr.o", "PowerEditor\src\TinyXml\tinyxml.o", "PowerEditor\src\TinyXml\tinyxmlerror.o", "PowerEditor\src\TinyXml\tinyxmlparser.o", "PowerEditor\src\MISC\Common\Common.o", "PowerEditor\src\MISC\Common\FileInterface.o", "PowerEditor\src\MISC\Common\SortLocale.o", "PowerEditor\src\MISC\Exception\MiniDumper.o", "PowerEditor\src\MISC\Exception\Win32Exception.o", "PowerEditor\src\MISC\PluginsManager\PluginsManager.o", "PowerEditor\src\MISC\Process\Processus.o", "PowerEditor\src\MISC\RegExt\regExtDlg.o", "PowerEditor\src\MISC\md5\md5Dlgs.o", "PowerEditor\src\MISC\sha1\sha1.o", "PowerEditor\src\MISC\sha1\calc_sha1.o", "PowerEditor\src\MISC\sha2\sha-256.o", "PowerEditor\src\MISC\sha512\sha512.o", "PowerEditor\src\MISC\Common\verifySignedfile.o", "PowerEditor\src\Utf8_16.o", "PowerEditor\src\EncodingMapper.o", "PowerEditor\src\lastRecentFileList.o", "PowerEditor\src\lesDlgs.o", "PowerEditor\src\ScintillaComponent\ScintillaEditView.o", "PowerEditor\src\ScintillaComponent\ScintillaCtrls.o", "PowerEditor\src\ScintillaComponent\AutoCompletion.o", "PowerEditor\src\ScintillaComponent\SmartHighlighter.o", "PowerEditor\src\ScintillaComponent\Buffer.o", "PowerEditor\src\ScintillaComponent\DocTabView.o", "PowerEditor\src\ScintillaComponent\FindReplaceDlg.o", "PowerEditor\src\ScintillaComponent\FunctionCallTip.o", "PowerEditor\src\ScintillaComponent\GoToLineDlg.o", "PowerEditor\src\ScintillaComponent\Printer.o", "PowerEditor\src\ScintillaComponent\xmlMatchedTagsHighlighter.o", "PowerEditor\src\WinControls\AboutDlg\AboutDlg.o", "PowerEditor\src\WinControls\AboutDlg\URLCtrl.o", "PowerEditor\src\WinControls\AnsiCharPanel\AnsiCharPanel.o", "PowerEditor\src\WinControls\AnsiCharPanel\ListView.o", "PowerEditor\src\WinControls\ClipboardHistory\clipboardHistoryPanel.o", "PowerEditor\src\WinControls\ColourPicker\ColourPicker.o", "PowerEditor\src\WinControls\ContextMenu\ContextMenu.o", "PowerEditor\src\WinControls\DockingWnd\DockingManager.o", "PowerEditor\src\WinControls\DockingWnd\DockingCont.o", "PowerEditor\src\WinControls\DockingWnd\DockingSplitter.o", "PowerEditor\src\WinControls\DockingWnd\Gripper.o", "PowerEditor\src\WinControls\DocumentMap\documentMap.o", "PowerEditor\src\WinControls\DocumentMap\documentSnapshot.o", "PowerEditor\src\WinControls\FileBrowser\fileBrowser.o", "PowerEditor\src\WinControls\FindCharsInRange\FindCharsInRange.o", "PowerEditor\src\WinControls\DoubleBuffer\DoubleBuffer.o", "PowerEditor\src\WinControls\FunctionList\functionListPanel.o", "PowerEditor\src\WinControls\Grid\ShortcutMapper.o", "PowerEditor\src\WinControls\ImageListSet\ImageListSet.o", "PowerEditor\src\WinControls\OpenSaveFileDialog\CustomFileDialog.o", "PowerEditor\src\WinControls\PluginsAdmin\pluginsAdmin.o", "PowerEditor\src\WinControls\Preference\preferenceDlg.o", "PowerEditor\src\WinControls\ProjectPanel\ProjectPanel.o", "PowerEditor\src\WinControls\ReadDirectoryChanges\ReadDirectoryChanges.o", "PowerEditor\src\WinControls\ReadDirectoryChanges\ReadFileChanges.o", "PowerEditor\src\WinControls\SplitterContainer\SplitterContainer.o", "PowerEditor\src\WinControls\StaticDialog\StaticDialog.o", "PowerEditor\src\WinControls\StaticDialog\RunDlg\RunDlg.o", "PowerEditor\src\WinControls\StatusBar\StatusBar.o", "PowerEditor\src\WinControls\TabBar\ControlsTab.o", "PowerEditor\src\WinControls\TabBar\TabBar.o", "PowerEditor\src\WinControls\TaskList\TaskList.o", "PowerEditor\src\WinControls\TaskList\TaskListDlg.o", "PowerEditor\src\WinControls\ToolBar\ToolBar.o", "PowerEditor\src\WinControls\ToolTip\ToolTip.o", "PowerEditor\src\WinControls\TreeView\TreeView.o", "PowerEditor\src\WinControls\TrayIcon\trayIconControler.o", "PowerEditor\src\WinControls\VerticalFileSwitcher\VerticalFileSwitcher.o", "PowerEditor\src\WinControls\VerticalFileSwitcher\VerticalFileSwitcherListView.o", "PowerEditor\src\WinControls\WindowsDlg\WindowsDlg.o", "PowerEditor\src\WinControls\shortcut\shortcut.o", "PowerEditor\src\DarkMode\DarkMode.o", "PowerEditor\src\uchardet\CharDistribution.o", "PowerEditor\src\uchardet\JpCntx.o", "PowerEditor\src\uchardet\LangBulgarianModel.o", "PowerEditor\src\uchardet\LangCyrillicModel.o", "PowerEditor\src\uchardet\LangGreekModel.o", "PowerEditor\src\uchardet\LangHebrewModel.o", "PowerEditor\src\uchardet\LangHungarianModel.o", "PowerEditor\src\uchardet\LangThaiModel.o", "PowerEditor\src\uchardet\nsBig5Prober.o", "PowerEditor\src\uchardet\nsCharSetProber.o", "PowerEditor\src\uchardet\nsEscCharsetProber.o", "PowerEditor\src\uchardet\nsEscSM.o", "PowerEditor\src\uchardet\nsEUCJPProber.o", "PowerEditor\src\uchardet\nsEUCKRProber.o", "PowerEditor\src\uchardet\nsEUCTWProber.o", "PowerEditor\src\uchardet\nsGB2312Prober.o", "PowerEditor\src\uchardet\nsHebrewProber.o", "PowerEditor\src\uchardet\nsLatin1Prober.o", "PowerEditor\src\uchardet\nsMBCSGroupProber.o", "PowerEditor\src\uchardet\nsMBCSSM.o", "PowerEditor\src\uchardet\nsSBCSGroupProber.o", "PowerEditor\src\uchardet\nsSBCharSetProber.o", "PowerEditor\src\uchardet\nsSJISProber.o", "PowerEditor\src\uchardet\nsUniversalDetector.o", "PowerEditor\src\uchardet\nsUTF8Prober.o", "boostregex\BoostRegExSearch.o", "boostregex\UTF8DocumentIterator.o", "obj\Notepad_plus_resource_fallback.o", "obj\FindReplaceDlg_resource_fallback.o", "obj\DockingGUIWidget_resource_fallback.o", "obj\functionListPanel_resource_fallback.o", "obj\VerticalFileSwitcher_resource_fallback.o"])
+🔧 使用自定义链接器命令生成器（直接LLD）
+🔧 源文件数量: 121
+🔧 目标文件: bin\notepad_abc.exe
+🔧 库文件列表: ['kernel32.lib', 'user32.lib', 'gdi32.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'advapi32.lib', 'uuid.lib', 'libcmt.lib', 'libvcruntime.lib', 'libucrt.lib', 'libcpmt.lib', 'msvcprt.lib', 'E:\\GitHub3\\cpp\\notepad_abc\\lexilla\\bin\\liblexilla.a', 'E:\\GitHub3\\cpp\\notepad_abc\\scintilla\\bin\\libscintilla.a']
+🔧 添加链接器选项: /SUBSYSTEM:WINDOWS
+🔧 添加链接器选项: /MACHINE:X64
+🔧 添加链接器选项: /DYNAMICBASE
+🔧 添加链接器选项: /NXCOMPAT
+🔧 添加链接器选项: /ENTRY:wWinMain
+🔧 跳过重复库文件（已在LIBS中）: E:\GitHub3\cpp\notepad_abc\lexilla\bin\liblexilla.a
+🔧 跳过重复库文件（已在LIBS中）: E:\GitHub3\cpp\notepad_abc\scintilla\bin\libscintilla.a
+🔧 添加库路径: /LIBPATH:E:\GitHub3\cpp\notepad_abc
+🔧 添加库路径: /LIBPATH:E:\GitHub3\cpp\notepad_abc\bin
+🔧 添加库路径: /LIBPATH:E:\GitHub3\cpp\notepad_abc\scintilla\bin
+🔧 添加库路径: /LIBPATH:E:\GitHub3\cpp\notepad_abc\obj
+🔧 添加库路径: /LIBPATH:D:\Code\VS2022\Community\VC\Tools\MSVC\14.29.30133\lib\x64
+🔧 添加库路径: /LIBPATH:D:\Code\VS2022\Community\VC\Tools\MSVC\14.29.30133\lib\onecore\x64
+🔧 添加库路径: /LIBPATH:E:\GitHub3\cpp\notepad_abc\lexilla\bin
+🔧 添加库文件: kernel32.lib
+🔧 添加库文件: user32.lib
+🔧 添加库文件: gdi32.lib
+🔧 添加库文件: shell32.lib
+🔧 添加库文件: ole32.lib
+🔧 添加库文件: oleaut32.lib
+🔧 添加库文件: advapi32.lib
+🔧 添加库文件: uuid.lib
+🔧 添加库文件: libcmt.lib
+🔧 添加库文件: libvcruntime.lib
+🔧 添加库文件: libucrt.lib
+🔧 添加库文件: libcpmt.lib
+🔧 添加库文件: msvcprt.lib
+🔧 添加库文件: E:\GitHub3\cpp\notepad_abc\lexilla\bin\liblexilla.a
+🔧 添加库文件: E:\GitHub3\cpp\notepad_abc\scintilla\bin\libscintilla.a
+🔧 最终链接器命令: C:\Program Files\LLVM\bin\lld-link.exe /SUBSYSTEM:WINDOWS /MACHINE:X64 /DYNAMICBASE /NXCOMPAT /ENTRY:wWinMain /LIBPATH:E:\GitHub3\cpp\notepad_abc /LIBPATH:E:\GitHub3\cpp\notepad_abc\bin /LIBPATH:E:\GitHub3\cpp\notepad_abc\scintilla\bin /LIBPATH:E:\GitHub3\cpp\notepad_abc\obj /LIBPATH:D:\Code\VS2022\Community\VC\Tools\MSVC\14.29.30133\lib\x64 /LIBPATH:D:\Code\VS2022\Community\VC\Tools\MSVC\14.29.30133\lib\onecore\x64 /LIBPATH:E:\GitHub3\cpp\notepad_abc\lexilla\bin -out:bin\notepad_abc.exe PowerEditor\src\Notepad_plus.o PowerEditor\src\Notepad_plus_Window.o PowerEditor\src\NppBigSwitch.o PowerEditor\src\NppCommands.o PowerEditor\src\NppNotification.o PowerEditor\src\NppIO.o PowerEditor\src\WinMain.o PowerEditor\src\Parameters.o PowerEditor\src\NppDarkMode.o PowerEditor\src\dpiManagerV2.o PowerEditor\src\TinyXml\tinyXmlA\tinystrA.o PowerEditor\src\TinyXml\tinyXmlA\tinyxmlA.o PowerEditor\src\TinyXml\tinyXmlA\tinyxmlerrorA.o PowerEditor\src\TinyXml\tinyXmlA\tinyxmlparserA.o PowerEditor\src\TinyXml\tinystr.o PowerEditor\src\TinyXml\tinyxml.o PowerEditor\src\TinyXml\tinyxmlerror.o PowerEditor\src\TinyXml\tinyxmlparser.o PowerEditor\src\MISC\Common\Common.o PowerEditor\src\MISC\Common\FileInterface.o PowerEditor\src\MISC\Common\SortLocale.o PowerEditor\src\MISC\Exception\MiniDumper.o PowerEditor\src\MISC\Exception\Win32Exception.o PowerEditor\src\MISC\PluginsManager\PluginsManager.o PowerEditor\src\MISC\Process\Processus.o PowerEditor\src\MISC\RegExt\regExtDlg.o PowerEditor\src\MISC\md5\md5Dlgs.o PowerEditor\src\MISC\sha1\sha1.o PowerEditor\src\MISC\sha1\calc_sha1.o PowerEditor\src\MISC\sha2\sha-256.o PowerEditor\src\MISC\sha512\sha512.o PowerEditor\src\MISC\Common\verifySignedfile.o PowerEditor\src\Utf8_16.o PowerEditor\src\EncodingMapper.o PowerEditor\src\lastRecentFileList.o PowerEditor\src\lesDlgs.o PowerEditor\src\ScintillaComponent\ScintillaEditView.o PowerEditor\src\ScintillaComponent\ScintillaCtrls.o PowerEditor\src\ScintillaComponent\AutoCompletion.o PowerEditor\src\ScintillaComponent\SmartHighlighter.o PowerEditor\src\ScintillaComponent\Buffer.o PowerEditor\src\ScintillaComponent\DocTabView.o PowerEditor\src\ScintillaComponent\FindReplaceDlg.o PowerEditor\src\ScintillaComponent\FunctionCallTip.o PowerEditor\src\ScintillaComponent\GoToLineDlg.o PowerEditor\src\ScintillaComponent\Printer.o PowerEditor\src\ScintillaComponent\xmlMatchedTagsHighlighter.o PowerEditor\src\WinControls\AboutDlg\AboutDlg.o PowerEditor\src\WinControls\AboutDlg\URLCtrl.o PowerEditor\src\WinControls\AnsiCharPanel\AnsiCharPanel.o PowerEditor\src\WinControls\AnsiCharPanel\ListView.o PowerEditor\src\WinControls\ClipboardHistory\clipboardHistoryPanel.o PowerEditor\src\WinControls\ColourPicker\ColourPicker.o PowerEditor\src\WinControls\ContextMenu\ContextMenu.o PowerEditor\src\WinControls\DockingWnd\DockingManager.o PowerEditor\src\WinControls\DockingWnd\DockingCont.o PowerEditor\src\WinControls\DockingWnd\DockingSplitter.o PowerEditor\src\WinControls\DockingWnd\Gripper.o PowerEditor\src\WinControls\DocumentMap\documentMap.o PowerEditor\src\WinControls\DocumentMap\documentSnapshot.o PowerEditor\src\WinControls\FileBrowser\fileBrowser.o PowerEditor\src\WinControls\FindCharsInRange\FindCharsInRange.o PowerEditor\src\WinControls\DoubleBuffer\DoubleBuffer.o PowerEditor\src\WinControls\FunctionList\functionListPanel.o PowerEditor\src\WinControls\Grid\ShortcutMapper.o PowerEditor\src\WinControls\ImageListSet\ImageListSet.o PowerEditor\src\WinControls\OpenSaveFileDialog\CustomFileDialog.o PowerEditor\src\WinControls\PluginsAdmin\pluginsAdmin.o PowerEditor\src\WinControls\Preference\preferenceDlg.o PowerEditor\src\WinControls\ProjectPanel\ProjectPanel.o PowerEditor\src\WinControls\ReadDirectoryChanges\ReadDirectoryChanges.o PowerEditor\src\WinControls\ReadDirectoryChanges\ReadFileChanges.o PowerEditor\src\WinControls\SplitterContainer\SplitterContainer.o PowerEditor\src\WinControls\StaticDialog\StaticDialog.o PowerEditor\src\WinControls\StaticDialog\RunDlg\RunDlg.o PowerEditor\src\WinControls\StatusBar\StatusBar.o PowerEditor\src\WinControls\TabBar\ControlsTab.o PowerEditor\src\WinControls\TabBar\TabBar.o PowerEditor\src\WinControls\TaskList\TaskList.o PowerEditor\src\WinControls\TaskList\TaskListDlg.o PowerEditor\src\WinControls\ToolBar\ToolBar.o PowerEditor\src\WinControls\ToolTip\ToolTip.o PowerEditor\src\WinControls\TreeView\TreeView.o PowerEditor\src\WinControls\TrayIcon\trayIconControler.o PowerEditor\src\WinControls\VerticalFileSwitcher\VerticalFileSwitcher.o PowerEditor\src\WinControls\VerticalFileSwitcher\VerticalFileSwitcherListView.o PowerEditor\src\WinControls\WindowsDlg\WindowsDlg.o PowerEditor\src\WinControls\shortcut\shortcut.o PowerEditor\src\DarkMode\DarkMode.o PowerEditor\src\uchardet\CharDistribution.o PowerEditor\src\uchardet\JpCntx.o PowerEditor\src\uchardet\LangBulgarianModel.o PowerEditor\src\uchardet\LangCyrillicModel.o PowerEditor\src\uchardet\LangGreekModel.o PowerEditor\src\uchardet\LangHebrewModel.o PowerEditor\src\uchardet\LangHungarianModel.o PowerEditor\src\uchardet\LangThaiModel.o PowerEditor\src\uchardet\nsBig5Prober.o PowerEditor\src\uchardet\nsCharSetProber.o PowerEditor\src\uchardet\nsEscCharsetProber.o PowerEditor\src\uchardet\nsEscSM.o PowerEditor\src\uchardet\nsEUCJPProber.o PowerEditor\src\uchardet\nsEUCKRProber.o PowerEditor\src\uchardet\nsEUCTWProber.o PowerEditor\src\uchardet\nsGB2312Prober.o PowerEditor\src\uchardet\nsHebrewProber.o PowerEditor\src\uchardet\nsLatin1Prober.o PowerEditor\src\uchardet\nsMBCSGroupProber.o PowerEditor\src\uchardet\nsMBCSSM.o PowerEditor\src\uchardet\nsSBCSGroupProber.o PowerEditor\src\uchardet\nsSBCharSetProber.o PowerEditor\src\uchardet\nsSJISProber.o PowerEditor\src\uchardet\nsUniversalDetector.o PowerEditor\src\uchardet\nsUTF8Prober.o boostregex\BoostRegExSearch.o boostregex\UTF8DocumentIterator.o obj\Notepad_plus_resource_fallback.o obj\FindReplaceDlg_resource_fallback.o obj\DockingGUIWidget_resource_fallback.o obj\functionListPanel_resource_fallback.o obj\VerticalFileSwitcher_resource_fallback.o kernel32.lib user32.lib gdi32.lib shell32.lib ole32.lib oleaut32.lib advapi32.lib uuid.lib libcmt.lib libvcruntime.lib libucrt.lib libcpmt.lib msvcprt.lib E:\GitHub3\cpp\notepad_abc\lexilla\bin\liblexilla.a E:\GitHub3\cpp\notepad_abc\scintilla\bin\libscintilla.a
+scons: building terminated because of errors.
+
+=== STDERR ===
+scons: *** [bin\notepad_abc.exe] Error ['C:\\Program Files\\LLVM\\bin\\lld-link.exe', '/SUBSYSTEM:WINDOWS', '/MACHINE:X64', '/DYNAMICBASE', '/NXCOMPAT', '/ENTRY:wWinMain', '/LIBPATH:E:\\GitHub3\\cpp\\notepad_abc', '/LIBPATH:E:\\GitHub3\\cpp\\notepad_abc\\bin', '/LIBPATH:E:\\GitHub3\\cpp\\notepad_abc\\scintilla\\bin', '/LIBPATH:E:\\GitHub3\\cpp\\notepad_abc\\obj', '/LIBPATH:D:\\Code\\VS2022\\Community\\VC\\Tools\\MSVC\\14.29.30133\\lib\\x64', '/LIBPATH:D:\\Code\\VS2022\\Community\\VC\\Tools\\MSVC\\14.29.30133\\lib\\onecore\\x64', '/LIBPATH:E:\\GitHub3\\cpp\\notepad_abc\\lexilla\\bin', '-out:bin\\notepad_abc.exe', 'PowerEditor\\src\\Notepad_plus.o', 'PowerEditor\\src\\Notepad_plus_Window.o', 'PowerEditor\\src\\NppBigSwitch.o', 'PowerEditor\\src\\NppCommands.o', 'PowerEditor\\src\\NppNotification.o', 'PowerEditor\\src\\NppIO.o', 'PowerEditor\\src\\WinMain.o', 'PowerEditor\\src\\Parameters.o', 'PowerEditor\\src\\NppDarkMode.o', 'PowerEditor\\src\\dpiManagerV2.o', 'PowerEditor\\src\\TinyXml\\tinyXmlA\\tinystrA.o', 'PowerEditor\\src\\TinyXml\\tinyXmlA\\tinyxmlA.o', 'PowerEditor\\src\\TinyXml\\tinyXmlA\\tinyxmlerrorA.o', 'PowerEditor\\src\\TinyXml\\tinyXmlA\\tinyxmlparserA.o', 'PowerEditor\\src\\TinyXml\\tinystr.o', 'PowerEditor\\src\\TinyXml\\tinyxml.o', 'PowerEditor\\src\\TinyXml\\tinyxmlerror.o', 'PowerEditor\\src\\TinyXml\\tinyxmlparser.o', 'PowerEditor\\src\\MISC\\Common\\Common.o', 'PowerEditor\\src\\MISC\\Common\\FileInterface.o', 'PowerEditor\\src\\MISC\\Common\\SortLocale.o', 'PowerEditor\\src\\MISC\\Exception\\MiniDumper.o', 'PowerEditor\\src\\MISC\\Exception\\Win32Exception.o', 'PowerEditor\\src\\MISC\\PluginsManager\\PluginsManager.o', 'PowerEditor\\src\\MISC\\Process\\Processus.o', 'PowerEditor\\src\\MISC\\RegExt\\regExtDlg.o', 'PowerEditor\\src\\MISC\\md5\\md5Dlgs.o', 'PowerEditor\\src\\MISC\\sha1\\sha1.o', 'PowerEditor\\src\\MISC\\sha1\\calc_sha1.o', 'PowerEditor\\src\\MISC\\sha2\\sha-256.o', 'PowerEditor\\src\\MISC\\sha512\\sha512.o', 'PowerEditor\\src\\MISC\\Common\\verifySignedfile.o', 'PowerEditor\\src\\Utf8_16.o', 'PowerEditor\\src\\EncodingMapper.o', 'PowerEditor\\src\\lastRecentFileList.o', 'PowerEditor\\src\\lesDlgs.o', 'PowerEditor\\src\\ScintillaComponent\\ScintillaEditView.o', 'PowerEditor\\src\\ScintillaComponent\\ScintillaCtrls.o', 'PowerEditor\\src\\ScintillaComponent\\AutoCompletion.o', 'PowerEditor\\src\\ScintillaComponent\\SmartHighlighter.o', 'PowerEditor\\src\\ScintillaComponent\\Buffer.o', 'PowerEditor\\src\\ScintillaComponent\\DocTabView.o', 'PowerEditor\\src\\ScintillaComponent\\FindReplaceDlg.o', 'PowerEditor\\src\\ScintillaComponent\\FunctionCallTip.o', 'PowerEditor\\src\\ScintillaComponent\\GoToLineDlg.o', 'PowerEditor\\src\\ScintillaComponent\\Printer.o', 'PowerEditor\\src\\ScintillaComponent\\xmlMatchedTagsHighlighter.o', 'PowerEditor\\src\\WinControls\\AboutDlg\\AboutDlg.o', 'PowerEditor\\src\\WinControls\\AboutDlg\\URLCtrl.o', 'PowerEditor\\src\\WinControls\\AnsiCharPanel\\AnsiCharPanel.o', 'PowerEditor\\src\\WinControls\\AnsiCharPanel\\ListView.o', 'PowerEditor\\src\\WinControls\\ClipboardHistory\\clipboardHistoryPanel.o', 'PowerEditor\\src\\WinControls\\ColourPicker\\ColourPicker.o', 'PowerEditor\\src\\WinControls\\ContextMenu\\ContextMenu.o', 'PowerEditor\\src\\WinControls\\DockingWnd\\DockingManager.o', 'PowerEditor\\src\\WinControls\\DockingWnd\\DockingCont.o', 'PowerEditor\\src\\WinControls\\DockingWnd\\DockingSplitter.o', 'PowerEditor\\src\\WinControls\\DockingWnd\\Gripper.o', 'PowerEditor\\src\\WinControls\\DocumentMap\\documentMap.o', 'PowerEditor\\src\\WinControls\\DocumentMap\\documentSnapshot.o', 'PowerEditor\\src\\WinControls\\FileBrowser\\fileBrowser.o', 'PowerEditor\\src\\WinControls\\FindCharsInRange\\FindCharsInRange.o', 'PowerEditor\\src\\WinControls\\DoubleBuffer\\DoubleBuffer.o', 'PowerEditor\\src\\WinControls\\FunctionList\\functionListPanel.o', 'PowerEditor\\src\\WinControls\\Grid\\ShortcutMapper.o', 'PowerEditor\\src\\WinControls\\ImageListSet\\ImageListSet.o', 'PowerEditor\\src\\WinControls\\OpenSaveFileDialog\\CustomFileDialog.o', 'PowerEditor\\src\\WinControls\\PluginsAdmin\\pluginsAdmin.o', 'PowerEditor\\src\\WinControls\\Preference\\preferenceDlg.o', 'PowerEditor\\src\\WinControls\\ProjectPanel\\ProjectPanel.o', 'PowerEditor\\src\\WinControls\\ReadDirectoryChanges\\ReadDirectoryChanges.o', 'PowerEditor\\src\\WinControls\\ReadDirectoryChanges\\ReadFileChanges.o', 'PowerEditor\\src\\WinControls\\SplitterContainer\\SplitterContainer.o', 'PowerEditor\\src\\WinControls\\StaticDialog\\StaticDialog.o', 'PowerEditor\\src\\WinControls\\StaticDialog\\RunDlg\\RunDlg.o', 'PowerEditor\\src\\WinControls\\StatusBar\\StatusBar.o', 'PowerEditor\\src\\WinControls\\TabBar\\ControlsTab.o', 'PowerEditor\\src\\WinControls\\TabBar\\TabBar.o', 'PowerEditor\\src\\WinControls\\TaskList\\TaskList.o', 'PowerEditor\\src\\WinControls\\TaskList\\TaskListDlg.o', 'PowerEditor\\src\\WinControls\\ToolBar\\ToolBar.o', 'PowerEditor\\src\\WinControls\\ToolTip\\ToolTip.o', 'PowerEditor\\src\\WinControls\\TreeView\\TreeView.o', 'PowerEditor\\src\\WinControls\\TrayIcon\\trayIconControler.o', 'PowerEditor\\src\\WinControls\\VerticalFileSwitcher\\VerticalFileSwitcher.o', 'PowerEditor\\src\\WinControls\\VerticalFileSwitcher\\VerticalFileSwitcherListView.o', 'PowerEditor\\src\\WinControls\\WindowsDlg\\WindowsDlg.o', 'PowerEditor\\src\\WinControls\\shortcut\\shortcut.o', 'PowerEditor\\src\\DarkMode\\DarkMode.o', 'PowerEditor\\src\\uchardet\\CharDistribution.o', 'PowerEditor\\src\\uchardet\\JpCntx.o', 'PowerEditor\\src\\uchardet\\LangBulgarianModel.o', 'PowerEditor\\src\\uchardet\\LangCyrillicModel.o', 'PowerEditor\\src\\uchardet\\LangGreekModel.o', 'PowerEditor\\src\\uchardet\\LangHebrewModel.o', 'PowerEditor\\src\\uchardet\\LangHungarianModel.o', 'PowerEditor\\src\\uchardet\\LangThaiModel.o', 'PowerEditor\\src\\uchardet\\nsBig5Prober.o', 'PowerEditor\\src\\uchardet\\nsCharSetProber.o', 'PowerEditor\\src\\uchardet\\nsEscCharsetProber.o', 'PowerEditor\\src\\uchardet\\nsEscSM.o', 'PowerEditor\\src\\uchardet\\nsEUCJPProber.o', 'PowerEditor\\src\\uchardet\\nsEUCKRProber.o', 'PowerEditor\\src\\uchardet\\nsEUCTWProber.o', 'PowerEditor\\src\\uchardet\\nsGB2312Prober.o', 'PowerEditor\\src\\uchardet\\nsHebrewProber.o', 'PowerEditor\\src\\uchardet\\nsLatin1Prober.o', 'PowerEditor\\src\\uchardet\\nsMBCSGroupProber.o', 'PowerEditor\\src\\uchardet\\nsMBCSSM.o', 'PowerEditor\\src\\uchardet\\nsSBCSGroupProber.o', 'PowerEditor\\src\\uchardet\\nsSBCharSetProber.o', 'PowerEditor\\src\\uchardet\\nsSJISProber.o', 'PowerEditor\\src\\uchardet\\nsUniversalDetector.o', 'PowerEditor\\src\\uchardet\\nsUTF8Prober.o', 'boostregex\\BoostRegExSearch.o', 'boostregex\\UTF8DocumentIterator.o', 'obj\\Notepad_plus_resource_fallback.o', 'obj\\FindReplaceDlg_resource_fallback.o', 'obj\\DockingGUIWidget_resource_fallback.o', 'obj\\functionListPanel_resource_fallback.o', 'obj\\VerticalFileSwitcher_resource_fallback.o', 'kernel32.lib', 'user32.lib', 'gdi32.lib', 'shell32.lib', 'ole32.lib', 'oleaut32.lib', 'advapi32.lib', 'uuid.lib', 'libcmt.lib', 'libvcruntime.lib', 'libucrt.lib', 'libcpmt.lib', 'msvcprt.lib', 'E:\\GitHub3\\cpp\\notepad_abc\\lexilla\\bin\\liblexilla.a', 'E:\\GitHub3\\cpp\\notepad_abc\\scintilla\\bin\\libscintilla.a']

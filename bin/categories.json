@@ -1,15 +1,15 @@
 ﻿{
     "categories": [
         {
-            "description": "未分类的文件",
+            "description": "Uncategorized的文件",
             "id": "default",
-            "name": "全部",
+            "name": "All",
             "order": 0
         },
         {
-            "description": "编程相关的文件",
+            "description": "Programming相关的文件",
             "id": "programming",
-            "name": "编程",
+            "name": "Programming",
             "order": 1
         },
         {
@@ -33,14 +33,6 @@
     ],
     "fileMappings": [
         {
-            "categoryId": "life",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-律师维权.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\test_dll.zig"
-        },
-        {
             "categoryId": "programming",
             "filePath": "F:\\www\\www.funnyai.com\\common\\mod_new.js"
         },
@@ -54,35 +46,11 @@
         },
         {
             "categoryId": "programming",
-            "filePath": "F:\\www\\www.funnyai.com\\common\\mod_csharp.js"
+            "filePath": "E:\\GitHub3\\python\\check_rustdesk_server\\check.py"
         },
         {
             "categoryId": "programming",
-            "filePath": "C:\\Users\\happyli\\Downloads\\关节 Python 函数库-251109\\面向过程编程\\test.py"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-编程.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot游戏创意.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot我的世界.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-C++.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-应用题.txt"
+            "filePath": "E:\\GitHub3\\python\\check_rustdesk_server\\check2.py"
         }
     ]
 }

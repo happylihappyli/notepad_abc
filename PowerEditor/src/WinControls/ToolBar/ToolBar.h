@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "Common.h"
-#include "Window.h"
-#include "Notepad_plus_msgs.h"
-#include "ImageListSet.h"
+#include "../../MISC/Common/Common.h"
+#include "../Window.h"
+#include "../../MISC/PluginsManager/Notepad_plus_msgs.h"
+#include "../ImageListSet/ImageListSet.h"
 #include "dpiManagerV2.h"
 
 #define REBAR_BAR_TOOLBAR		0

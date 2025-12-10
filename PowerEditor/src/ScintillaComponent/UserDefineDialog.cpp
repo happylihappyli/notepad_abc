@@ -545,7 +545,7 @@ void CommentStyleDialog::setKeywords2List(int id)
             convertTo(newList, max_char, buffer, intBuffer);
         }
 
-		wcscpy_s(_pUserLang->_keywordLists[index], newList);
+        wcscpy_s(_pUserLang->_keywordLists[index], max_char, newList);
         delete[] newList;
         delete[] buffer;
     }
@@ -867,7 +867,7 @@ void SymbolsStyleDialog::setKeywords2List(int id)
                 convertTo(newList, max_char, buffer, intBuffer);
             }
 
-			wcscpy_s(_pUserLang->_keywordLists[SCE_USER_KWLIST_DELIMITERS], newList);
+			wcscpy_s(_pUserLang->_keywordLists[SCE_USER_KWLIST_DELIMITERS], max_char, newList);
             delete[] newList;
             delete[] buffer;
             break;
@@ -954,7 +954,7 @@ void UserDefineDialog::changeStyle()
 
     auto style = ::GetWindowLongPtr(_hSelf, GWL_STYLE);
     if (!style)
-        ::MessageBox(NULL, L"GetWindowLongPtr failed in UserDefineDialog::changeStyle()", L"", MB_OK);
+        ::MessageBoxW(NULL, L"GetWindowLongPtr failed in UserDefineDialog::changeStyle()", L"", MB_OK);
 
     style = (_status == DOCK)?
         ((style & ~WS_POPUP) & ~DS_MODALFRAME & ~WS_CAPTION) | WS_CHILD :
@@ -962,7 +962,7 @@ void UserDefineDialog::changeStyle()
 
     auto result = ::SetWindowLongPtr(_hSelf, GWL_STYLE, style);
     if (!result)
-        ::MessageBox(NULL, L"SetWindowLongPtr failed in UserDefineDialog::changeStyle()", L"", MB_OK);
+        ::MessageBoxW(NULL, L"SetWindowLongPtr failed in UserDefineDialog::changeStyle()", L"", MB_OK);
 
     if (_status == DOCK)
         getActualPosSize();

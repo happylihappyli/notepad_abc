@@ -278,7 +278,7 @@ void StaticDialog::create(int dialogID, bool isRTL, bool msgDestParent)
 		{
 			// 第一次失败，记录错误信息
 			char errorMsg[512];
-			sprintf_s(errorMsg, "StaticDialog::create failed for dialog ID %d, error code: %lu", dialogID, errorCode);
+			sprintf_s(errorMsg, 512, "StaticDialog::create failed for dialog ID %d, error code: %lu", dialogID, errorCode);
 			writeToDebugLog(errorMsg);
 			
 			// 添加到已记录集合
@@ -297,7 +297,7 @@ void StaticDialog::create(int dialogID, bool isRTL, bool msgDestParent)
 		{
 			// 备用创建方法成功，记录成功信息
 			char successMsg[512];
-			sprintf_s(successMsg, "StaticDialog::create fallback succeeded for dialog ID %d", dialogID);
+			sprintf_s(successMsg, 512, "StaticDialog::create fallback succeeded for dialog ID %d", dialogID);
 			writeToDebugLog(successMsg);
 		}
 	}
@@ -357,7 +357,7 @@ HWND StaticDialog::createFallbackDialog(int dialogID)
 
 HWND StaticDialog::createDocumentListFallback()
 {
-	// 手动创建文档列表对话框的备用实现
+	// 手动创建Document List对话框的备用实现
 	HWND hDialog = ::CreateWindowEx(
 		WS_EX_CONTROLPARENT | WS_EX_TOOLWINDOW,
 		WC_DIALOG,
@@ -392,7 +392,7 @@ HWND StaticDialog::createDocumentListFallback()
 		return NULL;
 	}
 	
-	// 设置列表视图样式
+	// Set List View Style
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 	
 	// 添加列表列
@@ -420,7 +420,7 @@ HWND StaticDialog::createDocumentListFallback()
 	lvc.iSubItem = 2;
 	ListView_InsertColumn(hList, 2, &lvc);
 	
-	// 添加示例文档数据
+	// 添加Sample Document数据
 	LVITEM lvi = {0};
 	lvi.mask = LVIF_TEXT;
 	
@@ -540,7 +540,7 @@ HWND StaticDialog::createIncrementFindDialogFallback()
 		return NULL;
 	
 	// 创建关闭按钮
-	HWND hCloseBtn = ::CreateWindowEx(
+	::CreateWindowEx(
 		0,
 		WC_BUTTON,
 		L"✕",
@@ -553,7 +553,7 @@ HWND StaticDialog::createIncrementFindDialogFallback()
 	);
 	
 	// 创建查找文本标签
-	HWND hFindStatic = ::CreateWindowEx(
+	::CreateWindowEx(
 		0,
 		WC_STATIC,
 		L"Find:",
@@ -566,7 +566,7 @@ HWND StaticDialog::createIncrementFindDialogFallback()
 	);
 	
 	// 创建查找文本框
-	HWND hFindText = ::CreateWindowEx(
+	::CreateWindowEx(
 		WS_EX_CLIENTEDGE,
 		WC_EDIT,
 		L"",
@@ -579,7 +579,7 @@ HWND StaticDialog::createIncrementFindDialogFallback()
 	);
 	
 	// 创建查找按钮
-	HWND hFindPrevBtn = ::CreateWindowEx(
+	::CreateWindowEx(
 		0,
 		WC_BUTTON,
 		L"<",
@@ -591,7 +591,7 @@ HWND StaticDialog::createIncrementFindDialogFallback()
 		NULL
 	);
 	
-	HWND hFindNextBtn = ::CreateWindowEx(
+	::CreateWindowEx(
 		0,
 		WC_BUTTON,
 		L">",

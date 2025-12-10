@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "Window.h"
-#include "Common.h"
+#include "../Window.h"
+#include "../../MISC/Common/Common.h"
 
 #include <commctrl.h>
 
@@ -45,7 +45,7 @@ public:
 	};
 
 	void setColumnText(size_t i, std::wstring txt2Set) {
-		LVCOLUMN lvColumn{};
+		LVCOLUMNW lvColumn{};
 		lvColumn.mask = LVCF_TEXT;
 		lvColumn.pszText = const_cast<wchar_t *>(txt2Set.c_str());
 		ListView_SetColumn(_hSelf, i, &lvColumn);

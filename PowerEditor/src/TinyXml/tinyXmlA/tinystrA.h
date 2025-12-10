@@ -24,7 +24,7 @@ distribution.
 
 #ifndef TINYXMLA_INCLUDED
 #include "tinyxmlA.h"
-#endif TINYXMLA_INCLUDED
+#endif // TINYXMLA_INCLUDED
 #include <cassert>
 
 #ifndef TIXMLA_USE_STL
@@ -145,7 +145,7 @@ class TiXmlStringA
         if (size)
         {
             allocated = size;
-			TIXMLA_STRING cstring = new char [size];
+			cstring = new char [size];
             cstring [0] = 0;
             current_length = 0;
         }

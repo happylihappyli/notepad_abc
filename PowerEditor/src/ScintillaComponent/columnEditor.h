@@ -17,7 +17,7 @@
 #pragma once
 
 #include "columnEditor_rc.h"
-#include "StaticDialog.h"
+#include "../WinControls/StaticDialog/StaticDialog.h"
 #include "Parameters.h"
 
 class ScintillaEditView;

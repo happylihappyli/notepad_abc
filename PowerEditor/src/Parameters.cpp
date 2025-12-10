@@ -1081,7 +1081,7 @@ bool NppParameters::reloadStylers(const wchar_t* stylePath)
 	{
 		if (!_pNativeLangSpeaker)
 		{
-			::MessageBox(NULL, stylePathToLoad, L"Load stylers.xml failed", MB_OK);
+			::MessageBoxW(NULL, stylePathToLoad, L"Load stylers.xml failed", MB_OK);
 		}
 		else
 		{
@@ -1190,7 +1190,7 @@ bool NppParameters::load()
 		{
 			std::wstring progPath = getSpecialFolderLocation(CSIDL_PROGRAM_FILES);
 			wchar_t nppDirLocation[MAX_PATH];
-			wcscpy_s(nppDirLocation, _nppPath.c_str());
+			wcscpy_s(nppDirLocation, MAX_PATH, _nppPath.c_str());
 			::PathRemoveFileSpec(nppDirLocation);
 
 			if  (progPath == nppDirLocation)
@@ -1282,7 +1282,7 @@ bool NppParameters::load()
 			std::wstring errMsg = L"The given path\r";
 			errMsg += _cmdSettingsDir;
 			errMsg += L"\nvia command line \"-settingsDir=\" is not a valid directory.\rThis argument will be ignored.";
-			::MessageBox(NULL, errMsg.c_str(), L"Invalid directory", MB_OK);
+			::MessageBoxW(NULL, errMsg.c_str(), L"Invalid directory", MB_OK);
 		}
 		else
 		{
@@ -1315,9 +1315,9 @@ bool NppParameters::load()
 						MB_YESNO);
 				}
 				else
-				{
-					doRecover = ::MessageBox(NULL, L"Load langs.xml failed!\rDo you want to recover your langs.xml?", L"Configurator", MB_YESNO);
-				}
+			{
+				doRecover = ::MessageBoxW(NULL, L"Load langs.xml failed!\rDo you want to recover your langs.xml?", L"Configurator", MB_YESNO);
+			}
 			}
 		}
 	}
@@ -1347,7 +1347,7 @@ bool NppParameters::load()
 		}
 		else
 		{
-			::MessageBox(NULL, L"Load langs.xml failed!", L"Configurator", MB_OK);
+			::MessageBoxW(NULL, L"Load langs.xml failed!", L"Configurator", MB_OK);
 		}
 
 		delete _pXmlDoc;
@@ -1417,7 +1417,7 @@ bool NppParameters::load()
 		}
 		else
 		{
-			::MessageBox(NULL, _stylerPath.c_str(), L"Load stylers.xml failed", MB_OK);
+			::MessageBoxW(NULL, _stylerPath.c_str(), L"Load stylers.xml failed", MB_OK);
 		}
 		delete _pXmlUserStylerDoc;
 		_pXmlUserStylerDoc = NULL;
@@ -3647,7 +3647,7 @@ void NppParameters::writeSession(const Session & session, const wchar_t *fileNam
 		{
 			wstring errTitle = L"Session file backup error: ";
 			errTitle += GetLastErrorAsString(0);
-			::MessageBox(nullptr, sessionPathName, errTitle.c_str(), MB_OK);
+			::MessageBoxW(nullptr, sessionPathName, errTitle.c_str(), MB_OK);
 		}
 	}
 
@@ -3773,7 +3773,7 @@ void NppParameters::writeSession(const Session & session, const wchar_t *fileNam
 	}
 	else if (!isEndSessionCritical())
 	{
-		::MessageBox(nullptr, sessionPathName, L"Error of saving session XML file", MB_OK | MB_APPLMODAL | MB_ICONWARNING);
+		::MessageBoxW(nullptr, sessionPathName, L"Error of saving session XML file", MB_OK | MB_APPLMODAL | MB_ICONWARNING);
 	}
 
 	//
@@ -3784,7 +3784,7 @@ void NppParameters::writeSession(const Session & session, const wchar_t *fileNam
 		if (doesBackupCopyExist) // session backup file exists, restore it
 		{
 			if (!isEndSessionCritical())
-				::MessageBox(nullptr, backupPathName, L"Saving session error - restoring from the backup:", MB_OK | MB_APPLMODAL | MB_ICONWARNING);
+				::MessageBoxW(nullptr, backupPathName, L"Saving session error - restoring from the backup:", MB_OK | MB_APPLMODAL | MB_ICONWARNING);
 
 			wstring sessionPathNameFail2Load = sessionPathName;
 			sessionPathNameFail2Load += L".fail2Load";
@@ -3821,7 +3821,7 @@ void NppParameters::writeShortcuts()
 	else
 	{
 		wchar_t v852NoNeedShortcutsBackup[MAX_PATH]{};
-		::wcscpy_s(v852NoNeedShortcutsBackup, _shortcutsPath.c_str());
+		::wcscpy_s(v852NoNeedShortcutsBackup, MAX_PATH, _shortcutsPath.c_str());
 		::PathRemoveFileSpec(v852NoNeedShortcutsBackup);
 		::PathAppend(v852NoNeedShortcutsBackup, NONEEDSHORTCUTSXMLBACKUP_FILENAME);
 
@@ -4021,7 +4021,7 @@ void NppParameters::feedUserKeywordList(TiXmlNode *node)
 				temp += L" 08";	if (kwl[5] != '0') temp += kwl[5];
 
 				temp += L" 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23";
-				wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[SCE_USER_KWLIST_DELIMITERS], temp.c_str());
+				wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[SCE_USER_KWLIST_DELIMITERS], max_char, temp.c_str());
 			}
 			else if (!lstrcmp(keywordsName, L"Comment"))
 			{
@@ -4054,7 +4054,7 @@ void NppParameters::feedUserKeywordList(TiXmlNode *node)
 				if (temp[0] == ' ')
 					temp.erase(0, 1);
 
-				wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[SCE_USER_KWLIST_COMMENTS], temp.c_str());
+				wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[SCE_USER_KWLIST_COMMENTS], max_char, temp.c_str());
 			}
 			else
 			{
@@ -4064,11 +4064,11 @@ void NppParameters::feedUserKeywordList(TiXmlNode *node)
 					int id = globalMappper().keywordIdMapper[keywordsName];
 					if (wcslen(kwl) < max_char)
 					{
-						wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[id], kwl);
+						wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[id], max_char, kwl);
 					}
 					else
 					{
-						wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[id], L"imported string too long, needs to be < max_char(30720)");
+						wcscpy_s(_userLangArray[_nbUserLang - 1]->_keywordLists[id], max_char, L"imported string too long, needs to be < max_char(30720)");
 					}
 				}
 			}
@@ -6134,7 +6134,7 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			_nppGUI._multiInstSetting = (MultiInstSetting)val;
 
 			_nppGUI._clipboardHistoryPanelKeepState = parseYesNoBoolAttribute(L"clipboardHistory");
-			// 文档列表默认显示，如果配置文件中没有设置，使用默认值true
+			// Document List默认显示，如果Configuration Files中没有设置，使用默认值true
 			_nppGUI._docListKeepState = parseYesNoBoolAttribute(L"documentList", true);
 			_nppGUI._charPanelKeepState = parseYesNoBoolAttribute(L"characterPanel");
 			_nppGUI._fileBrowserKeepState = parseYesNoBoolAttribute(L"folderAsWorkspace");

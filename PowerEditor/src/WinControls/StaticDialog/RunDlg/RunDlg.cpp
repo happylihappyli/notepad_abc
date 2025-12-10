@@ -202,13 +202,13 @@ HINSTANCE Command::run(HWND hWnd, const wchar_t* cwd)
 	extractArgs(cmdPure, MAX_PATH, args, MAX_PATH, _cmdLine.c_str());
 	int nbTchar = ::ExpandEnvironmentStrings(cmdPure, cmdIntermediate, MAX_PATH);
 	if (!nbTchar)
-		wcscpy_s(cmdIntermediate, cmdPure);
+		wcscpy_s(cmdIntermediate, MAX_PATH, cmdPure);
 	else if (nbTchar >= MAX_PATH)
 		cmdIntermediate[MAX_PATH-1] = '\0';
 
 	nbTchar = ::ExpandEnvironmentStrings(args, argsIntermediate, argsIntermediateLen);
 	if (!nbTchar)
-		wcscpy_s(argsIntermediate, args);
+		wcscpy_s(argsIntermediate, argsIntermediateLen, args);
 	else if (nbTchar >= argsIntermediateLen)
 		argsIntermediate[argsIntermediateLen-1] = '\0';
 
@@ -238,7 +238,7 @@ HINSTANCE Command::run(HWND hWnd, const wchar_t* cwd)
 		errorMsg += intToString(retResult);
 		errorMsg += L"\n----------------------------------------------------------";
 
-		::MessageBox(hWnd, errorMsg.c_str(), L"ShellExecute - ERROR", MB_ICONINFORMATION | MB_APPLMODAL);
+		::MessageBoxW(hWnd, errorMsg.c_str(), L"ShellExecute - ERROR", MB_ICONINFORMATION | MB_APPLMODAL);
 	}
 
 	return res;

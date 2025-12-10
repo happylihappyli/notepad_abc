@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include "DockingDlgInterface.h"
+#include "../DockingWnd/DockingDlgInterface.h"
 #include "functionListPanel_rc.h"
 #include "functionParser.h"
-#include "TreeView.h"
+#include "../TreeView/TreeView.h"
 
 #define FL_PANELTITLE     L"Function List"
 #define FL_FUNCTIONLISTROOTNODE "FunctionList"

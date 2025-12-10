@@ -18,8 +18,8 @@
 #pragma once
 
 #include <map>
-#include "Common.h"
-#include "tinyxmlA.h"
+#include "MISC/Common/Common.h"
+#include "TinyXml/tinyXmlA/tinyxmlA.h"
 
 
 class FindReplaceDlg;

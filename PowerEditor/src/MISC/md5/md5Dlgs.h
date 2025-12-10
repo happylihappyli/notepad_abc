@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "StaticDialog.h"
+#include "../../WinControls/StaticDialog/StaticDialog.h"
 
 enum hashType {hash_md5 = 16, hash_sha1 = 20, hash_sha256 = 32, hash_sha512 = 64};
 

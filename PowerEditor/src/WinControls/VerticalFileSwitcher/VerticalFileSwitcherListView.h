@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "Window.h"
-#include "TaskListDlg.h"
-#include "Buffer.h"
+#include "../Window.h"
+#include "../TaskList/TaskListDlg.h"
+#include "../../ScintillaComponent/Buffer.h"
 #include "CategoryManager.h"
 
 #define SORT_DIRECTION_NONE     -1
@@ -35,10 +35,10 @@
 #define FS_FONTSIZE				"FontSize"
 #define FS_SETTINGS				"Settings"
 
-// 列索引常量
+// Column Index Constants
 #define COLUMN_INDEX_NAME       0
 #define COLUMN_INDEX_EXT        1  
-#define COLUMN_INDEX_CATEGORY   2  // 新增：分类列索引
+#define COLUMN_INDEX_CATEGORY   2  // 新增：Category Column Index
 
 
 class VerticalFileSwitcherListView : public Window
@@ -74,10 +74,10 @@ public:
 	void reload();
 	void redrawItems();
 	void ensureVisibleCurrentItem() const {
-		// 添加调试信息
+		// Add Debug Information
 		//debugLog(L"测试 VerticalFileSwitcherListView::ensureVisibleCurrentItem() called with _currentIndex=%d\n", _currentIndex);
 		ListView_EnsureVisible(_hSelf, _currentIndex, false);
-		// 添加调试信息
+		// Add Debug Information
 		//sdebugLog(L"VerticalFileSwitcherListView::ensureVisibleCurrentItem() finished\n");
 	};
 
@@ -92,50 +92,50 @@ public:
 		redraw(true);
     };
 
-	// 设置字体大小
+	// Set Font Size
 	void setFontSize(int fontSize) {
 		_fontSize = fontSize;
 		updateFont();
 	};
 
-	// 获取当前字体大小
+	// 获取Current Font Size
 	int getFontSize() const { return _fontSize; };
 
-	// 更新字体
+	// Update font
 	void updateFont();
 
-	// 分类过滤相关方法
+	// Category Filtering Related Methods
 	void setCategoryManager(CategoryManager* categoryManager) { _categoryManager = categoryManager; }
 	void setCurrentCategory(const std::wstring& categoryName) { _currentCategory = categoryName; reload(); }
 	const std::wstring& getCurrentCategory() const { return _currentCategory; }
 	void clearCategoryFilter() { _currentCategory.clear(); reload(); }
-	void refreshDisplay() { redrawItems(); } // 只刷新显示，不重新加载数据
+	void refreshDisplay() { redrawItems(); } // 只Refresh display，不重新加载数据
 	
-	// 右键菜单相关方法
-	void initContextMenu(HMENU hGlobalMenu);  // 修改：使用全局菜单初始化
-	void showContextMenu(int x, int y);       // 修改：统一的右键菜单显示方法
+	// Right-Click Menu Related Methods
+	void initContextMenu(HMENU hGlobalMenu);  // 修改：Initialize Using Global Menu
+	void showContextMenu(int x, int y);       // 修改：Unified Right-Click Menu Display Method
 	void onFileCategoryChange(const std::wstring& categoryName);
 	void onTabColorChange(int colorIndex);
 
-	// 获取文件分类名称（带自动分类逻辑）
+	// 获取文件Category Name（带自动分类逻辑）
 	std::wstring getFileCategoryName(const std::wstring& filePath);
 	
-	// 添加设置Notepad++主窗口句柄的方法
+	// Add Method to Set Notepad++ Main Window Handle
 	void setNppMainWnd(HWND nppMainWnd) { _nppMainWnd = nppMainWnd; }
 
 protected:
 	HIMAGELIST _hImaLst = nullptr;
-	HFONT _hFont = nullptr; // 字体句柄
+	HFONT _hFont = nullptr; // Font Handle
 	int _fontSize = 8; // 字体大小
-	CategoryManager* _categoryManager = nullptr; // 分类管理器指针
-	std::wstring _currentCategory; // 当前选中的分类
-	HMENU _hContextMenu = nullptr; // 统一的右键菜单句柄
-	HWND _nppMainWnd = nullptr; // Notepad++主窗口句柄
+	CategoryManager* _categoryManager = nullptr; // Category Manager Pointer
+	std::wstring _currentCategory; // Currently Selected Category
+	HMENU _hContextMenu = nullptr; // Unified Right-Click Menu Handle
+	HWND _nppMainWnd = nullptr; // Notepad++ Main Window Handle
 
 public:
-	// 直接设置窗口句柄，不创建新窗口
+	// Set Window Handle Directly, Do Not Create New Window
 	void setHSelf(HWND hWnd) { _hSelf = hWnd; }
-	// 设置图像列表
+	// Set Image List
 	void setHImageList(HIMAGELIST hImaLst) { _hImaLst = hImaLst; ListView_SetImageList(_hSelf, _hImaLst, LVSIL_SMALL); }
 
 	int _currentIndex = 0;

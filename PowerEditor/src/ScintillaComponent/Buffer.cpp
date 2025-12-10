@@ -1781,7 +1781,7 @@ bool FileManager::loadFileData(Document doc, int64_t fileSize, const wchar_t * f
 	if (PathIsNetworkPath(filename))
 	{
 		wchar_t dir[MAX_PATH]{};
-		wcscpy_s(dir,filename);
+		wcscpy_s(dir, MAX_PATH, filename);
 		PathRemoveFileSpec(dir);
 		isNetworkDirDisconnected = !doesDirectoryExist(dir);
 	}

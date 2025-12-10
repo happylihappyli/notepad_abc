@@ -19,26 +19,26 @@
 #include <wininet.h>
 #include "Notepad_plus.h"
 #include "Notepad_plus_Window.h"
-#include "CustomFileDialog.h"
-#include "Printer.h"
-#include "FileNameStringSplitter.h"
+#include "WinControls/OpenSaveFileDialog/CustomFileDialog.h"
+#include "ScintillaComponent/Printer.h"
+#include "MISC/FileNameStringSplitter.h"
 #include "lesDlgs.h"
 #include "Utf8_16.h"
-#include "regExtDlg.h"
-#include "RunDlg.h"
-#include "ShortcutMapper.h"
-#include "preferenceDlg.h"
-#include "TaskListDlg.h"
-#include "xmlMatchedTagsHighlighter.h"
+#include "MISC/RegExt/regExtDlg.h"
+#include "WinControls/StaticDialog/RunDlg/RunDlg.h"
+#include "WinControls/Grid/ShortcutMapper.h"
+#include "WinControls/Preference/preferenceDlg.h"
+#include "WinControls/TaskList/TaskListDlg.h"
+#include "ScintillaComponent/xmlMatchedTagsHighlighter.h"
 #include "EncodingMapper.h"
-#include "ansiCharPanel.h"
-#include "clipboardHistoryPanel.h"
-#include "VerticalFileSwitcher.h"
-#include "ProjectPanel.h"
-#include "documentMap.h"
-#include "functionListPanel.h"
-#include "fileBrowser.h"
-#include "Common.h"
+#include "WinControls/AnsiCharPanel/ansiCharPanel.h"
+#include "WinControls/ClipboardHistory/clipboardHistoryPanel.h"
+#include "WinControls/VerticalFileSwitcher/VerticalFileSwitcher.h"
+#include "WinControls/ProjectPanel/ProjectPanel.h"
+#include "WinControls/DocumentMap/documentMap.h"
+#include "WinControls/FunctionList/functionListPanel.h"
+#include "WinControls/FileBrowser/fileBrowser.h"
+#include "MISC/Common/Common.h"
 #include "NppDarkMode.h"
 
 using namespace std;
@@ -798,7 +798,7 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	// preset minimal panel dimensions according to the current DPI
 	dmd._minDockedPanelVisibility = DPIManagerV2::scale(nppGUI._dockingData._minDockedPanelVisibility, dpi);
 	dmd._minFloatingPanelSize.cy = nppGUI._dockingData._minDockedPanelVisibility;
-	dmd._minFloatingPanelSize.cx = std::max(static_cast<int>(nppGUI._dockingData._minFloatingPanelSize.cy * 6),
+	dmd._minFloatingPanelSize.cx = (std::max)(static_cast<int>(nppGUI._dockingData._minFloatingPanelSize.cy * 6),
 		DPIManagerV2::getSystemMetricsForDpi(SM_CXMINTRACK, dpi));
 
 	_dockingManager.setDockedContSize(CONT_LEFT, nppGUI._dockingData._leftWidth);
@@ -837,7 +837,7 @@ LRESULT Notepad_plus::init(HWND hwnd)
 			}
 			else
 			{
-				// 对于正常启动，也检查文档列表的保持状态
+				// 对于正常启动，也检查Document List的保持状态
 				// 如果_docListKeepState为true，强制显示面板，即使pdi._isVisible为false
 				if (isInternalFunc && pdi._internalID == IDM_VIEW_DOCLIST)
 				{
@@ -879,12 +879,12 @@ LRESULT Notepad_plus::init(HWND hwnd)
 		}
 	}
 
-	// 文档列表默认显示：根据_docListKeepState配置决定是否显示
-	// 如果_docListKeepState为true，或者这是首次启动，就显示文档列表
+	// Document List默认显示：根据_docListKeepState配置决定是否显示
+	// 如果_docListKeepState为true，或者这是首次启动，就显示Document List
 	bool shouldShowDocList = nppGUI._docListKeepState;
 	if (!shouldShowDocList)
 	{
-		// 首次启动时，即使_docListKeepState为false（可能是配置文件不存在或未设置），也默认显示文档列表
+		// 首次启动时，即使_docListKeepState为false（可能是Configuration Files不存在或未设置），也默认显示Document List
 		// 检查是否已经有docking配置，如果没有，说明是首次启动
 		bool isFirstLaunch = dmd._pluginDockInfo.empty();
 		if (isFirstLaunch)
@@ -896,7 +896,7 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	
 	if (shouldShowDocList)
 	{
-		// 检查是否在内部函数ID列表中包含了文档列表
+		// 检查是否在内部函数ID列表中包含了Document List
 		bool inInternalFuncIDs = false;
 		for (size_t i = 0, len = _internalFuncIDs.size(); i < len; ++i)
 		{
@@ -907,11 +907,11 @@ LRESULT Notepad_plus::init(HWND hwnd)
 			}
 		}
 		
-		// 如果应该显示文档列表，但还没有在_internalFuncIDs中，说明docking状态恢复时没有包含
+		// 如果应该显示Document List，但还没有在_internalFuncIDs中，说明docking状态恢复时没有包含
 		// 需要强制显示面板
 		if (!inInternalFuncIDs)
 		{
-			debugLog(L"Notepad_plus::init() - 自动启动文档列表面板（_docListKeepState=true，但docking状态中未包含）\n");
+			debugLog(L"Notepad_plus::init() - 自动启动Document List面板（_docListKeepState=true，但docking状态中未包含）\n");
 			if (!_pDocumentListPanel)
 			{
 				launchDocumentListPanel();
@@ -931,7 +931,7 @@ LRESULT Notepad_plus::init(HWND hwnd)
 		else if (_pDocumentListPanel && _pDocumentListPanel->isClosed())
 		{
 			// 如果面板已创建但被关闭，重新显示
-			debugLog(L"Notepad_plus::init() - 重新显示文档列表面板（_docListKeepState=true）\n");
+			debugLog(L"Notepad_plus::init() - 重新显示Document List面板（_docListKeepState=true）\n");
 			_pDocumentListPanel->display(true);
 			_pDocumentListPanel->setClosed(false);
 			checkMenuItem(IDM_VIEW_DOCLIST, true);
@@ -2520,7 +2520,7 @@ int Notepad_plus::doSaveOrNot(const wchar_t* fn, bool isMulti)
 
 		msg = stringReplace(msg, L"$STR_REPLACE$", fn);
 
-		return ::MessageBox(_pPublicInterface->getHSelf(), msg.c_str(), title.c_str(), MB_YESNOCANCEL | MB_ICONQUESTION | MB_APPLMODAL);
+		return ::MessageBoxW(_pPublicInterface->getHSelf(), msg.c_str(), title.c_str(), MB_YESNOCANCEL | MB_ICONQUESTION | MB_APPLMODAL);
 	}
 
 	DoSaveOrNotBox doSaveOrNotBox;
@@ -7402,7 +7402,7 @@ void Notepad_plus::launchClipboardHistoryPanel()
 		static wchar_t title[32];
 		if (title_temp.length() < 32)
 		{
-			wcscpy_s(title, title_temp.c_str());
+			wcscpy_s(title, 32, title_temp.c_str());
 			data.pszName = title;
 		}
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
@@ -7420,13 +7420,13 @@ void Notepad_plus::launchClipboardHistoryPanel()
 
 void Notepad_plus::launchDocumentListPanel(bool changeFromBtnCmd)
 {
-	// 添加调试信息
+	// Add Debug Information
 	debugLog(L"Notepad_plus::launchDocumentListPanel() called with changeFromBtnCmd=%d\n", changeFromBtnCmd);
 	debugLog(L"Notepad_plus::launchDocumentListPanel() _pDocumentListPanel=%p\n", _pDocumentListPanel);
 	
 	if (!_pDocumentListPanel)
 	{
-		// 添加调试信息
+		// Add Debug Information
 		debugLog(L"Notepad_plus::launchDocumentListPanel() creating new VerticalFileSwitcher\n");
 		
 		NppParameters& nppParams = NppParameters::getInstance();
@@ -7467,7 +7467,7 @@ void Notepad_plus::launchDocumentListPanel(bool changeFromBtnCmd)
 		static wchar_t title[32];
 		if (title_temp.length() < 32)
 		{
-			wcscpy_s(title, title_temp.c_str());
+			wcscpy_s(title, 32, title_temp.c_str());
 			data.pszName = title;
 		}
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
@@ -7478,15 +7478,15 @@ void Notepad_plus::launchDocumentListPanel(bool changeFromBtnCmd)
 		_pDocumentListPanel->setBackgroundColor(bgColor);
 		_pDocumentListPanel->setForegroundColor(fgColor);
 		
-		// 添加调试信息
+		// Add Debug Information
 		debugLog(L"Notepad_plus::launchDocumentListPanel() VerticalFileSwitcher created successfully\n");
 	}
 	
-	// 添加调试信息
+	// Add Debug Information
 	debugLog(L"Notepad_plus::launchDocumentListPanel() calling _pDocumentListPanel->display(true)\n");
 	_pDocumentListPanel->display(true); // 明确传入true参数以显示面板
 	
-	// 添加调试信息
+	// Add Debug Information
 	debugLog(L"Notepad_plus::launchDocumentListPanel() finished\n");
 }
 
@@ -7557,7 +7557,7 @@ void Notepad_plus::launchAnsiCharPanel()
 		static wchar_t title[85];
 		if (title_temp.length() < 85)
 		{
-			wcscpy_s(title, title_temp.c_str());
+			wcscpy_s(title, 85, title_temp.c_str());
 			data.pszName = title;
 		}
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
@@ -7605,7 +7605,7 @@ void Notepad_plus::launchFileBrowser(const vector<wstring> & folders, const wstr
 		static wchar_t title[titleLen];
 		if (title_temp.length() < titleLen)
 		{
-			wcscpy_s(title, title_temp.c_str());
+			wcscpy_s(title, titleLen, title_temp.c_str());
 			data.pszName = title;
 		}
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
@@ -7765,7 +7765,7 @@ void Notepad_plus::launchDocMap()
 		static wchar_t title[32];
 		if (title_temp.length() < 32)
 		{
-			wcscpy_s(title, title_temp.c_str());
+			wcscpy_s(title, 32, title_temp.c_str());
 			data.pszName = title;
 		}
 		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
@@ -7810,7 +7810,7 @@ void Notepad_plus::launchFunctionList()
 		static wchar_t title[32];
 		if (title_temp.length() < 32)
 		{
-			wcscpy_s(title, title_temp.c_str());
+			wcscpy_s(title, 32, title_temp.c_str());
 			data.pszName = title;
 		}
 

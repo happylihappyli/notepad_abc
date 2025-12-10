@@ -17,7 +17,7 @@
 
 #pragma once
 #include <windows.h>
-#include "Common.h"
+#include "../MISC/Common/Common.h"
 
 class Window
 {
@@ -38,7 +38,7 @@ public:
 	virtual void destroy() = 0;
 
 	virtual void display(bool toShow = true) const {
-		// 移除过于频繁的调试日志，减少日志输出
+		// Remove overly frequent debug logs to reduce log output
 		::ShowWindow(_hSelf, toShow ? SW_SHOW : SW_HIDE);
 	}
 

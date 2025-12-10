@@ -18,12 +18,12 @@
 
 #include <cwctype>
 #include <algorithm>
-#include "StaticDialog.h"
+#include "../StaticDialog/StaticDialog.h"
 #include "pluginsAdminRes.h"
-#include "TabBar.h"
-#include "ListView.h"
-#include "tinyxml.h"
-#include "URLCtrl.h"
+#include "../TabBar/TabBar.h"
+#include "../AnsiCharPanel/ListView.h"
+#include "../../TinyXml/tinyxml.h"
+#include "../AboutDlg/URLCtrl.h"
 
 class PluginsManager;
 

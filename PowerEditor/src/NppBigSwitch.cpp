@@ -997,7 +997,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		{
 			wchar_t str[MAX_PATH] = { '\0' };
 			// par defaut : NPPM_GETCURRENTDIRECTORY
-			wcscpy_s(str, _pEditView->getCurrentBuffer()->getFullPathName());
+			wcscpy_s(str, MAX_PATH, _pEditView->getCurrentBuffer()->getFullPathName());
 			wchar_t* fileStr = str;
 
 			if (message == NPPM_GETCURRENTDIRECTORY)

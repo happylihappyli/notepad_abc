@@ -1182,7 +1182,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					if (tipTmp.length() >= 80)
 						return FALSE;
 
-					wcscpy_s(lpttt->szText, tipTmp.c_str());
+					wcscpy_s(lpttt->szText, 80, tipTmp.c_str());
 					return TRUE;
 				}
 				else
@@ -1220,7 +1220,7 @@ BOOL Notepad_plus::notify(SCNotification *notification)
 					if (tipTmp.length() >= tipMaxLen)
 						return FALSE;
 
-					wcscpy_s(docTip, tipTmp.c_str());
+					wcscpy_s(docTip, tipMaxLen, tipTmp.c_str());
 					lpttt->lpszText = docTip;
 					return TRUE;
 				}

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "StaticDialog.h"
-#include "Common.h"
+#include "WinControls/StaticDialog/StaticDialog.h"
+#include "MISC/Common/Common.h"
 
 
 // 0 : normal window

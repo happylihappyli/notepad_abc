@@ -18,7 +18,7 @@
 #pragma once
 
 #include "regExtDlgRc.h"
-#include "StaticDialog.h"
+#include "../../WinControls/StaticDialog/StaticDialog.h"
 
 constexpr int extNameLen = 32;
 

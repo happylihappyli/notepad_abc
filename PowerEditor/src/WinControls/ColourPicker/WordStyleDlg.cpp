@@ -936,7 +936,7 @@ void WordStyleDlg::switchToTheme()
 	if (_isThemeDirty)
 	{
 		wchar_t themeFileName[MAX_PATH]{};
-		wcscpy_s(themeFileName, prevThemeName.c_str());
+		wcscpy_s(themeFileName, MAX_PATH, prevThemeName.c_str());
 		PathStripPath(themeFileName);
 		PathRemoveExtension(themeFileName);
 		NativeLangSpeaker *pNativeSpeaker = nppParamInst.getNativeLangSpeaker();
@@ -1234,11 +1234,11 @@ void WordStyleDlg::setVisualFromStyleList()
 	if (static_cast<size_t>(lbTextLen) > styleNameLen)
 		return;
 	::SendDlgItemMessage(_hSelf, IDC_STYLES_LIST, LB_GETTEXT, i, reinterpret_cast<LPARAM>(styleName));
-	wcscat_s(str, L": ");
-	wcscat_s(str, styleName);
+	wcscat_s(str, strLen + 1, L": ");
+	wcscat_s(str, strLen + 1, styleName);
 
 	// PAD for fix a display glitch
-	wcscat_s(str, L"          ");
+	wcscat_s(str, strLen + 1, L"          ");
 	_colourHooker.setColour(c);
 	::SetWindowText(_hStyleInfoStaticText, str);
 

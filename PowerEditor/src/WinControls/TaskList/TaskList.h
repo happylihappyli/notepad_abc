@@ -19,7 +19,7 @@
 
 #include <windows.h>
 #include <commctrl.h>
-#include "Window.h"
+#include "../Window.h"
 
 #ifndef WM_MOUSEWHEEL
 #define WM_MOUSEWHEEL 0x020A

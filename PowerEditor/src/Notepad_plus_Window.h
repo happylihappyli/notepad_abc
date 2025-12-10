@@ -101,7 +101,7 @@ public:
 	void setStartupBgColor(COLORREF BgColor);
 
 	static void loadTrayIcon(HINSTANCE hinst, HICON* icon) {
-		DPIManagerV2::loadIcon(hinst, MAKEINTRESOURCE(IDI_M30ICON), ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), icon);
+		DPIManagerV2::loadIcon(hinst, MAKEINTRESOURCEW(IDI_M30ICON), ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), icon);
 	}
 
 private:

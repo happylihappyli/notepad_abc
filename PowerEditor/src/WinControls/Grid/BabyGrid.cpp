@@ -414,7 +414,7 @@ void DisplayColumn(HWND hWnd, int SI, int c, int offset, HFONT hfont, HFONT hcol
 	SetCell(&BGcell, r, c);
 
 	wchar_t buffer[bufferLen]{};
-	wcscpy_s(buffer, L"");
+	wcscpy_s(buffer, bufferLen, L"");
 	if (BGHS[SI].COLUMNSNUMBERED)
 	{
 		if (c > 0)
@@ -474,7 +474,7 @@ void DisplayColumn(HWND hWnd, int SI, int c, int offset, HFONT hfont, HFONT hcol
 
 		BGCELL BGcell2;
 		SetCell(&BGcell2, r, c);
-		wcscpy_s(buffer, L"");
+		wcscpy_s(buffer, bufferLen, L"");
 		int iProperty = 0;
 		if ((c == 0) && (BGHS[SI].ROWSNUMBERED))
 		{
@@ -1029,7 +1029,7 @@ void CloseEdit(HWND hWnd, int SI)
 	cell.row = r;
 	cell.col = c;
 	SendMessage(hWnd, BGM_SETCELLDATA, reinterpret_cast<WPARAM>(&cell), reinterpret_cast<LPARAM>(BGHS[SI].editstring));
-	wcscpy_s(BGHS[SI].editstring, L"");
+	wcscpy_s(BGHS[SI].editstring, 305, L"");
 	RefreshGrid(hWnd);
 	BGHS[SI].EDITING = FALSE;
 	HideCaret(hWnd);
@@ -1064,8 +1064,8 @@ void DisplayEditString(HWND hWnd, int SI, const wchar_t* tstring)
 
 	if (lstrlen(BGHS[SI].editstring) <= 300)
 	{
-		wcscat_s(BGHS[SI].editstring, tstring);
-		wcscat_s(BGHS[SI].editstringdisplay, BGHS[SI].editstring);
+		wcscat_s(BGHS[SI].editstring, 305, tstring);
+		wcscat_s(BGHS[SI].editstringdisplay, 305, BGHS[SI].editstring);
 	}
 	else
 	{
@@ -1223,11 +1223,11 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			if (lstrlen((wchar_t*)lParam) > 300)
 			{
-				wcscpy_s(BGHS[SelfIndex].title, L"Title too long (300 chars max)");
+				wcscpy_s(BGHS[SelfIndex].title, 305, L"Title too long (300 chars max)");
 			}
 			else
 			{
-				wcscpy_s(BGHS[SelfIndex].title, (wchar_t*)lParam);
+				wcscpy_s(BGHS[SelfIndex].title, 305, (wchar_t*)lParam);
 			}
 
 			HDC gdc = GetDC(hWnd);
@@ -1389,16 +1389,16 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				//protecting or unprotecting a cell that isn't in the list
 				//add it as blank;
-				wcscat_s(buffer, L"|");
+				wcscat_s(buffer, bufferLen, L"|");
 				if ((BOOL)lParam)
 				{
-					wcscat_s(buffer, L"PA");
+					wcscat_s(buffer, bufferLen, L"PA");
 				}
 				else
 				{
-					wcscat_s(buffer, L"UA");
+					wcscat_s(buffer, bufferLen, L"UA");
 				}
-				wcscat_s(buffer, L"|");
+				wcscat_s(buffer, bufferLen, L"|");
 				SendMessage(BGHS[SelfIndex].hlist1, LB_ADDSTRING, FindResult, reinterpret_cast<LPARAM>(buffer));
 			}
 		}
@@ -1413,11 +1413,11 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case BGM_SETPROTECT:
 			if ((BOOL)wParam)
 			{
-				wcscpy_s(BGHS[SelfIndex].protect, L"P");
+				wcscpy_s(BGHS[SelfIndex].protect, 2, L"P");
 			}
 			else
 			{
-				wcscpy_s(BGHS[SelfIndex].protect, L"U");
+				wcscpy_s(BGHS[SelfIndex].protect, 2, L"U");
 			}
 			break;
 
@@ -1467,19 +1467,18 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 
 			//now add it
-			wcscat_s(buffer, L"|");
-			wcscat_s(buffer, BGHS[SelfIndex].protect);
+			wcscat_s(buffer, bufferLen, L"|");
+			wcscat_s(buffer, bufferLen, BGHS[SelfIndex].protect);
 
 			int iDataType = 1;
 
-			if (iDataType == 1) { wcscat_s(buffer, L"A"); }
-			if (iDataType == 2) { wcscat_s(buffer, L"N"); }
-			if (iDataType == 3) { wcscat_s(buffer, L"T"); }
-			if (iDataType == 4) { wcscat_s(buffer, L"F"); }
-			if (iDataType == 5) { wcscat_s(buffer, L"G"); }
-
-			wcscat_s(buffer, L"|");
-			wcscat_s(buffer, (wchar_t*)lParam);
+			if (iDataType == 1) { wcscat_s(buffer, bufferLen, L"A"); }
+			if (iDataType == 2) { wcscat_s(buffer, bufferLen, L"N"); }
+			if (iDataType == 3) { wcscat_s(buffer, bufferLen, L"T"); }
+			if (iDataType == 4) { wcscat_s(buffer, bufferLen, L"F"); }
+			if (iDataType == 5) { wcscat_s(buffer, bufferLen, L"G"); }
+			wcscat_s(buffer, bufferLen, L"|");
+			wcscat_s(buffer, bufferLen, (wchar_t*)lParam);
 			int FindResult = static_cast<int32_t>(SendMessage(BGHS[SelfIndex].hlist1, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(buffer)));
 
 			if (FindResult == LB_ERR)
@@ -1540,7 +1539,7 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 					int count = 1;
 					wchar_t tbuffer[255] = { '\0' };
-					wcscpy_s(tbuffer, (wchar_t*)lParam);
+					wcscpy_s(tbuffer, 255, (wchar_t*)lParam);
 					for (int j = 0; j < (int)lstrlen(tbuffer); j++)
 					{
 						if (tbuffer[j] == '\n') { count++; }
@@ -1618,7 +1617,7 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				}
 
 				wchar_t tbuffer[1000]{};
-				wcscpy_s(tbuffer, buffer);
+				wcscpy_s(tbuffer, 1000, buffer);
 				int k = lstrlen(tbuffer);
 				int c = 0;
 				for (int j = 13; j < k; j++)
@@ -2191,7 +2190,7 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (BGHS[SelfIndex].EDITING)
 				{
 					BGHS[SelfIndex].EDITING = FALSE;
-					wcscpy_s(BGHS[SelfIndex].editstring, L"");
+					wcscpy_s(BGHS[SelfIndex].editstring, 305, L"");
 					HideCaret(hWnd);
 					RefreshGrid(hWnd);
 					NotifyEditEnd(hWnd, SelfIndex);
@@ -2211,7 +2210,7 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if (BGHS[SelfIndex].EDITING)
 				{
 					BGHS[SelfIndex].EDITING = FALSE;
-					wcscpy_s(BGHS[SelfIndex].editstring, L"");
+					wcscpy_s(BGHS[SelfIndex].editstring, 305, L"");
 					HideCaret(hWnd);
 					RefreshGrid(hWnd);
 					NotifyEditEnd(hWnd, SelfIndex);
@@ -2691,7 +2690,7 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			BGHS[SelfIndex].gridmenu = 0;
 			BGHS[SelfIndex].hlist1 = NULL;
 			BGHS[SelfIndex].hfont = NULL;
-			wcscpy_s(BGHS[SelfIndex].protect, L"U");
+			wcscpy_s(BGHS[SelfIndex].protect, 2, L"U");
 			BGHS[SelfIndex].rows = 100;
 			BGHS[SelfIndex].cols = 255;
 			BGHS[SelfIndex].homerow = 1;
@@ -2849,7 +2848,7 @@ LRESULT CALLBACK GridProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				BGHS[BG_GridIndex].hfont = g_hfontbody;
 				BGHS[BG_GridIndex].htitlefont = g_hfonttitle;
 				BGHS[BG_GridIndex].hcolumnheadingfont = g_hfontheader;
-				wcscpy_s(BGHS[BG_GridIndex].title, lpcs->lpszName);
+				wcscpy_s(BGHS[BG_GridIndex].title, 305, lpcs->lpszName);
 				SendMessage(hWnd, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(lpcs->lpszName));
 
 

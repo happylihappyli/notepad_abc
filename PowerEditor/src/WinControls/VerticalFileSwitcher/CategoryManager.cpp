@@ -10,16 +10,16 @@
 
 
 CategoryManager::CategoryManager() {
-    // 默认配置文件路径
+    // 默认Configuration Files路径
     m_configPath = L"..\\bin\\categories.json";
     
-    // 添加调试信息
+    // Add Debug Information
     std::wstring debugMsg = L"CategoryManager: 构造函数调用，初始配置路径: " + m_configPath + L"\n";
     OutputDebugStringW(debugMsg.c_str());
 }
 
 /**
- * @brief 初始化分类管理器
+ * @brief Initialize Category Manager
  */
 void CategoryManager::initialize(const std::wstring& configPath) {
     if (!configPath.empty()) {
@@ -27,12 +27,12 @@ void CategoryManager::initialize(const std::wstring& configPath) {
     }
     
     // 调试信息：开始初始化
-    std::wstring debugMsg = L"CategoryManager: 开始初始化，原始配置文件路径: " + m_configPath + L"\n";
+    std::wstring debugMsg = L"CategoryManager: 开始初始化，原始Configuration Files路径: " + m_configPath + L"\n";
     OutputDebugStringW(debugMsg.c_str());
     
     // 尝试将路径转换为绝对路径
     std::wstring resolvedPath = normalizePath(m_configPath);
-    debugMsg = L"CategoryManager: 解析后的配置文件路径: " + resolvedPath + L"\n";
+    debugMsg = L"CategoryManager: 解析后的Configuration Files路径: " + resolvedPath + L"\n";
     OutputDebugStringW(debugMsg.c_str());
     
     // 更新为解析后的路径
@@ -45,26 +45,26 @@ void CategoryManager::initialize(const std::wstring& configPath) {
     debugMsg = L"CategoryManager: ensureConfigDirectory 返回结果: " + std::to_wstring(dirResult) + L"\n";
     OutputDebugStringW(debugMsg.c_str());
     
-    // 加载配置，如果失败则创建默认分类
-    OutputDebugStringW(L"CategoryManager: 开始加载配置文件\n");
+    // 加载配置，如果失败则创建Default Category
+    OutputDebugStringW(L"CategoryManager: 开始加载Configuration Files\n");
     if (!loadConfig()) {
-        OutputDebugStringW(L"CategoryManager: 配置加载失败，创建默认分类\n");
+        OutputDebugStringW(L"CategoryManager: 配置加载失败，创建Default Category\n");
         createDefaultCategories();
-        debugMsg = L"CategoryManager: 默认分类创建完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+        debugMsg = L"CategoryManager: Default Category创建完成，Category Count: " + std::to_wstring(m_categories.size()) + L"\n";
         OutputDebugStringW(debugMsg.c_str());
         if (saveConfig()) {
-            OutputDebugStringW(L"CategoryManager: 默认分类保存成功\n");
+            OutputDebugStringW(L"CategoryManager: Default Category保存成功\n");
         } else {
-            OutputDebugStringW(L"CategoryManager: 默认分类保存失败\n");
+            OutputDebugStringW(L"CategoryManager: Default Category保存失败\n");
         }
     } else {
         OutputDebugStringW(L"CategoryManager: 配置加载成功\n");
-        debugMsg = L"CategoryManager: 配置加载成功，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+        debugMsg = L"CategoryManager: 配置加载成功，Category Count: " + std::to_wstring(m_categories.size()) + L"\n";
         OutputDebugStringW(debugMsg.c_str());
     }
     
-    // 调试信息：显示加载的分类数量
-    debugMsg = L"CategoryManager: 初始化完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+    // 调试信息：显示加载的Category Count
+    debugMsg = L"CategoryManager: 初始化完成，Category Count: " + std::to_wstring(m_categories.size()) + L"\n";
     OutputDebugStringW(debugMsg.c_str());
     
     // 输出所有分类信息用于调试
@@ -75,7 +75,7 @@ void CategoryManager::initialize(const std::wstring& configPath) {
 }
 
 /**
- * @brief 加载分类配置
+ * @brief Load Category Configuration
  * @return bool 加载是否成功
  */
 bool CategoryManager::loadConfig() {
@@ -251,7 +251,7 @@ bool CategoryManager::loadConfig() {
             }
         }
         
-        debugMsg = L"CategoryManager: loadConfig 完成，分类数量: " + std::to_wstring(m_categories.size()) + L"\n";
+        debugMsg = L"CategoryManager: loadConfig 完成，Category Count: " + std::to_wstring(m_categories.size()) + L"\n";
         OutputDebugStringW(debugMsg.c_str());
         return true;
     }
@@ -275,7 +275,7 @@ bool CategoryManager::loadConfig() {
 }
 
 /**
- * @brief 保存分类配置
+ * @brief Save Category Configuration
  */
 bool CategoryManager::saveConfig() {
     try {
@@ -308,8 +308,8 @@ bool CategoryManager::saveConfig() {
         // 以二进制模式打开文件，写入UTF-8 BOM
         std::ofstream file(m_configPath, std::ios::binary | std::ios::trunc);
         if (!file.is_open()) {
-            // 调试信息：文件打开失败
-            std::wstring debugMsg = L"CategoryManager: 无法打开配置文件: " + m_configPath + L"\n";
+            // 调试信息：文件Open Failed
+            std::wstring debugMsg = L"CategoryManager: 无法打开Configuration Files: " + m_configPath + L"\n";
             OutputDebugStringW(debugMsg.c_str());
             return false;
         }
@@ -323,7 +323,7 @@ bool CategoryManager::saveConfig() {
         file.close(); // 确保文件正确关闭
         
         // 调试信息：保存成功
-        OutputDebugStringW(L"CategoryManager: 配置文件保存成功\n");
+        OutputDebugStringW(L"CategoryManager: Configuration Files保存成功\n");
         return true;
     }
     catch (const std::exception&) {
@@ -334,7 +334,7 @@ bool CategoryManager::saveConfig() {
 }
 
 /**
- * @brief 添加新分类
+ * @brief Add New Category
  */
 bool CategoryManager::addCategory(const FileCategory& category) {
     // 检查是否已存在同名分类
@@ -349,7 +349,7 @@ bool CategoryManager::addCategory(const FileCategory& category) {
 }
 
 /**
- * @brief 删除分类
+ * @brief Delete Category
  */
 bool CategoryManager::removeCategory(const std::wstring& categoryId) {
     // 移除分类
@@ -377,7 +377,7 @@ bool CategoryManager::removeCategory(const std::wstring& categoryId) {
 }
 
 /**
- * @brief 更新分类信息
+ * @brief Update Category Information
  */
 bool CategoryManager::updateCategory(const FileCategory& category) {
     for (auto& existingCat : m_categories) {
@@ -390,7 +390,7 @@ bool CategoryManager::updateCategory(const FileCategory& category) {
 }
 
 /**
- * @brief 根据ID获取分类
+ * @brief Get Category by ID
  */
 FileCategory* CategoryManager::getCategoryById(const std::wstring& categoryId) {
     for (auto& category : m_categories) {
@@ -402,7 +402,7 @@ FileCategory* CategoryManager::getCategoryById(const std::wstring& categoryId) {
 }
 
 /**
- * @brief 根据名称获取分类
+ * @brief Get Category by Name
  */
 FileCategory* CategoryManager::getCategoryByName(const std::wstring& name) {
     for (auto& category : m_categories) {
@@ -414,7 +414,7 @@ FileCategory* CategoryManager::getCategoryByName(const std::wstring& name) {
 }
 
 /**
- * @brief 重命名分类
+ * @brief Rename Category
  */
 bool CategoryManager::renameCategory(const std::wstring& oldName, const std::wstring& newName) {
     if (oldName == newName) {
@@ -426,7 +426,7 @@ bool CategoryManager::renameCategory(const std::wstring& oldName, const std::wst
         return false; // 新名称已存在
     }
     
-    // 查找并重命名分类
+    // 查找并Rename Category
     for (auto& category : m_categories) {
         if (category.name == oldName) {
             category.name = newName;
@@ -438,7 +438,7 @@ bool CategoryManager::renameCategory(const std::wstring& oldName, const std::wst
 }
 
 /**
- * @brief 重命名分类（根据ID）
+ * @brief Rename Category（根据ID）
  */
 bool CategoryManager::renameCategoryById(const std::wstring& categoryId, const std::wstring& newName) {
     // 首先根据新名称查找是否已存在
@@ -446,7 +446,7 @@ bool CategoryManager::renameCategoryById(const std::wstring& categoryId, const s
         return false; // 新名称已存在
     }
     
-    // 查找并重命名分类
+    // 查找并Rename Category
     for (auto& category : m_categories) {
         if (category.id == categoryId) {
             category.name = newName;
@@ -458,7 +458,7 @@ bool CategoryManager::renameCategoryById(const std::wstring& categoryId, const s
 }
 
 /**
- * @brief 设置文件的分类
+ * @brief Set File Category
  */
 bool CategoryManager::setFileCategory(const std::wstring& filePath, const std::wstring& categoryId) {
     std::wstring normalizedPath = normalizePath(filePath);
@@ -477,7 +477,7 @@ bool CategoryManager::setFileCategory(const std::wstring& filePath, const std::w
 }
 
 /**
- * @brief 获取文件的分类
+ * @brief Get File Category
  */
 std::wstring CategoryManager::getFileCategory(const std::wstring& filePath) const {
     std::wstring normalizedPath = normalizePath(filePath);
@@ -488,11 +488,11 @@ std::wstring CategoryManager::getFileCategory(const std::wstring& filePath) cons
         }
     }
     
-    return getDefaultCategoryId(); // 返回默认分类
+    return getDefaultCategoryId(); // 返回Default Category
 }
 
 /**
- * @brief 移除文件的分类
+ * @brief Remove File Category
  */
 bool CategoryManager::removeFileCategory(const std::wstring& filePath) {
     std::wstring normalizedPath = normalizePath(filePath);
@@ -511,7 +511,7 @@ bool CategoryManager::removeFileCategory(const std::wstring& filePath) {
 }
 
 /**
- * @brief 获取指定分类下的所有文件路径
+ * @brief 获取指定分类下的所有File Path
  */
 std::vector<std::wstring> CategoryManager::getFilesByCategory(const std::wstring& categoryId) const {
     std::vector<std::wstring> files;
@@ -526,10 +526,10 @@ std::vector<std::wstring> CategoryManager::getFilesByCategory(const std::wstring
 }
 
 /**
- * @brief 添加文件到分类（根据分类名称）
+ * @brief 添加文件到分类（根据Category Name）
  */
 bool CategoryManager::addFileToCategory(const std::wstring& filePath, const std::wstring& categoryName) {
-    // 根据分类名称查找分类ID
+    // 根据Category Name查找Category ID
     FileCategory* category = getCategoryByName(categoryName);
     if (!category) {
         return false; // 分类不存在
@@ -540,7 +540,7 @@ bool CategoryManager::addFileToCategory(const std::wstring& filePath, const std:
 }
 
 /**
- * @brief 从分类中移除文件（根据分类名称）
+ * @brief 从分类中移除文件（根据Category Name）
  */
 bool CategoryManager::removeFileFromCategory(const std::wstring& filePath) {
     // 使用现有的removeFileCategory方法
@@ -548,17 +548,17 @@ bool CategoryManager::removeFileFromCategory(const std::wstring& filePath) {
 }
 
 /**
- * @brief 创建默认分类
+ * @brief 创建Default Category
  */
 void CategoryManager::createDefaultCategories() {
     m_categories.clear();
     
-    // 创建默认分类，使用固定的分类ID
-    FileCategory defaultCategory(L"全部", L"未分类的文件", 0);
+    // 创建Default Category，使用固定的Category ID
+    FileCategory defaultCategory(L"All", L"Uncategorized的文件", 0);
     defaultCategory.id = getDefaultCategoryId();
     m_categories.push_back(defaultCategory);
     
-    FileCategory programmingCategory(L"编程", L"编程相关的文件", 1);
+    FileCategory programmingCategory(L"Programming", L"Programming相关的文件", 1);
     programmingCategory.id = L"programming";
     m_categories.push_back(programmingCategory);
     
@@ -576,7 +576,7 @@ void CategoryManager::createDefaultCategories() {
 }
 
 /**
- * @brief 确保配置文件目录存在
+ * @brief 确保Configuration Files目录存在
  */
 bool CategoryManager::ensureConfigDirectory() const {
     try {
@@ -612,10 +612,10 @@ bool CategoryManager::ensureConfigDirectory() const {
         // 检查文件是否存在
         DWORD fileAttributes = GetFileAttributesW(m_configPath.c_str());
         if (fileAttributes == INVALID_FILE_ATTRIBUTES) {
-            debugMsg = L"CategoryManager: 配置文件不存在: " + m_configPath + L"\n";
+            debugMsg = L"CategoryManager: Configuration Files不存在: " + m_configPath + L"\n";
             OutputDebugStringW(debugMsg.c_str());
         } else {
-            debugMsg = L"CategoryManager: 配置文件存在: " + m_configPath + L"\n";
+            debugMsg = L"CategoryManager: Configuration Files存在: " + m_configPath + L"\n";
             OutputDebugStringW(debugMsg.c_str());
         }
         
@@ -629,7 +629,7 @@ bool CategoryManager::ensureConfigDirectory() const {
 }
 
 /**
- * @brief 从文件路径生成标准化的路径
+ * @brief 从File Path生成标准化的路径
  * 修复版本：使用exe路径而不是当前工作目录来解析相对路径
  */
 std::wstring CategoryManager::normalizePath(const std::wstring& path) const {

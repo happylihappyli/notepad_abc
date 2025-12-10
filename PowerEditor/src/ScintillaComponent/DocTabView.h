@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "TabBar.h"
+#include "../WinControls/TabBar/TabBar.h"
 #include "Buffer.h"
 
 const int SAVED_IMG_INDEX = 0;

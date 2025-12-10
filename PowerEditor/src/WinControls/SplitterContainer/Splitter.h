@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 #include "resource.h"
-#include "Window.h"
-#include "Common.h"
+#include "../Window.h"
+#include "../../MISC/Common/Common.h"
 
 
 #define SV_HORIZONTAL		0x00000001

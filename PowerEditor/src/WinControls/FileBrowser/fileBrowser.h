@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "DockingDlgInterface.h"
-#include "TreeView.h"
+#include "../DockingWnd/DockingDlgInterface.h"
+#include "../TreeView/TreeView.h"
 #include "fileBrowser_rc.h"
 
 #define FB_PANELTITLE         L"Folder as Workspace"

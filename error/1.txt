@@ -1,4 +1,4 @@
 还是提示，找不到序数
 内容：
 无法定位序数381于动态链接库
-E:\Github3\notepad_abc\bin\notepad_abc.exe上。
+E:\Github3\cpp\notepad_abc\bin\notepad_abc.exe上。

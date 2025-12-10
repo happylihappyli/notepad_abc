@@ -1,5 +1,5 @@
-// 分类管理器头文件
-// 负责管理文件分类（编程、工作、生活等）
+﻿// Category Manager Header File
+// 负责管理文件分类（Programming, Work, Life, etc.）
 
 #pragma once
 
@@ -13,24 +13,24 @@
 using json = nlohmann::json;
 
 /**
- * @brief 文件分类信息结构体
+ * @brief File Category Information Structure
  */
 struct FileCategory {
-    std::wstring id;           // 分类ID
-    std::wstring name;         // 分类名称
-    std::wstring description;  // 分类描述
-    int order;                 // 显示顺序
+    std::wstring id;           // Category ID
+    std::wstring name;         // Category Name
+    std::wstring description;  // Category Description
+    int order;                 // Display Order
     
     FileCategory() : order(0) {}
     FileCategory(const std::wstring& name, const std::wstring& desc = L"", int order = 0)
         : name(name), description(desc), order(order) {
-        // 生成唯一ID
+        // Generate Unique ID
         id = L"cat_" + std::to_wstring(std::hash<std::wstring>{}(name + desc));
     }
     
-    // 转换为JSON
+    // Convert to JSON
     json toJson() const {
-        // 使用UTF-8编码转换宽字符串
+        // Convert wide string using UTF-8 encoding
         auto toUtf8 = [](const std::wstring& wstr) -> std::string {
             if (wstr.empty()) return "";
             int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
@@ -47,9 +47,9 @@ struct FileCategory {
         };
     }
     
-    // 从JSON加载
+    // Load from JSON
     void fromJson(const json& j) {
-        // 使用UTF-8编码转换到宽字符串
+        // Convert to wide string using UTF-8 encoding
         auto toWide = [](const std::string& str) -> std::wstring {
             if (str.empty()) return L"";
             int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
@@ -77,19 +77,19 @@ struct FileCategory {
 };
 
 /**
- * @brief 文件与分类的关联信息
+ * @brief File and Category Association Information
  */
 struct FileCategoryMapping {
-    std::wstring filePath;     // 文件路径
-    std::wstring categoryId;   // 分类ID
+    std::wstring filePath;     // File Path
+    std::wstring categoryId;   // Category ID
     
     FileCategoryMapping() = default;
     FileCategoryMapping(const std::wstring& path, const std::wstring& catId)
         : filePath(path), categoryId(catId) {}
     
-    // 转换为JSON
+    // Convert to JSON
     json toJson() const {
-        // 使用UTF-8编码转换宽字符串
+        // Convert wide string using UTF-8 encoding
         auto toUtf8 = [](const std::wstring& wstr) -> std::string {
             if (wstr.empty()) return "";
             int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
@@ -104,9 +104,9 @@ struct FileCategoryMapping {
         };
     }
     
-    // 从JSON加载
+    // Load from JSON
     void fromJson(const json& j) {
-        // 使用UTF-8编码转换到宽字符串
+        // Convert to wide string using UTF-8 encoding
         auto toWide = [](const std::string& str) -> std::wstring {
             if (str.empty()) return L"";
             int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
@@ -127,155 +127,155 @@ struct FileCategoryMapping {
 };
 
 /**
- * @brief 分类管理器类
+ * @brief Category Manager Class
  */
 class CategoryManager {
 private:
-    std::vector<FileCategory> m_categories;           // 分类列表
-    std::vector<FileCategoryMapping> m_fileMappings;   // 文件与分类的映射
-    std::wstring m_configPath;                         // 配置文件路径
-    std::wstring m_fileMappingsPath;                    // 文件映射单独保存路径
+    std::vector<FileCategory> m_categories;           // Category List
+    std::vector<FileCategoryMapping> m_fileMappings;   // File and Category Mapping
+    std::wstring m_configPath;                         // Configuration Files路径
+    std::wstring m_fileMappingsPath;                    // File Mapping Save Path Separately
     
 public:
     CategoryManager();
     ~CategoryManager() = default;
     
     /**
-     * @brief 初始化分类管理器
-     * @param configPath 配置文件路径
+     * @brief Initialize Category Manager
+     * @param configPath Configuration Files路径
      */
     void initialize(const std::wstring& configPath);
     
     /**
-     * @brief 加载分类配置
+     * @brief Load Category Configuration
      */
     bool loadConfig();
     
     /**
-     * @brief 保存分类配置
+     * @brief Save Category Configuration
      */
     bool saveConfig();
     
     /**
-     * @brief 获取所有分类
+     * @brief Get All Categories
      */
     const std::vector<FileCategory>& getCategories() const { return m_categories; }
     
     /**
-     * @brief 添加新分类
+     * @brief Add New Category
      * @param category 分类信息
      */
     bool addCategory(const FileCategory& category);
     
     /**
-     * @brief 删除分类
-     * @param categoryId 分类ID
+     * @brief Delete Category
+     * @param categoryId Category ID
      */
     bool removeCategory(const std::wstring& categoryId);
     
     /**
-     * @brief 更新分类信息
+     * @brief Update Category Information
      * @param category 分类信息
      */
     bool updateCategory(const FileCategory& category);
     
     /**
-     * @brief 根据ID获取分类
-     * @param categoryId 分类ID
+     * @brief Get Category by ID
+     * @param categoryId Category ID
      */
     FileCategory* getCategoryById(const std::wstring& categoryId);
     
     /**
-     * @brief 根据名称获取分类
-     * @param name 分类名称
+     * @brief Get Category by Name
+     * @param name Category Name
      */
     FileCategory* getCategoryByName(const std::wstring& name);
     
     /**
-     * @brief 重命名分类
+     * @brief Rename Category
      * @param oldName 原名称
      * @param newName 新名称
      */
     bool renameCategory(const std::wstring& oldName, const std::wstring& newName);
     
     /**
-     * @brief 重命名分类（根据ID）
-     * @param categoryId 分类ID
+     * @brief Rename Category（根据ID）
+     * @param categoryId Category ID
      * @param newName 新名称
      */
     bool renameCategoryById(const std::wstring& categoryId, const std::wstring& newName);
     
     /**
-     * @brief 设置文件的分类
-     * @param filePath 文件路径
-     * @param categoryId 分类ID
+     * @brief Set File Category
+     * @param filePath File Path
+     * @param categoryId Category ID
      */
     bool setFileCategory(const std::wstring& filePath, const std::wstring& categoryId);
     
     /**
-     * @brief 获取文件的分类
-     * @param filePath 文件路径
+     * @brief Get File Category
+     * @param filePath File Path
      */
     std::wstring getFileCategory(const std::wstring& filePath) const;
     
     /**
-     * @brief 移除文件的分类
-     * @param filePath 文件路径
+     * @brief Remove File Category
+     * @param filePath File Path
      */
     bool removeFileCategory(const std::wstring& filePath);
     
     /**
-     * @brief 添加文件到分类（根据分类名称）
-     * @param filePath 文件路径
-     * @param categoryName 分类名称
+     * @brief 添加文件到分类（根据Category Name）
+     * @param filePath File Path
+     * @param categoryName Category Name
      */
     bool addFileToCategory(const std::wstring& filePath, const std::wstring& categoryName);
     
     /**
-     * @brief 从分类中移除文件（根据分类名称）
-     * @param filePath 文件路径
+     * @brief 从分类中移除文件（根据Category Name）
+     * @param filePath File Path
      */
     bool removeFileFromCategory(const std::wstring& filePath);
     
     /**
-     * @brief 获取指定分类下的所有文件路径
-     * @param categoryId 分类ID
+     * @brief 获取指定分类下的所有File Path
+     * @param categoryId Category ID
      */
     std::vector<std::wstring> getFilesByCategory(const std::wstring& categoryId) const;
     
     /**
-     * @brief 创建默认分类
+     * @brief 创建Default Category
      */
     void createDefaultCategories();
     
     /**
-     * @brief 获取默认分类ID
+     * @brief 获取Default CategoryID
      */
     static std::wstring getDefaultCategoryId() { return L"default"; }
     
     /**
-     * @brief 获取默认分类名称
+     * @brief 获取Default Category名称
      */
-    static std::wstring getDefaultCategoryName() { return L"全部"; }
+    static std::wstring getDefaultCategoryName() { return L"All"; }
     
     /**
-     * @brief 保存文件映射到单独的JSON文件
+     * @brief Save File Mapping to Separate JSON File
      */
     bool saveFileMappings();
     
     /**
-     * @brief 从单独的JSON文件加载文件映射
+     * @brief Load File Mapping from Separate JSON File
      */
     bool loadFileMappings();
     
 private:
     /**
-     * @brief 确保配置文件目录存在
+     * @brief 确保Configuration Files目录存在
      */
     bool ensureConfigDirectory() const;
     
     /**
-     * @brief 从文件路径生成标准化的路径
+     * @brief 从File Path生成标准化的路径
      */
     std::wstring normalizePath(const std::wstring& path) const;
 };

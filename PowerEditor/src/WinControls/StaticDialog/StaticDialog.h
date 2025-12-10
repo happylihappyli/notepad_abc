@@ -16,8 +16,8 @@
 
 #pragma once
 #include "dpiManagerV2.h"
-#include "Notepad_plus_msgs.h"
-#include "Window.h"
+#include "../MISC/PluginsManager/Notepad_plus_msgs.h"
+#include "../Window.h"
 
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 

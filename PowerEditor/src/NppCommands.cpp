@@ -130,7 +130,7 @@ void Notepad_plus::command(int id)
 			}
 			else
 			{
-				debugLog(L"错误: 文档列表面板未初始化，无法显示分类菜单\n");
+				debugLog(L"错误: Document List面板未初始化，无法显示分类菜单\n");
 			}
 		}
 		break;
@@ -145,7 +145,7 @@ void Notepad_plus::command(int id)
 			}
 			else
 			{
-				debugLog(L"错误: 文档列表面板未初始化，无法编辑分类文件\n");
+				debugLog(L"错误: Document List面板未初始化，无法编辑分类文件\n");
 			}
 		}
 		break;
@@ -160,7 +160,7 @@ void Notepad_plus::command(int id)
 			}
 			else
 			{
-				debugLog(L"错误: 文档列表面板未初始化，无法刷新分类\n");
+				debugLog(L"错误: Document List面板未初始化，无法刷新分类\n");
 			}
 		}
 		break;
@@ -281,7 +281,7 @@ void Notepad_plus::command(int id)
 				errorMsg += intToString(retResult);
 				errorMsg += L"\n----------------------------------------------------------";
 				
-				::MessageBox(_pPublicInterface->getHSelf(), errorMsg.c_str(), L"ShellExecute - ERROR", MB_ICONINFORMATION | MB_APPLMODAL);
+				::MessageBoxW(_pPublicInterface->getHSelf(), errorMsg.c_str(), L"ShellExecute - ERROR", MB_ICONINFORMATION | MB_APPLMODAL);
 			}
 		}
 		break;
@@ -682,7 +682,7 @@ void Notepad_plus::command(int id)
 			wchar_t cmd2Exec[CURRENTWORD_MAXLENGTH] = { '\0' };
 			if (id == IDM_EDIT_OPENINFOLDER)
 			{
-				wcscpy_s(cmd2Exec, L"explorer");
+				wcscpy_s(cmd2Exec, CURRENTWORD_MAXLENGTH, L"explorer");
 			}
 			else
 			{
@@ -1013,24 +1013,24 @@ void Notepad_plus::command(int id)
 		{
 			if (_pDocumentListPanel && _pDocumentListPanel->isVisible())
 			{
-				debugLog(L"文档列表已可见，获取焦点\n");
+				debugLog(L"Document List已可见，获取焦点\n");
 				_pDocumentListPanel->grabFocus();
 			}
 			else
 		{
-			debugLog(L"准备显示文档列表\n");
+			debugLog(L"准备显示Document List\n");
 			checkMenuItem(IDM_VIEW_DOCLIST, true);
 			_toolBar.setCheck(IDM_VIEW_DOCLIST, true);
 			debugLog(L"调用launchDocumentListPanel()\n");
 			launchDocumentListPanel();
 			if (_pDocumentListPanel)
 			{
-				debugLog(L"文档列表面板创建成功\n");
+				debugLog(L"Document List面板创建成功\n");
 				_pDocumentListPanel->setClosed(false);
 			}
 			else
 			{
-				debugLog(L"文档列表面板创建失败\n");
+				debugLog(L"Document List面板创建失败\n");
 			}
 		}
 		}
@@ -1038,18 +1038,18 @@ void Notepad_plus::command(int id)
 
 		case IDM_VIEW_DOCLIST:
 		{
-			debugLog(L"开始处理文档列表命令\n");
+			debugLog(L"开始处理Document List命令\n");
 			wchar_t buffer[256];
 		swprintf(buffer, 256, L"_pDocumentListPanel 指针状态: %p\n", _pDocumentListPanel);
 		debugLog(buffer);
 			if (_pDocumentListPanel)
 			{
 				wchar_t buffer[256];
-		swprintf(buffer, 256, L"文档列表面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
+		swprintf(buffer, 256, L"Document List面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
 		debugLog(buffer);
 				if (!_pDocumentListPanel->isClosed())
 				{
-					debugLog(L"隐藏文档列表面板\n");
+					debugLog(L"隐藏Document List面板\n");
 					_pDocumentListPanel->display(false);
 					_pDocumentListPanel->setClosed(true);
 					checkMenuItem(IDM_VIEW_DOCLIST, false);
@@ -1062,7 +1062,7 @@ void Notepad_plus::command(int id)
 				}
 				else
 				{
-					debugLog(L"准备显示文档列表面板\n");
+					debugLog(L"准备显示Document List面板\n");
 					checkMenuItem(IDM_VIEW_DOCLIST, true);
 					_toolBar.setCheck(IDM_VIEW_DOCLIST, true);
 					debugLog(L"调用launchDocumentListPanel()\n");
@@ -1072,7 +1072,7 @@ void Notepad_plus::command(int id)
 		debugLog(buffer);
 					if (_pDocumentListPanel)
 					{
-						debugLog(L"文档列表面板创建成功\n");
+						debugLog(L"Document List面板创建成功\n");
 						_pDocumentListPanel->setClosed(false);
 						// 更新保持状态为true
 						NppParameters::getInstance().getNppGUI()._docListKeepState = true;
@@ -1088,7 +1088,7 @@ void Notepad_plus::command(int id)
 			}
 			else
 			{
-				debugLog(L"文档列表面板不存在，准备创建\n");
+				debugLog(L"Document List面板不存在，准备创建\n");
 				checkMenuItem(IDM_VIEW_DOCLIST, true);
 				_toolBar.setCheck(IDM_VIEW_DOCLIST, true);
 				debugLog(L"调用launchDocumentListPanel()\n");
@@ -1098,7 +1098,7 @@ void Notepad_plus::command(int id)
 		debugLog(buffer);
 				if (_pDocumentListPanel)
 				{
-					debugLog(L"文档列表面板创建成功\n");
+					debugLog(L"Document List面板创建成功\n");
 					_pDocumentListPanel->setClosed(false);
 					// 更新保持状态为true
 					NppParameters::getInstance().getNppGUI()._docListKeepState = true;
@@ -1116,18 +1116,18 @@ void Notepad_plus::command(int id)
 
 		case IDM_VIEW_DOCUMENT_LIST:
 		{
-			debugLog(L"开始处理文档分类列表命令\n");
+			debugLog(L"开始处理Document Category列表命令\n");
 			wchar_t buffer[256];
 			swprintf(buffer, 256, L"_pDocumentListPanel 指针状态: %p\n", _pDocumentListPanel);
 			debugLog(buffer);
 			if (_pDocumentListPanel)
 			{
 				wchar_t buffer[256];
-				swprintf(buffer, 256, L"文档列表面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
+				swprintf(buffer, 256, L"Document List面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
 				debugLog(buffer);
 				if (!_pDocumentListPanel->isClosed())
 				{
-					debugLog(L"隐藏文档列表面板\n");
+					debugLog(L"隐藏Document List面板\n");
 					_pDocumentListPanel->display(false);
 					_pDocumentListPanel->setClosed(true);
 					checkMenuItem(IDM_VIEW_DOCUMENT_LIST, false);
@@ -1135,7 +1135,7 @@ void Notepad_plus::command(int id)
 				}
 				else
 				{
-					debugLog(L"准备显示文档列表面板\n");
+					debugLog(L"准备显示Document List面板\n");
 					checkMenuItem(IDM_VIEW_DOCUMENT_LIST, true);
 					_toolBar.setCheck(IDM_VIEW_DOCUMENT_LIST, true);
 					debugLog(L"调用launchDocumentListPanel()\n");
@@ -1145,7 +1145,7 @@ void Notepad_plus::command(int id)
 					debugLog(buffer);
 					if (_pDocumentListPanel)
 					{
-						debugLog(L"文档列表面板创建成功\n");
+						debugLog(L"Document List面板创建成功\n");
 						_pDocumentListPanel->setClosed(false);
 					}
 					else
@@ -1156,7 +1156,7 @@ void Notepad_plus::command(int id)
 			}
 			else
 			{
-				debugLog(L"文档列表面板不存在，准备创建\n");
+				debugLog(L"Document List面板不存在，准备创建\n");
 				checkMenuItem(IDM_VIEW_DOCUMENT_LIST, true);
 				_toolBar.setCheck(IDM_VIEW_DOCUMENT_LIST, true);
 				debugLog(L"调用launchDocumentListPanel()\n");
@@ -1166,7 +1166,7 @@ void Notepad_plus::command(int id)
 				debugLog(buffer);
 				if (_pDocumentListPanel)
 				{
-					debugLog(L"文档列表面板创建成功\n");
+					debugLog(L"Document List面板创建成功\n");
 					_pDocumentListPanel->setClosed(false);
 				}
 				else
@@ -1179,25 +1179,25 @@ void Notepad_plus::command(int id)
 
 		case IDM_VIEW_DOCUMENT_CATEGORY:
 		{
-			debugLog(L"开始处理文档分类菜单命令\n");
+			debugLog(L"开始处理Document Category菜单命令\n");
 			wchar_t buffer[256];
 			swprintf(buffer, 256, L"_pDocumentListPanel 指针状态: %p\n", _pDocumentListPanel);
 			debugLog(buffer);
 			if (_pDocumentListPanel)
 			{
 				wchar_t buffer[256];
-				swprintf(buffer, 256, L"文档列表面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
+				swprintf(buffer, 256, L"Document List面板已存在，检查是否关闭: %d\n", _pDocumentListPanel->isClosed());
 				debugLog(buffer);
 				if (!_pDocumentListPanel->isClosed())
 				{
-					debugLog(L"文档列表面板已打开，切换到分类视图\n");
+					debugLog(L"Document List面板已打开，切换到分类视图\n");
 					// 这里可以添加切换到分类视图的逻辑
 					// 目前只是显示面板
 					_pDocumentListPanel->display(true);
 				}
 				else
 				{
-					debugLog(L"准备显示文档列表面板\n");
+					debugLog(L"准备显示Document List面板\n");
 					checkMenuItem(IDM_VIEW_DOCUMENT_CATEGORY, true);
 					_toolBar.setCheck(IDM_VIEW_DOCUMENT_CATEGORY, true);
 					debugLog(L"调用launchDocumentListPanel()\n");
@@ -1207,7 +1207,7 @@ void Notepad_plus::command(int id)
 					debugLog(buffer);
 					if (_pDocumentListPanel)
 					{
-						debugLog(L"文档列表面板创建成功\n");
+						debugLog(L"Document List面板创建成功\n");
 						_pDocumentListPanel->setClosed(false);
 					}
 					else
@@ -1218,7 +1218,7 @@ void Notepad_plus::command(int id)
 			}
 			else
 			{
-				debugLog(L"文档列表面板不存在，准备创建\n");
+				debugLog(L"Document List面板不存在，准备创建\n");
 				checkMenuItem(IDM_VIEW_DOCUMENT_CATEGORY, true);
 				_toolBar.setCheck(IDM_VIEW_DOCUMENT_CATEGORY, true);
 				debugLog(L"调用launchDocumentListPanel()\n");
@@ -1228,7 +1228,7 @@ void Notepad_plus::command(int id)
 				debugLog(buffer);
 				if (_pDocumentListPanel)
 				{
-					debugLog(L"文档列表面板创建成功\n");
+					debugLog(L"Document List面板创建成功\n");
 					_pDocumentListPanel->setClosed(false);
 				}
 				else
@@ -3004,7 +3004,7 @@ void Notepad_plus::command(int id)
 
 				wstring summaryLabel = pNativeSpeaker->getLocalizedStrFromID("summary", L"Summary");
 
-				::MessageBox(_pPublicInterface->getHSelf(), characterNumber.c_str(), summaryLabel.c_str(), MB_OK|MB_APPLMODAL);
+				::MessageBoxW(_pPublicInterface->getHSelf(), characterNumber.c_str(), summaryLabel.c_str(), MB_OK|MB_APPLMODAL);
 			}
 		}
 		break;
@@ -3794,33 +3794,33 @@ void Notepad_plus::command(int id)
 
 		case IDM_SHOW_CONSOLE:
 		{
-			// 显示调试控制台
+			// Show Debug Console
 			// 检查控制台是否已经存在
 			HWND hConsoleWnd = GetConsoleWindow();
 			if (hConsoleWnd == NULL) {
 				// 控制台不存在，创建新的控制台
 				if (AllocConsole()) {
-					// 设置控制台编码为UTF-8，解决中文显示问号问题
+					// Set Console Encoding to UTF-8 to Solve Chinese Display Question Mark Issue
 					SetConsoleOutputCP(CP_UTF8);
 					SetConsoleCP(CP_UTF8);
-					// 重定向标准输出到控制台
+					// Redirect Standard Output to Console
 					freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 					freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
-					// 设置控制台标题
-					SetConsoleTitle(L"Notepad++ 调试控制台");
+					// Set Console Title
+					SetConsoleTitle(L"Notepad++ Debug Console");
 					
 					// 重新获取控制台句柄，确保它是有效的
 					HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 					if (hConsole != INVALID_HANDLE_VALUE && hConsole != NULL) {
 						DWORD charsWritten;
-						// 输出启动信息
-						WriteConsoleW(hConsole, L"=== Notepad++ 调试控制台已打开 ===\n", 
-							wcslen(L"=== Notepad++ 调试控制台已打开 ===\n"), &charsWritten, NULL);
+						// Output Startup Information
+						WriteConsoleW(hConsole, L"=== Notepad++ Debug Console已打开 ===\n", 
+							wcslen(L"=== Notepad++ Debug Console已打开 ===\n"), &charsWritten, NULL);
 						wchar_t versionMsg[256];
-						swprintf_s(versionMsg, 256, L"程序版本: %hs\n", "1.0.0");
+						swprintf_s(versionMsg, 256, L"Program Version: %hs\n", "1.0.0");
 						WriteConsoleW(hConsole, versionMsg, wcslen(versionMsg), &charsWritten, NULL);
 						wchar_t timeMsg[256];
-						swprintf_s(timeMsg, 256, L"编译时间: %hs\n\n", __DATE__ " " __TIME__);
+						swprintf_s(timeMsg, 256, L"Build Time: %hs\n\n", __DATE__ " " __TIME__);
 						WriteConsoleW(hConsole, timeMsg, wcslen(timeMsg), &charsWritten, NULL);
 						WriteConsoleW(hConsole, L"控制台已就绪，调试信息将显示在这里...\n", 
 							wcslen(L"控制台已就绪，调试信息将显示在这里...\n"), &charsWritten, NULL);
@@ -3925,7 +3925,7 @@ void Notepad_plus::command(int id)
 		case IDM_CMDLINEARGUMENTS:
 		{
 			// Not translatable
-			::MessageBox(_pPublicInterface->getHSelf(), COMMAND_ARG_HELP, L"Notepad++ Command Argument Help", MB_OK | MB_APPLMODAL);
+			::MessageBoxW(_pPublicInterface->getHSelf(), COMMAND_ARG_HELP, L"Notepad++ Command Argument Help", MB_OK | MB_APPLMODAL);
 			break;
 		}
 

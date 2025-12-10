@@ -43,10 +43,10 @@ bool MiniDumper::writeDump(EXCEPTION_POINTERS * pExceptionInfo)
 			wchar_t szDumpPath[MAX_PATH];
 			::GetModuleFileName(NULL, szDumpPath, MAX_PATH);
 			::PathRemoveFileSpec(szDumpPath);
-			wcscat_s(szDumpPath, L"\\NppDump.dmp");
+			wcscat_s(szDumpPath, MAX_PATH, L"\\NppDump.dmp");
 
 			// ask the user if they want to save a dump file
-			int msgret = ::MessageBox(NULL, L"Do you want to save a dump file?\r\nDoing so can aid in developing Notepad++.", msgTitle, MB_YESNO);
+			int msgret = ::MessageBoxW(NULL, L"Do you want to save a dump file?\r\nDoing so can aid in developing Notepad++.", msgTitle, MB_YESNO);
 			if (msgret == IDYES)
 			{
 				// create the file
@@ -95,7 +95,7 @@ bool MiniDumper::writeDump(EXCEPTION_POINTERS * pExceptionInfo)
 	}
 
 	if (szResult)
-		::MessageBox(NULL, szResult, msgTitle, MB_OK);
+		::MessageBoxW(NULL, szResult, msgTitle, MB_OK);
 
 	return retval;
 }

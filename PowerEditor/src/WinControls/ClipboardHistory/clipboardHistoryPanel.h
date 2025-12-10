@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "DockingDlgInterface.h"
+#include "../DockingWnd/DockingDlgInterface.h"
 #include "clipboardHistoryPanel_rc.h"
 #include <vector>
 

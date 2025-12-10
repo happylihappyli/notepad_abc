@@ -1,4 +1,4 @@
-﻿// This file is part of Notepad++ project
+// This file is part of Notepad++ project
 // Copyright (C)2021 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -334,7 +334,7 @@ const wchar_t FLAG_MONITOR_FILES[] = L"-monitor";
 void doException(Notepad_plus_Window & notepad_plus_plus)
 {
 	Win32Exception::removeHandler();	//disable exception handler after exception, we don't want corrupt data structures to crash the exception handler
-	::MessageBox(Notepad_plus_Window::gNppHWND, L"Notepad++ will attempt to save any unsaved data. However, data loss is very likely.", L"Recovery initiating", MB_OK | MB_ICONINFORMATION);
+	::MessageBoxW(Notepad_plus_Window::gNppHWND, L"Notepad++ will attempt to save any unsaved data. However, data loss is very likely.", L"Recovery initiating", MB_OK | MB_ICONINFORMATION);
 
 	wchar_t tmpDir[1024];
 	GetTempPath(1024, tmpDir);
@@ -346,10 +346,10 @@ void doException(Notepad_plus_Window & notepad_plus_plus)
 	{
 		std::wstring displayText = L"Notepad++ was able to successfully recover some unsaved documents, or nothing to be saved could be found.\r\nYou can find the results at :\r\n";
 		displayText += emergencySavedDir;
-		::MessageBox(Notepad_plus_Window::gNppHWND, displayText.c_str(), L"Recovery success", MB_OK | MB_ICONINFORMATION);
+		::MessageBoxW(Notepad_plus_Window::gNppHWND, displayText.c_str(), L"Recovery success", MB_OK | MB_ICONINFORMATION);
 	}
 	else
-		::MessageBox(Notepad_plus_Window::gNppHWND, L"Unfortunately, Notepad++ was not able to save your work. We are sorry for any lost data.", L"Recovery failure", MB_OK | MB_ICONERROR);
+		::MessageBoxW(Notepad_plus_Window::gNppHWND, L"Unfortunately, Notepad++ was not able to save your work. We are sorry for any lost data.", L"Recovery failure", MB_OK | MB_ICONERROR);
 }
 
 // Looks for -z arguments and strips command line arguments following those, if any
@@ -377,7 +377,7 @@ void stripIgnoredParams(ParamVector & params)
 
 std::chrono::steady_clock::time_point g_nppStartTimePoint{};
 
-// Windows版本检查函数 - 添加安全检查
+// Windows Version Check Function - Add Security Check
 static bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WORD wBuildNumber)
 {
     OSVERSIONINFOEXW osvi{};
@@ -394,44 +394,47 @@ static bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WO
     return VerifyVersionInfoW(&osvi, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, conditionMask);
 }
 
-// 安全的DPI感知设置
-static bool SetDPIAwarenessSafe()
-{
-    try {
-        // 检查Windows 10版本1803或更高版本支持SetProcessDpiAwarenessContext
-        if (IsWindowsVersionOrGreater(10, 0, 17134)) {
-            return SetDPIAwarenessSafe();
+    // Safe DPI Awareness Setting
+    static bool SetDPIAwarenessSafe()
+    {
+        try {
+            // Check if Windows 10 Version 1803 or Higher Supports SetProcessDpiAwarenessContext
+            if (IsWindowsVersionOrGreater(10, 0, 17134)) {
+                // Use Win32 API directly or dynamic loading
+                // Here we simplify, fallback to older method or do nothing if compilation fails
+                 SetProcessDPIAware();
+                 return true;
+            }
+            // For Older Versions, Use Compatibility Method
+            else {
+                SetProcessDPIAware();
+                return true;
+            }
         }
-        // 对于较旧版本，使用兼容性方法
-        else {
-            SetProcessDPIAware();
-            return true;
+        catch (...) {
+            // Silent Failure, Use Default Value
+            return false;
         }
     }
-    catch (...) {
-        // 静默失败，使用默认值
-        return false;
-    }
-}
 
 int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ PWSTR pCmdLine, _In_ int /*nShowCmd*/)
 {
-	// 控制台窗口默认不显示，可以通过Help菜单中的"显示调试控制台"来显示
-	// 如果需要默认显示，可以取消下面的注释
+	// 控制台窗口默认不显示，可以通过Help菜单中的"Show Debug Console"来显示
+	// 如果需要默认显示，可以Cancel下面的注释
 	/*
 	if (AllocConsole()) {
-		// 设置控制台编码为UTF-8，解决中文显示问号问题
+		// Set Console Encoding to UTF-8 to Solve Chinese Display Question Mark Issue
 		SetConsoleOutputCP(CP_UTF8);
 		SetConsoleCP(CP_UTF8);
-		// 重定向标准输出到控制台
+		// Redirect Standard Output to Console
 		freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 		freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
-		// 设置控制台标题
-		SetConsoleTitle(L"Notepad++ 调试控制台");
-		// 输出启动信息
-		wprintf(L"=== Notepad++ 调试模式启动 ===\n");
-		wprintf(L"程序版本: %hs\n", "1.0.0"); // 临时版本号
-		wprintf(L"编译时间: %hs\n\n", __DATE__ " " __TIME__);
+		// Set Console Title
+		SetConsoleTitle(L"Notepad++ Debug Console");
+		// Output Startup Information
+		wprintf(L"=== Notepad++ Debug Mode Started ===\n");
+		wprintf(L"Program Version: %hs\n", "1.0.0"); // Temporary Version Number
+		wprintf(L"Build Time: %hs\n\n", __DATE__ " " __TIME__);
 	}
 	*/
 
@@ -543,7 +546,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 	}
 
 	if (showHelp)
-		::MessageBox(NULL, COMMAND_ARG_HELP, L"Notepad++ Command Argument Help", MB_OK);
+		::MessageBoxW(NULL, COMMAND_ARG_HELP, L"Notepad++ Command Argument Help", MB_OK);
 
 	if (cmdLineParams._localizationPath != L"")
 	{
@@ -789,8 +792,8 @@ bool going = true;
 		wchar_t str[50] = L"God Damned Exception:";
 		wchar_t code[10];
 		wsprintf(code, L"%d", i);
-		wcscat_s(str, code);
-		::MessageBox(Notepad_plus_Window::gNppHWND, str, L"Int Exception", MB_OK);
+		wcscat_s(str, 50, code);
+		::MessageBoxW(Notepad_plus_Window::gNppHWND, str, L"Int Exception", MB_OK);
 		doException(notepad_plus_plus);
 	}
 	catch (std::runtime_error & ex)
@@ -803,7 +806,7 @@ bool going = true;
 		wchar_t message[1024];
 		wsprintf(message, L"An exception occurred. Notepad++ cannot recover and must be shut down.\r\nThe exception details are as follows:\r\n"
 			L"Code:\t0x%08X\r\nType:\t%S\r\nException address: 0x%p", ex.code(), ex.what(), ex.where());
-		::MessageBox(Notepad_plus_Window::gNppHWND, message, L"Win32Exception", MB_OK | MB_ICONERROR);
+		::MessageBoxW(Notepad_plus_Window::gNppHWND, message, L"Win32Exception", MB_OK | MB_ICONERROR);
 		mdump.writeDump(ex.info());
 		doException(notepad_plus_plus);
 	}

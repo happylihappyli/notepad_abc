@@ -48,7 +48,7 @@ public :
 		else
 		{
 			// clean Line Edit
-			::SetDlgItemText(_hSelf, ID_GOLINE_EDIT, L"");
+			::SetDlgItemTextW(_hSelf, ID_GOLINE_EDIT, L"");
 		}
 	};
 

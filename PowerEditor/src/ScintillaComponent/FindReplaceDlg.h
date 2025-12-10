@@ -20,9 +20,9 @@
 #include <map>
 #include "FindReplaceDlg_rc.h"
 #include "ScintillaEditView.h"
-#include "DockingDlgInterface.h"
+#include "../WinControls/DockingWnd/DockingDlgInterface.h"
 #include "BoostRegexSearch.h"
-#include "StatusBar.h"
+#include "../WinControls/StatusBar/StatusBar.h"
 
 #define FIND_RECURSIVE 1
 #define FIND_INHIDDENDIR 2
@@ -327,14 +327,14 @@ public :
 	bool isProjectPanel_3() const { return _env->_isProjectPanel_3; };
 	void saveFindHistory();
 	void changeTabName(DIALOG_TYPE index, const wchar_t *name2change) {
-		TCITEM tie{};
+		TCITEMW tie{};
 		tie.mask = TCIF_TEXT;
 		tie.pszText = (wchar_t *)name2change;
 		TabCtrl_SetItem(_tab.getHSelf(), index, &tie);
 
 		wchar_t label[MAX_PATH]{};
 		_tab.getCurrentTitle(label, MAX_PATH);
-		::SetWindowText(_hSelf, label);
+		::SetWindowTextW(_hSelf, label);
 	}
 	void beginNewFilesSearch()
 	{
