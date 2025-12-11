@@ -9,7 +9,7 @@
         {
             "description": "Programming相关的文件",
             "id": "programming",
-            "name": "Programming",
+            "name": "开发",
             "order": 1
         },
         {
@@ -51,6 +51,26 @@
         {
             "categoryId": "programming",
             "filePath": "E:\\GitHub3\\python\\check_rustdesk_server\\check2.py"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\main.zig"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\test_dll.zig"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-ai.txt"
+        },
+        {
+            "categoryId": "study",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-C++.txt"
         }
     ]
 }

@@ -713,8 +713,8 @@ intptr_t CALLBACK GeneralSubDlg::run_dlgProc(UINT message, WPARAM wParam, LPARAM
 						NativeLangSpeaker* pNativeSpeaker = nppParam.getNativeLangSpeaker();
 						pNativeSpeaker->messageBox("Need2Restart2ShowMenuShortcuts",
 							_hSelf,
-							L"Notepad++ needs to be restarted to show right menu shortcuts.",
-							L"Notepad++ need to be restarted",
+							L"Notepad_abc needs to be restarted to show right menu shortcuts.",
+							L"Notepad_abc need to be restarted",
 							MB_OK | MB_APPLMODAL);
 
 						isFirstShow = false;
@@ -2891,8 +2891,8 @@ intptr_t CALLBACK MarginsBorderEdgeSubDlg::run_dlgProc(UINT message, WPARAM wPar
 							NativeLangSpeaker* pNativeSpeaker = nppParam.getNativeLangSpeaker();
 							pNativeSpeaker->messageBox("ChangeHistoryEnabledWarning",
 								_hSelf,
-								L"You have to restart Notepad++ to enable Change History.",
-								L"Notepad++ needs to be relaunched",
+								L"You have to restart Notepad_abc to enable Change History.",
+								L"Notepad_abc needs to be relaunched",
 								MB_OK | MB_APPLMODAL);
 							
 							changeHistoryWarningHasBeenGiven = true;
@@ -2923,8 +2923,8 @@ intptr_t CALLBACK MarginsBorderEdgeSubDlg::run_dlgProc(UINT message, WPARAM wPar
 							NativeLangSpeaker* pNativeSpeaker = nppParam.getNativeLangSpeaker();
 							pNativeSpeaker->messageBox("ChangeHistoryEnabledWarning",
 								_hSelf,
-								L"You have to restart Notepad++ to enable Change History.",
-								L"Notepad++ needs to be relaunched",
+								L"You have to restart Notepad_abc to enable Change History.",
+								L"Notepad_abc needs to be relaunched",
 								MB_OK | MB_APPLMODAL);
 							
 							changeHistoryWarningHasBeenGiven = true;

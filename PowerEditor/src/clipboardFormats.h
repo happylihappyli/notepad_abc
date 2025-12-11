@@ -20,6 +20,6 @@
 
 #define CF_HTML			L"HTML Format"
 #define CF_RTF			L"Rich Text Format"
-#define CF_NPPTEXTLEN	L"Notepad++ Binary Length"
+#define CF_NPPTEXTLEN	L"Notepad_abc Binary Length"
 
 #endif //CLIPBOARDFORMATS_H

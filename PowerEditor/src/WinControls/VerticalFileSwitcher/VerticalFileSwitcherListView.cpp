@@ -140,7 +140,7 @@ void VerticalFileSwitcherListView::initList()
 	debugLog(L"VerticalFileSwitcherListView::initList() - 开始获取Document List信息");
 	debugLog(L"当前窗口句柄: %p", _hSelf);
 	debugLog(L"父窗口句柄: %p", _hParent);
-	debugLog(L"Notepad++ Main Window Handle: %p", nppHwnd);
+	debugLog(L"Notepad_abc Main Window Handle: %p", nppHwnd);
 	debugLog(L"WM_GETTASKLISTINFO消息值: %d", WM_GETTASKLISTINFO);
 	
 	// 检查窗口是否有效

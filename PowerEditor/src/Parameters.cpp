@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <time.h>
+#include <fstream>
+#include "SessionJSON.h"
 
 #include <shlobj.h>
 #include "Parameters.h"
@@ -454,7 +456,7 @@ static const WinMenuKeyDefinition winKeyDefs[] =
 	// The following two commands are not in menu if (nppGUI._doesExistUpdater == 0).
 	// They cannot be derived from menu then, only for this reason the text is specified here.
 	// In localized environments, the text comes preferably from xml Menu/Main/Commands.
-	{ VK_NULL,    IDM_UPDATE_NPP,                               false, false, false, L"Update Notepad++" },
+	{ VK_NULL,    IDM_UPDATE_NPP,                               false, false, false, L"Update Notepad_abc" },
 	{ VK_NULL,    IDM_CONFUPDATERPROXY,                         false, false, false, L"Set Updater Proxy..." },
 	{ VK_NULL,    IDM_DEBUGINFO,                                false, false, false, nullptr },
 	{ VK_F1,      IDM_ABOUT,                                    false, false, false, nullptr }
@@ -1162,7 +1164,7 @@ std::wstring NppParameters::getSettingsFolder()
 	if (settingsFolderPath.empty())
 		return _nppPath;
 
-	pathAppend(settingsFolderPath, L"Notepad++");
+	pathAppend(settingsFolderPath, L"Notepad_abc");
 	return settingsFolderPath;
 }
 
@@ -1215,7 +1217,7 @@ bool NppParameters::load()
 	{
 		_userPath = getSpecialFolderLocation(CSIDL_APPDATA);
 
-		pathAppend(_userPath, L"Notepad++");
+		pathAppend(_userPath, L"Notepad_abc");
 		if (!doesDirectoryExist(_userPath.c_str()))
 			::CreateDirectory(_userPath.c_str(), NULL);
 
@@ -1604,64 +1606,59 @@ bool NppParameters::load()
 	}
 
 	//----------------------------//
-	// session.xml : for per-user //
+	// session.json : for per-user //
 	//----------------------------//
 
-	pathAppend(_sessionPath, L"session.xml");
+	pathAppend(_sessionPath, L"session.json");
 
-	// Don't load session.xml if not required in order to speed up!!
+	// Don't load session.json if not required in order to speed up!!
 	const NppGUI & nppGUI = (NppParameters::getInstance()).getNppGUI();
 	if (nppGUI._rememberLastSession)
 	{
-		TiXmlDocument* pXmlSessionDoc = new TiXmlDocument(_sessionPath);
-
-		loadOkay = pXmlSessionDoc->LoadFile();
-		if (loadOkay)
+		std::ifstream i(_sessionPath);
+		if (i.is_open())
 		{
-			loadOkay = getSessionFromXmlTree(pXmlSessionDoc, _session);
+			try {
+				json j;
+				i >> j;
+				_session = j.get<Session>();
+				loadOkay = true;
+			} catch (...) {
+				loadOkay = false;
+			}
+			i.close();
 		}
-		
+		else
+		{
+			loadOkay = false;
+		}
+
 		if (!loadOkay)
 		{
-			wstring sessionInCaseOfCorruption_bak = _sessionPath;
-			sessionInCaseOfCorruption_bak += SESSION_BACKUP_EXT;
-			if (doesFileExist(sessionInCaseOfCorruption_bak.c_str()))
+			// Try to load from backup
+			wstring backupPath = _sessionPath;
+			backupPath += L".inCaseOfCorruption.bak";
+			
+			if (doesFileExist(backupPath.c_str()))
 			{
-				BOOL bFileSwapOk = false;
-				if (doesFileExist(_sessionPath.c_str()))
+				std::ifstream ib(backupPath);
+				if (ib.is_open())
 				{
-					// an invalid session.xml file exists
-					bFileSwapOk = ::ReplaceFile(_sessionPath.c_str(), sessionInCaseOfCorruption_bak.c_str(), nullptr,
-						REPLACEFILE_IGNORE_MERGE_ERRORS | REPLACEFILE_IGNORE_ACL_ERRORS, 0, 0);
+					try {
+						json j;
+						ib >> j;
+						_session = j.get<Session>();
+						loadOkay = true;
+					} catch (...) {
+						loadOkay = false;
+					}
+					ib.close();
 				}
-				else
-				{
-					// no session.xml file
-					bFileSwapOk = ::MoveFileEx(sessionInCaseOfCorruption_bak.c_str(), _sessionPath.c_str(),
-						MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH);
-				}
-
-				if (bFileSwapOk)
-				{
-					TiXmlDocument* pXmlSessionBackupDoc = new TiXmlDocument(_sessionPath);
-					loadOkay = pXmlSessionBackupDoc->LoadFile();
-					if (loadOkay)
-						loadOkay = getSessionFromXmlTree(pXmlSessionBackupDoc, _session);
-
-					delete pXmlSessionBackupDoc;
-				}
-
-				if (!loadOkay)
-					isAllLoaded = false; // either the backup file is also invalid or cannot be swapped with the session.xml
 			}
-			else
-			{
-				// no backup file
+
+			if (!loadOkay)
 				isAllLoaded = false;
-			}
 		}
-
-		delete pXmlSessionDoc;
 
 		for (size_t i = 0, len = _pXmlExternalLexerDoc.size() ; i < len ; ++i)
 			if (_pXmlExternalLexerDoc[i])
@@ -2319,10 +2316,20 @@ void NppParameters::setWorkingDir(const wchar_t * newPath)
 
 bool NppParameters::loadSession(Session& session, const wchar_t* sessionFileName, const bool bSuppressErrorMsg)
 {
-	TiXmlDocument* pXmlSessionDocument = new TiXmlDocument(sessionFileName);
-	bool loadOkay = pXmlSessionDocument->LoadFile();
-	if (loadOkay)
-		loadOkay = getSessionFromXmlTree(pXmlSessionDocument, session);
+	bool loadOkay = false;
+	std::ifstream i(sessionFileName);
+	if (i.is_open())
+	{
+		try {
+			json j;
+			i >> j;
+			session = j.get<Session>();
+			loadOkay = true;
+		} catch (...) {
+			loadOkay = false;
+		}
+		i.close();
+	}
 
 	if (!loadOkay && !bSuppressErrorMsg)
 	{
@@ -2333,7 +2340,6 @@ bool NppParameters::loadSession(Session& session, const wchar_t* sessionFileName
 			MB_OK);
 	}
 
-	delete pXmlSessionDocument;
 	return loadOkay;
 }
 
@@ -3652,128 +3658,43 @@ void NppParameters::writeSession(const Session & session, const wchar_t *fileNam
 	}
 
 	//
-	// Prepare for writing
-	//
-	TiXmlDocument* pXmlSessionDoc = new TiXmlDocument(sessionPathName);
-	TiXmlDeclaration* decl = new TiXmlDeclaration(L"1.0", L"UTF-8", L"");
-	pXmlSessionDoc->LinkEndChild(decl);
-	TiXmlNode *root = pXmlSessionDoc->InsertEndChild(TiXmlElement(L"NotepadPlus"));
-
-	if (root)
-	{
-		TiXmlNode *sessionNode = root->InsertEndChild(TiXmlElement(L"Session"));
-		(sessionNode->ToElement())->SetAttribute(L"activeView", static_cast<int32_t>(session._activeView));
-
-		struct ViewElem {
-			TiXmlNode *viewNode;
-			vector<sessionFileInfo> *viewFiles;
-			size_t activeIndex;
-		};
-		const int nbElem = 2;
-		ViewElem viewElems[nbElem];
-		viewElems[0].viewNode = sessionNode->InsertEndChild(TiXmlElement(L"mainView"));
-		viewElems[1].viewNode = sessionNode->InsertEndChild(TiXmlElement(L"subView"));
-		viewElems[0].viewFiles = (vector<sessionFileInfo> *)(&(session._mainViewFiles));
-		viewElems[1].viewFiles = (vector<sessionFileInfo> *)(&(session._subViewFiles));
-		viewElems[0].activeIndex = session._activeMainIndex;
-		viewElems[1].activeIndex = session._activeSubIndex;
-
-		for (size_t k = 0; k < nbElem ; ++k)
-		{
-			(viewElems[k].viewNode->ToElement())->SetAttribute(L"activeIndex", static_cast<int32_t>(viewElems[k].activeIndex));
-			vector<sessionFileInfo> & viewSessionFiles = *(viewElems[k].viewFiles);
-
-			for (size_t i = 0, len = viewElems[k].viewFiles->size(); i < len ; ++i)
-			{
-				TiXmlNode *fileNameNode = viewElems[k].viewNode->InsertEndChild(TiXmlElement(L"File"));
-
-				wchar_t szInt64[64];
-
-				(fileNameNode->ToElement())->SetAttribute(L"firstVisibleLine", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._firstVisibleLine), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"xOffset", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._xOffset), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"scrollWidth", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._scrollWidth), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"startPos", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._startPos), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"endPos", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._endPos), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"selMode", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._selMode), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"offset", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._offset), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"wrapCount", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._wrapCount), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"lang", viewSessionFiles[i]._langName.c_str());
-				(fileNameNode->ToElement())->SetAttribute(L"encoding", viewSessionFiles[i]._encoding);
-				(fileNameNode->ToElement())->SetAttribute(L"userReadOnly", (viewSessionFiles[i]._isUserReadOnly && !viewSessionFiles[i]._isMonitoring) ? L"yes" : L"no");
-				(fileNameNode->ToElement())->SetAttribute(L"filename", viewSessionFiles[i]._fileName.c_str());
-				(fileNameNode->ToElement())->SetAttribute(L"backupFilePath", viewSessionFiles[i]._backupFilePath.c_str());
-				(fileNameNode->ToElement())->SetAttribute(L"originalFileLastModifTimestamp", static_cast<int32_t>(viewSessionFiles[i]._originalFileLastModifTimestamp.dwLowDateTime));
-				(fileNameNode->ToElement())->SetAttribute(L"originalFileLastModifTimestampHigh", static_cast<int32_t>(viewSessionFiles[i]._originalFileLastModifTimestamp.dwHighDateTime));
-				(fileNameNode->ToElement())->SetAttribute(L"tabColourId", static_cast<int32_t>(viewSessionFiles[i]._individualTabColour));
-				(fileNameNode->ToElement())->SetAttribute(L"RTL", viewSessionFiles[i]._isRTL ? L"yes" : L"no");
-				(fileNameNode->ToElement())->SetAttribute(L"tabPinned", viewSessionFiles[i]._isPinned ? L"yes" : L"no");
-				// Save this info only when it's an untitled entry
-				if (viewSessionFiles[i]._isUntitledTabRenamed)
-					(fileNameNode->ToElement())->SetAttribute(L"untitleTabRenamed", L"yes");
-
-				// docMap 
-				(fileNameNode->ToElement())->SetAttribute(L"mapFirstVisibleDisplayLine", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._firstVisibleDisplayLine), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapFirstVisibleDocLine", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._firstVisibleDocLine), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapLastVisibleDocLine", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._lastVisibleDocLine), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapNbLine", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._nbLine), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapHigherPos", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._higherPos), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapWidth", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._width), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapHeight", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._height), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapKByteInDoc", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._KByteInDoc), szInt64, 10));
-				(fileNameNode->ToElement())->SetAttribute(L"mapWrapIndentMode", _i64tot(static_cast<LONGLONG>(viewSessionFiles[i]._mapPos._wrapIndentMode), szInt64, 10));
-				fileNameNode->ToElement()->SetAttribute(L"mapIsWrap", viewSessionFiles[i]._mapPos._isWrap ? L"yes" : L"no");
-
-				for (size_t j = 0, len = viewSessionFiles[i]._marks.size() ; j < len ; ++j)
-				{
-					size_t markLine = viewSessionFiles[i]._marks[j];
-					TiXmlNode *markNode = fileNameNode->InsertEndChild(TiXmlElement(L"Mark"));
-					markNode->ToElement()->SetAttribute(L"line", _ui64tot(static_cast<ULONGLONG>(markLine), szInt64, 10));
-				}
-
-				for (size_t j = 0, len = viewSessionFiles[i]._foldStates.size() ; j < len ; ++j)
-				{
-					size_t foldLine = viewSessionFiles[i]._foldStates[j];
-					TiXmlNode *foldNode = fileNameNode->InsertEndChild(TiXmlElement(L"Fold"));
-					foldNode->ToElement()->SetAttribute(L"line", _ui64tot(static_cast<ULONGLONG>(foldLine), szInt64, 10));
-				}
-			}
-		}
-
-		if (session._includeFileBrowser)
-		{
-			// Node structure and naming corresponds to config.xml
-			TiXmlNode* fileBrowserRootNode = sessionNode->InsertEndChild(TiXmlElement(L"FileBrowser"));
-			fileBrowserRootNode->ToElement()->SetAttribute(L"latestSelectedItem", session._fileBrowserSelectedItem.c_str());
-			for (const auto& fbRoot : session._fileBrowserRoots)
-			{
-				TiXmlNode *fileNameNode = fileBrowserRootNode->InsertEndChild(TiXmlElement(L"root"));
-				(fileNameNode->ToElement())->SetAttribute(L"foldername", fbRoot.c_str());
-			}
-		}
-	}
-
-	//
 	// Write the session file
 	//
-	bool sessionSaveOK = pXmlSessionDoc->SaveFile();
+	bool sessionSaveOK = false;
+	try {
+		json j = session;
+		std::ofstream o(sessionPathName);
+		if (o.is_open()) {
+			o << j.dump(4);
+			o.close();
+			sessionSaveOK = true;
+		}
+	} catch (...) {
+		sessionSaveOK = false;
+	}
 
 	//
 	// Double checking: prevent written session file corrupted while writting
 	//
 	if (sessionSaveOK)
 	{
-		TiXmlDocument* pXmlSessionCheck = new TiXmlDocument(sessionPathName);
-		sessionSaveOK = pXmlSessionCheck->LoadFile();
-		if (sessionSaveOK)
-		{
-			Session sessionCheck;
-			sessionSaveOK = getSessionFromXmlTree(pXmlSessionCheck, sessionCheck);
+		try {
+			std::ifstream i(sessionPathName);
+			if (i.is_open()) {
+				json j;
+				i >> j;
+				// Just parsing it is a good enough check for corruption
+				i.close();
+			} else {
+				sessionSaveOK = false;
+			}
+		} catch (...) {
+			sessionSaveOK = false;
 		}
-		delete pXmlSessionCheck;
 	}
 	else if (!isEndSessionCritical())
 	{
-		::MessageBoxW(nullptr, sessionPathName, L"Error of saving session XML file", MB_OK | MB_APPLMODAL | MB_ICONWARNING);
+		::MessageBoxW(nullptr, sessionPathName, L"Error of saving session JSON file", MB_OK | MB_APPLMODAL | MB_ICONWARNING);
 	}
 
 	//
@@ -3791,19 +3712,6 @@ void NppParameters::writeSession(const Session & session, const wchar_t *fileNam
 			ReplaceFile(sessionPathName, backupPathName, sessionPathNameFail2Load.c_str(), REPLACEFILE_IGNORE_MERGE_ERRORS | REPLACEFILE_IGNORE_ACL_ERRORS, 0, 0);
 		}
 	}
-	/*
-	 * Keep session backup file in case of corrupted session file
-	 * 
-	else
-	{
-		if (backupPathName[0]) // session backup file not useful, delete it
-		{
-			::DeleteFile(backupPathName);
-		}
-	}
-	*/
-
-	delete pXmlSessionDoc;
 }
 
 
@@ -3843,7 +3751,7 @@ void NppParameters::writeShortcuts()
 			// user can always go back to Notepad++ v8.5.2 and use the backup of shortcuts.xml 
 			_pNativeLangSpeaker->messageBox("MacroAndRunCmdlWarning",
 				nullptr,
-				L"Your Macro and Run commands saved in Notepad++ v.8.5.2 (or older) may not be compatible with the current version of Notepad++.\nPlease test those commands and, if needed, re-edit them.\n\nAlternatively, you can downgrade to Notepad++ v8.5.2 and restore your previous data.\nNotepad++ will backup your old \"shortcuts.xml\" and save it as \"shortcuts.xml.v8.5.2.backup\".\nRenaming \"shortcuts.xml.v8.5.2.backup\" -> \"shortcuts.xml\", your commands should be restored and work properly.",
+				L"Your Macro and Run commands saved in Notepad++ v.8.5.2 (or older) may not be compatible with the current version of Notepad_abc.\nPlease test those commands and, if needed, re-edit them.\n\nAlternatively, you can downgrade to Notepad++ v8.5.2 and restore your previous data.\nNotepad_abc will backup your old \"shortcuts.xml\" and save it as \"shortcuts.xml.v8.5.2.backup\".\nRenaming \"shortcuts.xml.v8.5.2.backup\" -> \"shortcuts.xml\", your commands should be restored and work properly.",
 				L"Macro and Run Commands Compatibility",
 				MB_OK | MB_APPLMODAL | MB_ICONWARNING);
 		}

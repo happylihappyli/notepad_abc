@@ -21,7 +21,7 @@
 #include <shlwapi.h>
 #include "MiniDumper.h"
 
-LPCTSTR msgTitle = L"Notepad++ crash analysis";
+LPCTSTR msgTitle = L"Notepad_abc crash analysis";
 
 MiniDumper::MiniDumper()
 {

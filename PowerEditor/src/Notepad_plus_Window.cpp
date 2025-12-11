@@ -98,7 +98,7 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	_hSelf = ::CreateWindowEx(
 		WS_EX_ACCEPTFILES | (_notepad_plus_plus_core._nativeLangSpeaker.isRTL() ? WS_EX_LAYOUTRTL : 0),
 		_className,
-		L"Notepad++",
+		L"Notepad_abc",
 		(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN),
 		// CreateWindowEx bug : set all 0 to walk around the problem
 		0, 0, 0, 0,
@@ -414,12 +414,12 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 			return wss.str();
 		};
 		
-		wss << L"Notepad++ initialization: " << formatDuration(std::chrono::duration_cast<std::chrono::milliseconds>(nppInitTime)) << std::endl;
+		wss << L"Notepad_abc initialization: " << formatDuration(std::chrono::duration_cast<std::chrono::milliseconds>(nppInitTime)) << std::endl;
 		wss << L"Plugins loading: " << formatDuration(std::chrono::duration_cast<std::chrono::milliseconds>(g_pluginsLoadingTime)) << std::endl;
 		wss << L"Last session loading: " << formatDuration(std::chrono::duration_cast<std::chrono::milliseconds>(sessionLoadingTime)) << std::endl;
 		wss << L"Command line params handling: " << formatDuration(std::chrono::duration_cast<std::chrono::milliseconds>(cmdlineParamsLoadingTime)) << std::endl;
 		wss << L"Total loading time: " << formatDuration(std::chrono::duration_cast<std::chrono::milliseconds>(nppInitTime + g_pluginsLoadingTime + sessionLoadingTime + cmdlineParamsLoadingTime));
-		::MessageBoxW(NULL, wss.str().c_str(), L"Notepad++ loading time (hh:mm:ss.ms)", MB_OK);
+		::MessageBoxW(NULL, wss.str().c_str(), L"Notepad_abc loading time (hh:mm:ss.ms)", MB_OK);
 	}
 
 	bool isSnapshotMode = nppGUI.isSnapshotMode();

@@ -334,22 +334,24 @@ const wchar_t FLAG_MONITOR_FILES[] = L"-monitor";
 void doException(Notepad_plus_Window & notepad_plus_plus)
 {
 	Win32Exception::removeHandler();	//disable exception handler after exception, we don't want corrupt data structures to crash the exception handler
-	::MessageBoxW(Notepad_plus_Window::gNppHWND, L"Notepad++ will attempt to save any unsaved data. However, data loss is very likely.", L"Recovery initiating", MB_OK | MB_ICONINFORMATION);
+	::MessageBoxW(Notepad_plus_Window::gNppHWND, L"Notepad_abc will attempt to save any unsaved data. However, data loss is very likely.", L"Recovery initiating", MB_OK | MB_ICONINFORMATION);
 
+	//create directory
 	wchar_t tmpDir[1024];
 	GetTempPath(1024, tmpDir);
 	std::wstring emergencySavedDir = tmpDir;
-	emergencySavedDir += L"\\Notepad++ RECOV";
+	emergencySavedDir += L"\\Notepad_abc RECOV";
 
 	bool res = notepad_plus_plus.emergency(emergencySavedDir);
+
 	if (res)
 	{
-		std::wstring displayText = L"Notepad++ was able to successfully recover some unsaved documents, or nothing to be saved could be found.\r\nYou can find the results at :\r\n";
+		std::wstring displayText = L"Notepad_abc was able to successfully recover some unsaved documents, or nothing to be saved could be found.\r\nYou can find the results at :\r\n";
 		displayText += emergencySavedDir;
 		::MessageBoxW(Notepad_plus_Window::gNppHWND, displayText.c_str(), L"Recovery success", MB_OK | MB_ICONINFORMATION);
 	}
 	else
-		::MessageBoxW(Notepad_plus_Window::gNppHWND, L"Unfortunately, Notepad++ was not able to save your work. We are sorry for any lost data.", L"Recovery failure", MB_OK | MB_ICONERROR);
+		::MessageBoxW(Notepad_plus_Window::gNppHWND, L"Unfortunately, Notepad_abc was not able to save your work. We are sorry for any lost data.", L"Recovery failure", MB_OK | MB_ICONERROR);
 }
 
 // Looks for -z arguments and strips command line arguments following those, if any
@@ -430,9 +432,9 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 		freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 		freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
 		// Set Console Title
-		SetConsoleTitle(L"Notepad++ Debug Console");
+		SetConsoleTitle(L"Notepad_abc Debug Console");
 		// Output Startup Information
-		wprintf(L"=== Notepad++ Debug Mode Started ===\n");
+		wprintf(L"=== Notepad_abc Debug Mode Started ===\n");
 		wprintf(L"Program Version: %hs\n", "1.0.0"); // Temporary Version Number
 		wprintf(L"Build Time: %hs\n\n", __DATE__ " " __TIME__);
 	}
@@ -546,7 +548,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance
 	}
 
 	if (showHelp)
-		::MessageBoxW(NULL, COMMAND_ARG_HELP, L"Notepad++ Command Argument Help", MB_OK);
+		::MessageBoxW(NULL, COMMAND_ARG_HELP, L"Notepad_abc Command Argument Help", MB_OK);
 
 	if (cmdLineParams._localizationPath != L"")
 	{
@@ -804,7 +806,7 @@ bool going = true;
 	catch (const Win32Exception & ex)
 	{
 		wchar_t message[1024];
-		wsprintf(message, L"An exception occurred. Notepad++ cannot recover and must be shut down.\r\nThe exception details are as follows:\r\n"
+		wsprintf(message, L"An exception occurred. Notepad_abc cannot recover and must be shut down.\r\nThe exception details are as follows:\r\n"
 			L"Code:\t0x%08X\r\nType:\t%S\r\nException address: 0x%p", ex.code(), ex.what(), ex.where());
 		::MessageBoxW(Notepad_plus_Window::gNppHWND, message, L"Win32Exception", MB_OK | MB_ICONERROR);
 		mdump.writeDump(ex.info());

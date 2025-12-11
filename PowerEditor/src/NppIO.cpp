@@ -742,7 +742,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 						{
 							_nativeLangSpeaker.messageBox("OpenInAdminModeFailed",
 								_pPublicInterface->getHSelf(),
-								L"Notepad++ cannot be opened in Administrator mode.",
+								L"Notepad_abc cannot be opened in Administrator mode.",
 								L"Open in Administrator mode failed",
 								MB_OK);
 						}
@@ -758,7 +758,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 
 					int openInAdminModeRes = _nativeLangSpeaker.messageBox("OpenInAdminModeWithoutCloseCurrent",
 						_pPublicInterface->getHSelf(),
-						L"The file cannot be saved and it may be protected.\rDo you want to launch Notepad++ in Administrator mode?",
+						L"The file cannot be saved and it may be protected.\rDo you want to launch Notepad_abc in Administrator mode?",
 						L"Save failed",
 						MB_YESNO);
 
@@ -786,7 +786,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 						{
 							_nativeLangSpeaker.messageBox("OpenInAdminModeFailed",
 								_pPublicInterface->getHSelf(),
-								L"Notepad++ cannot be opened in Administrator mode.",
+								L"Notepad_abc cannot be opened in Administrator mode.",
 								L"Open in Administrator mode failed",
 								MB_OK);
 						}

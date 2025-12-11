@@ -326,8 +326,8 @@ bool PluginsAdminDlg::exitToInstallRemovePlugins(Operation op, const vector<Plug
 	NativeLangSpeaker *pNativeSpeaker = nppParameters.getNativeLangSpeaker();
 	auto res = pNativeSpeaker->messageBox("ExitToUpdatePlugins",
 		_hSelf,
-		L"If you click YES, you will quit Notepad++ to continue the operations.\nNotepad++ will be restarted after all the operations are terminated.\nContinue?",
-		L"Notepad++ is about to exit",
+		L"If you click YES, you will quit Notepad_abc to continue the operations.\nNotepad_abc will be restarted after all the operations are terminated.\nContinue?",
+		L"Notepad_abc is about to exit",
 		MB_YESNO | MB_APPLMODAL);
 
 	if (res == IDYES)

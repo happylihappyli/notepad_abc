@@ -229,6 +229,8 @@ struct sessionFileInfo : public Position
 
 	sessionFileInfo(const std::wstring& fn) : _fileName(fn) {}
 
+	sessionFileInfo() = default;
+
 	std::wstring _fileName;
 	std::wstring _langName;
 	std::vector<size_t> _marks;

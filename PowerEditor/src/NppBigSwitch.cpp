@@ -2544,8 +2544,8 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		{
 			int answer = _nativeLangSpeaker.messageBox("WindowsSessionExit",
 				_pPublicInterface->getHSelf(),
-				L"Windows session is about to be terminated but you have some data unsaved. Do you want to exit Notepad++ now?",
-				L"Notepad++ - Windows session exit",
+				L"Windows session is about to be terminated but you have some data unsaved. Do you want to exit Notepad_abc now?",
+				L"Notepad_abc - Windows session exit",
 				MB_YESNO | MB_ICONQUESTION | MB_APPLMODAL);
 			if (answer == IDYES)
 				::PostMessage(_pPublicInterface->getHSelf(), WM_CLOSE, 0, 0);

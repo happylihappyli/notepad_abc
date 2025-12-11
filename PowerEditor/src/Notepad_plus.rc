@@ -1,4 +1,4 @@
-﻿// This file is part of Notepad++ project
+// This file is part of Notepad++ project
 // Copyright (C)2021 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -43,12 +43,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE    "CompanyName",        "Don HO don.h@free.fr\0"
-            VALUE    "FileDescription",    "Notepad++\0"
+            VALUE    "FileDescription",    "Notepad_abc\0"
             VALUE    "FileVersion",        VERSION_PRODUCT_VALUE
-            VALUE    "InternalName",       "notepad++.exe\0"
+            VALUE    "InternalName",       "notepad_abc.exe\0"
             VALUE    "LegalCopyright",     "Copyleft 1998-2023 by Don HO\0"
-            VALUE    "OriginalFilename",   "notepad++.exe\0"
-            VALUE    "ProductName",        "Notepad++\0"
+            VALUE    "OriginalFilename",   "notepad_abc.exe\0"
+            VALUE    "ProductName",        "Notepad_abc\0"
             VALUE    "ProductVersion",     VERSION_PRODUCT_VALUE
         END
     END
@@ -633,7 +633,7 @@ BEGIN
         MENUITEM "Character &Panel",         IDM_EDIT_CHAR_PANEL
         MENUITEM "Clipboard &History",       IDM_EDIT_CLIPBOARDHISTORY_PANEL
         MENUITEM SEPARATOR
-        MENUITEM "Read-Only in Notepad++",            IDM_EDIT_TOGGLEREADONLY
+        MENUITEM "Read-Only in Notepad_abc",            IDM_EDIT_TOGGLEREADONLY
         MENUITEM "Read-Only Attribute in Windows",    IDM_EDIT_TOGGLESYSTEMREADONLY
     END
 
@@ -1089,7 +1089,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Define your language...", IDM_LANG_USER_DLG
         MENUITEM "Open User Defined Language folder...",      IDM_LANG_OPENUDLDIR
-        MENUITEM "Notepad++ User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
+        MENUITEM "Notepad_abc User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
         MENUITEM "User-Defined",            IDM_LANG_USER
     END
 
@@ -1250,7 +1250,7 @@ BEGIN
     BEGIN
         MENUITEM "Define your language...",   IDM_LANG_USER_DLG
         MENUITEM "Open User Defined Language folder...",        IDM_LANG_OPENUDLDIR
-        MENUITEM "Notepad++ User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
+        MENUITEM "Notepad_abc User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
     END
     MENUITEM "User-Defined",              IDM_LANG_USER
     END
@@ -1339,17 +1339,17 @@ BEGIN
     BEGIN
         MENUITEM "Command Line Arguments...",      IDM_CMDLINEARGUMENTS
         MENUITEM SEPARATOR
-        MENUITEM "Notepad++ Home",                 IDM_HOMESWEETHOME
-        MENUITEM "Notepad++ Project Page",         IDM_PROJECTPAGE
-        MENUITEM "Notepad++ Online User Manual",   IDM_ONLINEDOCUMENT
-        MENUITEM "Notepad++ Community (Forum)",    IDM_FORUM
+        MENUITEM "Notepad_abc Home",                 IDM_HOMESWEETHOME
+        MENUITEM "Notepad_abc Project Page",         IDM_PROJECTPAGE
+        MENUITEM "Notepad_abc Online User Manual",   IDM_ONLINEDOCUMENT
+        MENUITEM "Notepad_abc Community (Forum)",    IDM_FORUM
         MENUITEM SEPARATOR
-        MENUITEM "Update Notepad++",               IDM_UPDATE_NPP
+        MENUITEM "Update Notepad_abc",               IDM_UPDATE_NPP
         MENUITEM "Set Updater Proxy...",           IDM_CONFUPDATERPROXY
         MENUITEM SEPARATOR
         MENUITEM "Debug Info...",                  IDM_DEBUGINFO
         MENUITEM "Show Debug Console",                  IDM_SHOW_CONSOLE
-        MENUITEM "About Notepad++",                IDM_ABOUT
+        MENUITEM "About Notepad_abc",                IDM_ABOUT
     END
 
     MENUITEM "＋",               IDM_FILE_NEW, HELP
@@ -1383,7 +1383,7 @@ BEGIN
     CONTROL         "", IDI_NPPABOUT_LOGO,"Static",SS_OWNERDRAW,10,5,128,128
     LTEXT           NOTEPAD_PLUS_VERSION, IDC_STATIC,85,25,140,11
     LTEXT           "bit",IDC_VERSION_BIT,160,25,140,11
-	LTEXT           "Notepad++ happy version", IDC_AUTHOR_NAME, 85, 38, 130, 10
+	LTEXT           "Notepad_abc happy version", IDC_AUTHOR_NAME, 85, 38, 130, 10
     //LTEXT           "Home:",IDC_STATIC,21,58,47,8
     //LTEXT           "https://notepad-plus-plus.org/",IDC_HOME_ADDR,50,56,126,10
     GROUPBOX        "使用说明",IDC_STATIC,20,75,230,138,BS_CENTER

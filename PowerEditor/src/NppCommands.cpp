@@ -3490,7 +3490,7 @@ void Notepad_plus::command(int id)
 		case IDM_SETTING_IMPORTPLUGIN :
         {
 			// Copy plugins to Plugins Home
-            const wchar_t *extFilterName = L"Notepad++ plugin";
+            const wchar_t *extFilterName = L"Notepad_abc plugin";
             const wchar_t *extFilter = L".dll";
             vector<wstring> copiedFiles = addNppPlugins(extFilterName, extFilter);
 
@@ -3500,8 +3500,8 @@ void Notepad_plus::command(int id)
 				NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
 				pNativeSpeaker->messageBox("NeedToRestartToLoadPlugins",
 					_pPublicInterface->getHSelf(),
-					L"You have to restart Notepad++ to load plugins you installed.",
-					L"Notepad++ needs to be relaunched",
+					L"You have to restart Notepad_abc to load plugins you installed.",
+					L"Notepad_abc needs to be relaunched",
 					MB_OK | MB_APPLMODAL);
 			}
             break;
@@ -3510,7 +3510,7 @@ void Notepad_plus::command(int id)
         case IDM_SETTING_IMPORTSTYLETHEMES :
         {
             // get plugin source path
-            const wchar_t *extFilterName = L"Notepad++ style theme";
+            const wchar_t *extFilterName = L"Notepad_abc style theme";
             const wchar_t *extFilter = L".xml";
             const wchar_t *destDir = L"themes";
 
@@ -3583,7 +3583,7 @@ void Notepad_plus::command(int id)
         {
 			_nativeLangSpeaker.messageBox("ContextMenuXmlEditWarning",
 				_pPublicInterface->getHSelf(),
-				L"Editing contextMenu.xml allows you to modify your Notepad++ popup context menu on edit zone.\rYou have to restart your Notepad++ to take effect after modifying contextMenu.xml.",
+				L"Editing contextMenu.xml allows you to modify your Notepad_abc popup context menu on edit zone.\rYou have to restart your Notepad_abc to take effect after modifying contextMenu.xml.",
 				L"Editing contextMenu",
 				MB_OK|MB_APPLMODAL);
 
@@ -3807,15 +3807,15 @@ void Notepad_plus::command(int id)
 					freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 					freopen_s((FILE**)stderr, "CONOUT$", "w", stderr);
 					// Set Console Title
-					SetConsoleTitle(L"Notepad++ Debug Console");
+					SetConsoleTitle(L"Notepad_abc Debug Console");
 					
 					// 重新获取控制台句柄，确保它是有效的
 					HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 					if (hConsole != INVALID_HANDLE_VALUE && hConsole != NULL) {
 						DWORD charsWritten;
 						// Output Startup Information
-						WriteConsoleW(hConsole, L"=== Notepad++ Debug Console已打开 ===\n", 
-							wcslen(L"=== Notepad++ Debug Console已打开 ===\n"), &charsWritten, NULL);
+						WriteConsoleW(hConsole, L"=== Notepad_abc Debug Console已打开 ===\n", 
+							wcslen(L"=== Notepad_abc Debug Console已打开 ===\n"), &charsWritten, NULL);
 						wchar_t versionMsg[256];
 						swprintf_s(versionMsg, 256, L"Program Version: %hs\n", "1.0.0");
 						WriteConsoleW(hConsole, versionMsg, wcslen(versionMsg), &charsWritten, NULL);
@@ -3925,7 +3925,7 @@ void Notepad_plus::command(int id)
 		case IDM_CMDLINEARGUMENTS:
 		{
 			// Not translatable
-			::MessageBoxW(_pPublicInterface->getHSelf(), COMMAND_ARG_HELP, L"Notepad++ Command Argument Help", MB_OK | MB_APPLMODAL);
+			::MessageBoxW(_pPublicInterface->getHSelf(), COMMAND_ARG_HELP, L"Notepad_abc Command Argument Help", MB_OK | MB_APPLMODAL);
 			break;
 		}
 
@@ -3944,8 +3944,8 @@ void Notepad_plus::command(int id)
 			{
 				long res = _nativeLangSpeaker.messageBox("XpUpdaterProblem",
 					_pPublicInterface->getHSelf(),
-					L"Notepad++ updater is not compatible with XP due to the obsolete security layer under XP.\rDo you want to go to Notepad++ page to download the latest version?",
-					L"Notepad++ Updater",
+					L"Notepad_abc updater is not compatible with XP due to the obsolete security layer under XP.\rDo you want to go to Notepad_abc page to download the latest version?",
+					L"Notepad_abc Updater",
 					MB_YESNO);
 
 				if (res == IDYES)
@@ -3978,7 +3978,7 @@ void Notepad_plus::command(int id)
 						{
 							_nativeLangSpeaker.messageBox("GUpProxyConfNeedAdminMode",
 								_pPublicInterface->getHSelf(),
-								L"Please relaunch Notepad++ in Admin mode to configure proxy.",
+								L"Please relaunch Notepad_abc in Admin mode to configure proxy.",
 								L"Proxy Settings",
 								MB_OK | MB_APPLMODAL);
 							return;

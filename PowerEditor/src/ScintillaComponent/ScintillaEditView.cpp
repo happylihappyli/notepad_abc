@@ -202,7 +202,7 @@ void ScintillaEditView::init(HINSTANCE hInst, HWND hPere)
 	_hSelf = ::CreateWindowEx(
 					0,\
 					L"Scintilla",\
-					L"Notepad++",\
+					L"Notepad_abc",\
 					WS_CHILD | WS_VSCROLL | WS_HSCROLL | WS_CLIPCHILDREN | WS_EX_RTLREADING,\
 					0, 0, 100, 100,\
 					_hParent,\
@@ -4451,7 +4451,7 @@ void ScintillaEditView::changeTextDirection(bool isRTL)
 		{
 			(nppParamInst.getNativeLangSpeaker())->messageBox("RTLvsDirectWrite",
 				getHSelf(),
-				L"RTL is not compatible with Direct Write mode. Please disable DirectWrite mode in MISC. section of Preferences dialog, and restart Notepad++.",
+				L"RTL is not compatible with Direct Write mode. Please disable DirectWrite mode in MISC. section of Preferences dialog, and restart Notepad_abc.",
 				L"Cannot run RTL",
 				MB_OK | MB_APPLMODAL);
 

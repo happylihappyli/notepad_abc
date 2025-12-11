@@ -138,7 +138,7 @@ void Win32_IO_File::close()
 						curFilePath = pathbuf;
 					}
 
-					std::wstring errMsg = L"Notepad++ has encountered a serious system problem while saving:\n\n";
+					std::wstring errMsg = L"Notepad_abc has encountered a serious system problem while saving:\n\n";
 					errMsg += curFilePath;
 					errMsg += L"\n\nThat file, temporarily stored in the system cache, cannot be finally committed to the storage device selected! \
 This is probably a storage driver or hardware issue, beyond the control of the Notepad++. \

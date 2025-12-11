@@ -20,9 +20,9 @@
 
 
 
-const wchar_t* nppName   = L"Notepad++_file";
-const wchar_t* nppBackup = L"Notepad++_backup";
-const wchar_t* nppDoc    = L"Notepad++ Document";
+const wchar_t* nppName   = L"Notepad_abc_file";
+const wchar_t* nppBackup = L"Notepad_abc_backup";
+const wchar_t* nppDoc    = L"Notepad_abc Document";
 
 const int nbSupportedLang = 10;
 const int nbExtMax = 28;

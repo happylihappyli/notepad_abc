@@ -1574,7 +1574,7 @@ BufferID FileManager::newPlaceholderDocument(const wchar_t* missingFilename, int
 			res = (nppParamInst.getNativeLangSpeaker())->messageBox(
 				"FileInaccessibleDefaultSessionXml",
 				_pNotepadPlus->_pEditView->getHSelf(),
-				L"Some files from your past session are inaccessible. They can be opened as empty and read-only documents as placeholders.\n\nWould you like to create those placeholders?\n\nNOTE: Choosing not to create the placeholders or closing them later, your session WILL BE MODIFIED ON EXIT! We suggest you backup your \"session.xml\" now.",
+				L"Some files from your past session are inaccessible. They can be opened as empty and read-only documents as placeholders.\n\nWould you like to create those placeholders?\n\nNOTE: Choosing not to create the placeholders or closing them later, your session WILL BE MODIFIED ON EXIT! We suggest you backup your \"session.json\" now.",
 				L"File inaccessible",
 				MB_YESNO | MB_APPLMODAL);
 		}
@@ -1743,7 +1743,7 @@ bool FileManager::loadFileData(Document doc, int64_t fileSize, const wchar_t * f
 		{
 			pNativeSpeaker->messageBox("FileTooBigToOpen",
 				_pNotepadPlus->_pEditView->getHSelf(),
-				L"File is too big to be opened by Notepad++",
+				L"File is too big to be opened by Notepad_abc",
 				L"File size problem",
 				MB_OK | MB_APPLMODAL);
 
@@ -1935,7 +1935,7 @@ bool FileManager::loadFileData(Document doc, int64_t fileSize, const wchar_t * f
 			{
 				pNativeSpeaker->messageBox("FileMemoryAllocationFailed",
 					_pNotepadPlus->_pEditView->getHSelf(),
-					L"There is probably not enough contiguous free memory for the file being loaded by Notepad++.",
+					L"There is probably not enough contiguous free memory for the file being loaded by Notepad_abc.",
 					L"Exception: File memory allocation failed",
 					MB_OK | MB_APPLMODAL);
 			}
