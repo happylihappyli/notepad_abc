@@ -117,6 +117,10 @@ public:
 	void onFileCategoryChange(const std::wstring& categoryName);
 	void onTabColorChange(int colorIndex);
 
+	int getCategoryColumnIndex() const;
+
+	std::wstring translateCategoryNameForDisplay(const std::wstring& name) const;
+
 	// 获取文件Category Name（带自动分类逻辑）
 	std::wstring getFileCategoryName(const std::wstring& filePath);
 	

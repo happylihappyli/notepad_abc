@@ -1255,19 +1255,19 @@ BEGIN
     MENUITEM "User-Defined",              IDM_LANG_USER
     END
 
-    POPUP "Se&ttings"
+    POPUP "设置(&S)"
     BEGIN
-        MENUITEM "Preferences...",          IDM_SETTING_PREFERENCE
-        MENUITEM "Style Configurator...",   IDM_LANGSTYLE_CONFIG_DLG
-        MENUITEM "Shortcut Mapper...",      IDM_SETTING_SHORTCUT_MAPPER
+        MENUITEM "首选项...",                IDM_SETTING_PREFERENCE
+        MENUITEM "样式配置...",             IDM_LANGSTYLE_CONFIG_DLG
+        MENUITEM "快捷键映射...",           IDM_SETTING_SHORTCUT_MAPPER
         MENUITEM SEPARATOR
-        POPUP "Import"
+        POPUP "导入"
         BEGIN
-            MENUITEM "Import plugin(s)...",         IDM_SETTING_IMPORTPLUGIN
-            MENUITEM "Import style theme(s)...",    IDM_SETTING_IMPORTSTYLETHEMES
+            MENUITEM "导入插件...",                 IDM_SETTING_IMPORTPLUGIN
+            MENUITEM "导入样式主题...",             IDM_SETTING_IMPORTSTYLETHEMES
         END
         MENUITEM SEPARATOR
-        MENUITEM "Edit Popup ContextMenu",      IDM_SETTING_EDITCONTEXTMENU
+        MENUITEM "编辑右键上下文菜单",          IDM_SETTING_EDITCONTEXTMENU
     END
 
     POPUP "T&ools"

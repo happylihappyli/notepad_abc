@@ -441,11 +441,10 @@ void VerticalFileSwitcherListView::reload()
 			std::wstring filePath = fileNameStatus._fn;
 			std::wstring fileCategoryName = getFileCategoryName(filePath);
 			
-			// Correctly calculate category column index: if extension column is hidden, category column is the second column
-			int categoryColIndex = isExtColumn ? 2 : 1;
-			ListView_SetItemText(_hSelf, itemIndex, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
-			debugLog(L"VerticalFileSwitcherListView::reload - 为文件 %s Set category列数据: %s", filePath.c_str(), fileCategoryName.c_str());
-		}
+            int categoryColIndex = getCategoryColumnIndex();
+            ListView_SetItemText(_hSelf, itemIndex, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
+            debugLog(L"VerticalFileSwitcherListView::reload - 为文件 %s Set category列数据: %s", filePath.c_str(), fileCategoryName.c_str());
+        }
 		// Comment out path column data setting to ensure only three columns are displayed
 		
 		itemIndex++;
@@ -544,12 +543,11 @@ void VerticalFileSwitcherListView::setItemIconStatus(BufferID bufferID)
 				std::wstring filePath = tlfs->_fn;
 				std::wstring fileCategoryName = getFileCategoryName(filePath);
 				
-				// Correctly calculate category column index: if extension column is hidden, category column is the second column
-				int categoryColIndex = isExtColumn ? 2 : 1;
-				
-				// Debug log: Check category column data setting
-				debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 文件: %s, Category Name: %s, Category Column Index: %d, 扩展名列状态: %d", 
-					filePath.c_str(), fileCategoryName.c_str(), categoryColIndex, isExtColumn);
+                int categoryColIndex = getCategoryColumnIndex();
+                
+                // Debug log: Check category column data setting
+                debugLog(L"VerticalFileSwitcherListView::setItemIconStatus - 文件: %s, Category Name: %s, Category Column Index: %d, 扩展名列状态: %d", 
+                    filePath.c_str(), fileCategoryName.c_str(), categoryColIndex, isExtColumn);
 				
 				// 检查是否错误地设置了扩展名
 				std::wstring ext = ::PathFindExtension(filePath.c_str());
@@ -665,9 +663,8 @@ int VerticalFileSwitcherListView::add(BufferID bufferID, int iView)
 		std::wstring filePath = buf->getFullPathName();
 		std::wstring fileCategoryName = getFileCategoryName(filePath);
 		
-		// Correctly calculate category column index: if extension column is hidden, category column is the second column
-		int categoryColIndex = isExtColumn ? 2 : 1;
-		ListView_SetItemText(_hSelf, _currentIndex, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
+        int categoryColIndex = getCategoryColumnIndex();
+        ListView_SetItemText(_hSelf, _currentIndex, categoryColIndex, (LPWSTR)fileCategoryName.c_str());
 	}
 	
 	selectCurrentItem();
@@ -853,14 +850,14 @@ void VerticalFileSwitcherListView::initContextMenu(HMENU hGlobalMenu)
         
         // 添加Tab Color子菜单
         HMENU hTabColorMenu = ::CreatePopupMenu();
-        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 0, L"Red Tab");
-        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 1, L"Green Tab");
-        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 2, L"Blue Tab");
-        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 3, L"Yellow Tab");
-        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 4, L"Purple Tab");
+        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 0, L"红色标签");
+        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 1, L"绿色标签");
+        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 2, L"蓝色标签");
+        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 3, L"黄色标签");
+        ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 4, L"紫色标签");
         
         // 添加Tab Color菜单项
-        ::AppendMenu(_hContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"Tab Color");
+        ::AppendMenu(_hContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"标签颜色");
         
         // Add Category选择子菜单（仅在File List Right-Click Menu中显示）
         HMENU hCategoryMenu = ::CreatePopupMenu();
@@ -874,17 +871,18 @@ void VerticalFileSwitcherListView::initContextMenu(HMENU hGlobalMenu)
             for (size_t i = 0; i < categories.size(); ++i)
             {
                 UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
-                BOOL result = ::AppendMenu(hCategoryMenu, MF_STRING, menuId, categories[i].name.c_str());
+                std::wstring displayName = translateCategoryNameForDisplay(categories[i].name);
+                BOOL result = ::AppendMenu(hCategoryMenu, MF_STRING, menuId, displayName.c_str());
                 if (result)
                 {
                     debugLog(L"VerticalFileSwitcherListView::initContextMenu - 成功Add Category菜单项: %s (ID: %d)", 
-                        categories[i].name.c_str(), menuId);
+                        displayName.c_str(), menuId);
                 }
                 else
                 {
                     DWORD error = ::GetLastError();
                     debugLog(L"VerticalFileSwitcherListView::initContextMenu - Add Category菜单项失败: %s (ID: %d)，错误码: %d", 
-                        categories[i].name.c_str(), menuId, error);
+                        displayName.c_str(), menuId, error);
                 }
             }
         }
@@ -894,7 +892,7 @@ void VerticalFileSwitcherListView::initContextMenu(HMENU hGlobalMenu)
         }
         
         // 添加Document Category菜单项（仅在File List Right-Click Menu中显示）
-        BOOL menuResult = ::AppendMenu(_hContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"Document Category");
+        BOOL menuResult = ::AppendMenu(_hContextMenu, MF_STRING | MF_POPUP, (UINT_PTR)hCategoryMenu, L"文件分类");
         if (menuResult)
         {
             debugLog(L"VerticalFileSwitcherListView::initContextMenu - 成功添加Document Category子菜单");
@@ -906,10 +904,10 @@ void VerticalFileSwitcherListView::initContextMenu(HMENU hGlobalMenu)
         }
         
         ::AppendMenu(_hContextMenu, MF_SEPARATOR, 0, NULL);
-        ::AppendMenu(_hContextMenu, MF_STRING, 1001, L"Open File Location");
-        ::AppendMenu(_hContextMenu, MF_STRING, 1002, L"Copy File Path");
+        ::AppendMenu(_hContextMenu, MF_STRING, 1001, L"打开文件所在目录");
+        ::AppendMenu(_hContextMenu, MF_STRING, 1002, L"复制文件路径");
         ::AppendMenu(_hContextMenu, MF_SEPARATOR, 0, NULL);
-        ::AppendMenu(_hContextMenu, MF_STRING, IDM_EDIT_CATEGORY_JSON, L"Edit File Category JSON File");
+        ::AppendMenu(_hContextMenu, MF_STRING, IDM_EDIT_CATEGORY_JSON, L"编辑文件分类JSON文件");
     }
 }
 
@@ -978,6 +976,7 @@ std::wstring VerticalFileSwitcherListView::getFileCategoryName(const std::wstrin
 		fileCategoryName = L"Uncategorized";
 	}
 	
+	fileCategoryName = translateCategoryNameForDisplay(fileCategoryName);
 	return fileCategoryName;
 }
 
@@ -990,10 +989,7 @@ void VerticalFileSwitcherListView::onFileCategoryChange(const std::wstring& cate
         return;
     
     // OKCategory Column Index
-    bool isExtColumn = true;  // 总是Display extension列
-    int categoryColIndex = 1; // 默认第二列
-    if (isExtColumn)
-        categoryColIndex = 2; // 如果有扩展名列，分类列是第三列
+    int categoryColIndex = getCategoryColumnIndex();
     
     // Set category and update display for each selected file
     for (const auto& fileInfo : selectedFiles)
@@ -1028,13 +1024,12 @@ void VerticalFileSwitcherListView::onFileCategoryChange(const std::wstring& cate
                 if (tlfs && tlfs->_bufID == fileInfo._bufID)
                 {
                     // Update category column display
-                    std::wstring displayCategoryName = categoryName;
-                    if (categoryName == L"All")
-                    {
-                        // 如果Clear category，显示Default Category名称
-                        displayCategoryName = _categoryManager->getDefaultCategoryName();
-                    }
-                    ListView_SetItemText(_hSelf, i, categoryColIndex, const_cast<LPWSTR>(displayCategoryName.c_str()));
+					std::wstring displayCategoryName = translateCategoryNameForDisplay(categoryName);
+					if (categoryName == L"All")
+					{
+						displayCategoryName = translateCategoryNameForDisplay(_categoryManager->getDefaultCategoryName());
+					}
+					ListView_SetItemText(_hSelf, i, categoryColIndex, const_cast<LPWSTR>(displayCategoryName.c_str()));
                     debugLog(L"VerticalFileSwitcherListView::onFileCategoryChange - 更新文件 %s 的分类列为: %s", 
                         filePath.c_str(), displayCategoryName.c_str());
                     break;
@@ -1048,6 +1043,13 @@ void VerticalFileSwitcherListView::onFileCategoryChange(const std::wstring& cate
     
     debugLog(L"VerticalFileSwitcherListView::onFileCategoryChange - 已为%d个文件Set category: %s", 
         selectedFiles.size(), categoryName.c_str());
+}
+
+int VerticalFileSwitcherListView::getCategoryColumnIndex() const
+{
+    HWND colHeader = reinterpret_cast<HWND>(SendMessage(_hSelf, LVM_GETHEADER, 0, 0));
+    int columnCount = static_cast<int32_t>(SendMessage(colHeader, HDM_GETITEMCOUNT, 0, 0));
+    return (columnCount >= 3) ? 2 : 1;
 }
 
 // 处理Tab Color变更
@@ -1075,4 +1077,16 @@ void VerticalFileSwitcherListView::onTabColorChange(int colorIndex)
     
     debugLog(L"VerticalFileSwitcherListView::onTabColorChange - 已为%d个文件设置Tab Color: %d", 
         selectedFiles.size(), colorIndex);
+}
+
+// 函数说明：将内部分类英文名称转换为中文显示名称，仅影响界面显示不改变内部逻辑标识
+std::wstring VerticalFileSwitcherListView::translateCategoryNameForDisplay(const std::wstring& name) const
+{
+    if (name == L"All") return L"全部";
+    if (name == L"Default Category") return L"默认分类";
+    if (name == L"Programming") return L"编程";
+    if (name == L"Work Files") return L"工作文件";
+    if (name == L"Configuration Files") return L"配置文件";
+    if (name == L"Uncategorized") return L"未分类";
+    return name;
 }

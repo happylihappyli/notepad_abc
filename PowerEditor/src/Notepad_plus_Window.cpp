@@ -62,6 +62,9 @@ void Notepad_plus_Window::setStartupBgColor(COLORREF BgColor)
 }
 
 
+// 函数说明：初始化主窗口，注册窗口类、创建主窗口、恢复界面状态，
+// 并完成资源扫描（包括本地化语言与主题）。其中本地化语言扫描在
+// nppDir\localization 不存在时回退到 installer\nativeLang。
 void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdLine, CmdLineParams *cmdLineParams)
 {
 	Window::init(hInst, parent);
@@ -206,9 +209,17 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	std::wstring localizationDir = nppDir;
 	pathAppend(localizationDir, L"localization\\");
 
-	_notepad_plus_plus_core.getMatchedFileNames(localizationDir.c_str(), 0, patterns, fileNames, false, false);
-	for (size_t i = 0, len = fileNames.size(); i < len; ++i)
-		localizationSwitcher.addLanguageFromXml(fileNames[i]);
+    _notepad_plus_plus_core.getMatchedFileNames(localizationDir.c_str(), 0, patterns, fileNames, false, false);
+    for (size_t i = 0, len = fileNames.size(); i < len; ++i)
+        localizationSwitcher.addLanguageFromXml(fileNames[i]);
+    if (fileNames.empty())
+    {
+        std::wstring installerNativeLangDir = nppDir;
+        pathAppend(installerNativeLangDir, L"installer\\nativeLang\\");
+        _notepad_plus_plus_core.getMatchedFileNames(installerNativeLangDir.c_str(), 0, patterns, fileNames, false, false);
+        for (size_t i = 0, len = fileNames.size(); i < len; ++i)
+            localizationSwitcher.addLanguageFromXml(fileNames[i]);
+    }
 
 	fileNames.clear();
 	ThemeSwitcher & themeSwitcher = nppParams.getThemeSwitcher();

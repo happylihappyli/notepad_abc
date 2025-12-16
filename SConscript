@@ -400,6 +400,7 @@ rc_files = [
     os.path.join(src_dir, 'ScintillaComponent', 'FindReplaceDlg.rc'),
     os.path.join(src_dir, 'WinControls', 'DockingWnd', 'DockingGUIWidget.rc'),
     os.path.join(src_dir, 'WinControls', 'FunctionList', 'functionListPanel.rc'),
+    os.path.join(src_dir, 'WinControls', 'Preference', 'preference.rc'),
     os.path.join(src_dir, 'WinControls', 'VerticalFileSwitcher', 'VerticalFileSwitcher.rc'),
 ]
 
@@ -502,7 +503,7 @@ config_files = [
 ]
 
 def copy_config_files(target, source, env):
-    """复制配置文件到输出目录"""
+    """复制配置与本地化文件到输出目录"""
     print("复制配置文件到bin目录...")
     for config_file in config_files:
         if os.path.exists(config_file):
@@ -512,6 +513,26 @@ def copy_config_files(target, source, env):
             print(f"  复制成功: {os.path.basename(config_file)}")
         else:
             print(f"  警告: 配置文件不存在: {config_file}")
+    # 复制本地化语言XML到 bin\\localization
+    localization_src_dir = os.path.join(project_root, 'PowerEditor', 'installer', 'nativeLang')
+    localization_dest_dir = os.path.join(bin_dir, 'localization')
+    try:
+        if os.path.isdir(localization_src_dir):
+            os.makedirs(localization_dest_dir, exist_ok=True)
+            import glob
+            import shutil
+            xml_list = glob.glob(os.path.join(localization_src_dir, '*.xml'))
+            if xml_list:
+                for xml_path in xml_list:
+                    dest_xml = os.path.join(localization_dest_dir, os.path.basename(xml_path))
+                    shutil.copy2(xml_path, dest_xml)
+                print(f"  本地化语言文件已复制: {len(xml_list)} 个 -> {localization_dest_dir}")
+            else:
+                print("  警告: 未在installer\\nativeLang中找到任何XML语言文件")
+        else:
+            print(f"  警告: 本地化源目录不存在: {localization_src_dir}")
+    except Exception as e:
+        print(f"  错误: 复制本地化文件失败: {e}")
 
 # 添加后构建操作
 env.AddPostAction(program, copy_config_files)

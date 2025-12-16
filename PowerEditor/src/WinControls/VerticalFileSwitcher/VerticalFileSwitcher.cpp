@@ -131,15 +131,21 @@ void VerticalFileSwitcher::showCategoryMenu()
 				::AppendMenu(hCategoryMenu, MF_SEPARATOR, 0, NULL);
 				
 				// 添加所有分类
-				for (const auto& category : categories)
-				{
-					wstring menuText = category.name;
-					if (category.description != L"")
-					{
-						menuText += L" (" + category.description + L")";
-					}
-					::AppendMenu(hCategoryMenu, MF_STRING, menuItemID++, menuText.c_str());
-				}
+                for (const auto& category : categories)
+                {
+                    wstring displayName = category.name;
+                    if (displayName == L"All") displayName = L"全部";
+                    else if (displayName == L"Default Category") displayName = L"默认分类";
+                    else if (displayName == L"Programming") displayName = L"编程";
+                    else if (displayName == L"Work Files") displayName = L"工作文件";
+                    else if (displayName == L"Configuration Files") displayName = L"配置文件";
+                    wstring menuText = displayName;
+                    if (category.description != L"")
+                    {
+                        menuText += L" (" + category.description + L")";
+                    }
+                    ::AppendMenu(hCategoryMenu, MF_STRING, menuItemID++, menuText.c_str());
+                }
 				
 				// 获取鼠标位置显示菜单
 				POINT pt;
@@ -973,9 +979,9 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 			// 处理设置按钮点击事件
 			if (cmdID == IDM_SETTINGS_VFS)// IDC_SETTINGS_BUTTON_VFS)
 			{
-				// 显示设置对话框
-				showSettingsDialog();
-				debugLog(L"VerticalFileSwitcher::WM_COMMAND - 设置按钮被点击，已显示设置对话框");
+				// 打开Notepad++的首选项对话框
+				debugLog(L"VerticalFileSwitcher::WM_COMMAND - 设置按钮被点击，打开Notepad++首选项");
+				::SendMessage(_hParent, NPPM_MENUCOMMAND, 0, IDM_SETTING_PREFERENCE);
 				break;
 			}
 			
@@ -1495,8 +1501,8 @@ void VerticalFileSwitcher::initPopupMenus()
     // 添加分隔符
     ::InsertMenu(_hGlobalMenu, 0, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     
-    // 添加设置菜单项
-    wstring settingsStr = pNativeSpeaker->getAttrNameStr(L"Settings", FS_ROOTNODE, FS_SETTINGS);
+    // 添加设置菜单项（中文）
+    wstring settingsStr = L"设置";
     ::InsertMenu(_hGlobalMenu, IDM_SETTINGS_VFS, MF_BYCOMMAND | MF_STRING, IDM_SETTINGS_VFS, settingsStr.c_str());
     
     // 添加编辑分类JSON菜单项
@@ -1614,19 +1620,25 @@ void VerticalFileSwitcher::initFileListContextMenu()
     for (size_t i = 0; i < categories.size(); ++i)
     {
         UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
-        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - Add Category菜单项: %s (ID: %d)", categories[i].name.c_str(), menuId);
+        wstring displayName = categories[i].name;
+        if (displayName == L"All") displayName = L"全部";
+        else if (displayName == L"Default Category") displayName = L"默认分类";
+        else if (displayName == L"Programming") displayName = L"编程";
+        else if (displayName == L"Work Files") displayName = L"工作文件";
+        else if (displayName == L"Configuration Files") displayName = L"配置文件";
+        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - Add Category菜单项: %s (ID: %d)", displayName.c_str(), menuId);
         
-        BOOL result = ::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, categories[i].name.c_str());
+        BOOL result = ::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, displayName.c_str());
         if (!result)
         {
             DWORD error = ::GetLastError();
             debugLog(L"VerticalFileSwitcher::initFileListContextMenu - Add Category菜单项失败: %s (ID: %d)，错误码: %d", 
-                categories[i].name.c_str(), menuId, error);
+                displayName.c_str(), menuId, error);
         }
     }
     
     debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 插入Document Category子菜单到主菜单");
-    wstring documentCategoryStr = L"Document Category";
+    wstring documentCategoryStr = L"文件分类";
     BOOL insertResult = ::InsertMenu(_hFileListMenu, CATEGORY_MENU_ID, MF_BYCOMMAND | MF_POPUP, 
                                      reinterpret_cast<UINT_PTR>(hDocumentCategoryMenu), documentCategoryStr.c_str());
     if (!insertResult)
@@ -1666,14 +1678,14 @@ void VerticalFileSwitcher::initFileListContextMenu()
 
     // 添加Tab Color子菜单
     HMENU hTabColorMenu = ::CreatePopupMenu();
-    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 0, L"Red Tab");
-    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 1, L"Green Tab");
-    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 2, L"Blue Tab");
-    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 3, L"Yellow Tab");
-    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 4, L"Purple Tab");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 0, L"红色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 1, L"绿色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 2, L"蓝色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 3, L"黄色标签");
+    ::AppendMenu(hTabColorMenu, MF_STRING, TAB_COLOR_MENU_START + 4, L"紫色标签");
     
     // 添加Tab Color菜单项
-    ::AppendMenu(_hFileListMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"Tab Color");
+    ::AppendMenu(_hFileListMenu, MF_STRING | MF_POPUP, (UINT_PTR)hTabColorMenu, L"标签颜色");
     
     ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
     
@@ -1682,8 +1694,8 @@ void VerticalFileSwitcher::initFileListContextMenu()
     ::AppendMenu(_hFileListMenu, MF_STRING, IDM_DOCLIST_CLOSE_CURRENT, closeCurrentFileStr.c_str());
     
     ::AppendMenu(_hFileListMenu, MF_SEPARATOR, 0, NULL);
-    ::AppendMenu(_hFileListMenu, MF_STRING, 1001, L"Open File Location");
-    ::AppendMenu(_hFileListMenu, MF_STRING, 1002, L"Copy File Path");
+    ::AppendMenu(_hFileListMenu, MF_STRING, 1001, L"打开文件所在目录");
+    ::AppendMenu(_hFileListMenu, MF_STRING, 1002, L"复制文件路径");
     
     debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 完成");
 }
