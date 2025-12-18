@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-完成语音提示
+构建完成语音提示
 """
-import pyttsx3
+
+import os
+import sys
+import time
 from datetime import datetime
 
-def speak_completion():
-    """语音提示任务完成"""
+# 添加项目根目录到Python路径
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+def play_completion_voice():
+    """播放构建完成语音提示"""
     try:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 准备语音提示...")
+        import pyttsx3
         
         # 初始化TTS引擎
         engine = pyttsx3.init()
@@ -16,28 +23,37 @@ def speak_completion():
         # 设置语音参数
         voices = engine.getProperty('voices')
         if voices:
-            engine.setProperty('voice', voices[0].id)  # 使用第一个可用语音
+            # 选择中文语音（如果有的话）
+            for voice in voices:
+                if 'chinese' in voice.name.lower() or 'chinese' in voice.id.lower():
+                    engine.setProperty('voice', voice.id)
+                    break
         
         # 设置语速
-        engine.setProperty('rate', 150)
+        engine.setProperty('rate', 180)
         
-        # 语音文本
-        text = "任务运行完毕，过来看看！编译已经成功，程序可以正常运行并显示GUI窗口了！"
-        
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 播放语音: {text}")
-        
-        # 播放语音
-        engine.say(text)
+        # 播放构建完成消息
+        completion_message = "任务运行完毕，过来看看！"
+        engine.say(completion_message)
         engine.runAndWait()
         
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 语音提示完成")
+        print(f"语音提示播放完成: {completion_message}")
         
+    except ImportError:
+        print("⚠️ pyttsx3未安装，使用文本提示替代语音")
+        print("=" * 50)
+        print("🎉 构建完成！")
+        print("=" * 50)
+        print("任务运行完毕，过来看看！")
+        print("=" * 50)
     except Exception as e:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 语音提示失败: {str(e)}")
-
-def main():
-    """主函数"""
-    speak_completion()
+        print(f"播放语音提示时出错: {e}")
+        print("=" * 50)
+        print("🎉 构建完成！")
+        print("=" * 50)
+        print("任务运行完毕，过来看看！")
+        print("=" * 50)
 
 if __name__ == "__main__":
-    main()
+    print("构建时间:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    play_completion_voice()

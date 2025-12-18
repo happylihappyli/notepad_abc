@@ -9,7 +9,7 @@
         {
             "description": "Programming相关的文件",
             "id": "programming",
-            "name": "开发",
+            "name": "Programming",
             "order": 1
         },
         {
@@ -46,35 +46,7 @@
         },
         {
             "categoryId": "programming",
-            "filePath": "E:\\GitHub3\\python\\check_rustdesk_server\\check.py"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\GitHub3\\python\\check_rustdesk_server\\check2.py"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\main.zig"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\test_dll.zig"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-ai.txt"
-        },
-        {
-            "categoryId": "study",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-C++.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot.txt"
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-编程.txt"
         },
         {
             "categoryId": "programming",
@@ -82,23 +54,7 @@
         },
         {
             "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-编程.txt"
-        },
-        {
-            "categoryId": "work",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-公司.txt"
-        },
-        {
-            "categoryId": "life",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-健康.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-应用题.txt"
-        },
-        {
-            "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot我的世界.txt"
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot.txt"
         },
         {
             "categoryId": "programming",
@@ -106,15 +62,11 @@
         },
         {
             "categoryId": "programming",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-可视化编程.txt"
+            "filePath": "E:\\BaiduSyncdisk\\bak\\编程和低代码\\计划-godot我的世界.txt"
         },
         {
-            "categoryId": "life",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\打官司有关\\计划-公积金.txt"
-        },
-        {
-            "categoryId": "life",
-            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-律师维权.txt"
+            "categoryId": "study",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习-看视频.txt"
         }
     ]
 }
