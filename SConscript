@@ -92,7 +92,7 @@ if sys.platform.startswith('win'):
 # 导入主脚本中的变量和环境
 Import('project_root', 'src_dir', 'scintilla_dir', 'lexilla_dir', 'bin_dir', 'obj_dir')
 Import('configure_build_options', 'configure_link_options', 'get_compiler_type')
-Import('env', 'lexilla_lib', 'scintilla_lib')  # 导入配置好的环境变量和预编译库
+Import('env', 'lexilla_lib', 'scintilla_lib', 'libs')  # 导入配置好的环境变量和预编译库
 
 # 使用从SConstruct导入的环境，不再创建新环境
 
@@ -164,6 +164,7 @@ if compiler_type == 'clang':
         os.path.join(src_dir, 'WinControls', 'ImageListSet'),  # ImageListSet子目录（包含ImageListSet.h）
         os.path.join(src_dir, 'WinControls', 'shortcut'),  # shortcut子目录（包含shortcut.h）
         os.path.join(src_dir, 'WinControls', 'StaticDialog'),  # StaticDialog子目录（包含StaticDialog.h）
+        os.path.join(src_dir, 'WinControls', 'TomatoTimer'),  # TomatoTimer子目录（包含TomatoTimer.h）
         os.path.join(src_dir, 'WinControls', 'ContextMenu'),  # ContextMenu子目录（包含ContextMenu.h）
         os.path.join(src_dir, 'WinControls', 'TabBar'),  # TabBar子目录（包含ControlsTab.h）
         os.path.join(src_dir, 'WinControls', 'ColourPicker'),  # ColourPicker子目录（包含ColourPicker.h）
@@ -220,8 +221,11 @@ lib_paths = [
 
 print(f"✅ 库路径已设置（将在自定义链接器命令中处理）: {lib_paths}")
 
-# 配置链接选项，传递额外的库路径
-env = configure_link_options(env, subsystem, extra_lib_paths=lib_paths)
+# 链接器配置已在SConstruct中通过configure_link_options完成，无需重复设置
+print("🔧 链接器配置已在SConstruct中完成，无需重复设置")
+print(f"✅ 当前链接器: {env.get('LINK', '未设置')}")
+print(f"✅ 当前链接器标志: {env.get('LINKFLAGS', [])}")
+print(f"✅ 当前LIBS: {env.get('LIBS', [])}")
 
 # 设置目标文件名 - 根据子系统类型设置不同的文件名
 if subsystem.upper() == 'CONSOLE':
@@ -344,6 +348,11 @@ src_files = [
     os.path.join(src_dir, 'WinControls', 'shortcut', 'shortcut.cpp'),
     os.path.join(src_dir, 'WinControls', 'shortcut', 'RunMacroDlg.cpp'),
     
+    # TomatoTimer模块
+    os.path.join(src_dir, 'WinControls', 'TomatoTimer', 'TomatoTimer.cpp'),
+    os.path.join(src_dir, 'WinControls', 'TomatoTimer', 'TomatoTimerDlg.cpp'),
+    os.path.join(src_dir, 'WinControls', 'TomatoTimer', 'CycleAlarm.cpp'),
+    
     # DarkMode模块
     os.path.join(src_dir, 'DarkMode', 'DarkMode.cpp'),
     
@@ -393,44 +402,53 @@ except Exception as e:
         except Exception as e2:
             print(f"❌ 编译失败: {os.path.basename(src_file)} - {str(e2)}")
 
-# 处理资源文件 - 简化版本，避免复杂的资源编译器问题
+# 处理资源文件 - 使用资源编译器编译.rc文件
 rc_objects = []
 rc_files = [
     os.path.join(src_dir, 'Notepad_plus.rc'),
     os.path.join(src_dir, 'ScintillaComponent', 'FindReplaceDlg.rc'),
+    os.path.join(src_dir, 'ScintillaComponent', 'UserDefineDialog.rc'),
+    os.path.join(src_dir, 'ScintillaComponent', 'columnEditor.rc'),
     os.path.join(src_dir, 'WinControls', 'DockingWnd', 'DockingGUIWidget.rc'),
     os.path.join(src_dir, 'WinControls', 'FunctionList', 'functionListPanel.rc'),
     os.path.join(src_dir, 'WinControls', 'Preference', 'preference.rc'),
     os.path.join(src_dir, 'WinControls', 'VerticalFileSwitcher', 'VerticalFileSwitcher.rc'),
+    os.path.join(src_dir, 'WinControls', 'WindowsDlg', 'WindowsDlg.rc'),
+    os.path.join(src_dir, 'WinControls', 'shortcut', 'RunMacroDlg.rc'),
+    os.path.join(src_dir, 'WinControls', 'shortcut', 'shortcut.rc'),
+    os.path.join(src_dir, 'WinControls', 'StaticDialog', 'RunDlg', 'RunDlg.rc'),
+    os.path.join(src_dir, 'WinControls', 'PluginsAdmin', 'pluginsAdmin.rc'),
+    os.path.join(src_dir, 'WinControls', 'TaskList', 'TaskListDlg.rc'),
+    os.path.join(src_dir, 'WinControls', 'ProjectPanel', 'ProjectPanel.rc'),
+    os.path.join(src_dir, 'WinControls', 'FindCharsInRange', 'findCharsInRange.rc'),
+    os.path.join(src_dir, 'WinControls', 'FileBrowser', 'fileBrowser.rc'),
+    os.path.join(src_dir, 'WinControls', 'Grid', 'ShortcutMapper.rc'),
+    os.path.join(src_dir, 'WinControls', 'DocumentMap', 'documentMap.rc'),
+    os.path.join(src_dir, 'WinControls', 'DocumentMap', 'documentSnapshot.rc'),
+    os.path.join(src_dir, 'WinControls', 'AnsiCharPanel', 'ansiCharPanel.rc'),
+    os.path.join(src_dir, 'WinControls', 'ColourPicker', 'ColourPopup.rc'),
+    os.path.join(src_dir, 'WinControls', 'ColourPicker', 'WordStyleDlg.rc'),
+    os.path.join(src_dir, 'WinControls', 'ClipboardHistory', 'clipboardHistoryPanel.rc'),
+    os.path.join(src_dir, 'WinControls', 'TomatoTimer', 'TomatoTimer.rc'),
+    os.path.join(src_dir, 'MISC', 'RegExt', 'regExtDlg.rc'),
+    os.path.join(src_dir, 'MISC', 'md5', 'md5Dlgs.rc'),
 ]
 
 print("处理资源文件...")
+print(f"资源编译器: {env.get('RC', '未设置')}")
+print(f"资源编译器标志: {env.get('RCFLAGS', [])}")
+print(f"资源编译命令: {env.get('RCCOM', '未设置')}")
+
 for rc_file in rc_files:
     if os.path.exists(rc_file):
-        try:
-            # 使用简单的资源编译器处理
-            rc_obj = env.RES(rc_file)
-            rc_objects.append(rc_obj)
-            print(f"  资源文件处理成功: {os.path.basename(rc_file)}")
-        except Exception as e:
-            print(f"❌ 资源文件处理失败: {os.path.basename(rc_file)} - {str(e)}")
-            # 如果资源文件处理失败，生成一个简单的替代实现
-            try:
-                cpp_file = os.path.join(obj_dir, f"{os.path.basename(rc_file).replace('.rc', '')}_resource_fallback.cpp")
-                cpp_content = f"""// 自动生成的资源定义文件 - 替代{os.path.basename(rc_file)}
-void {os.path.basename(rc_file).replace('.', '_')}_resource_placeholder() {{}}
-"""
-                os.makedirs(obj_dir, exist_ok=True)
-                with open(cpp_file, 'w', encoding='utf-8-sig') as f:
-                    f.write(cpp_content)
-                
-                rc_obj = env.Object(cpp_file)
-                rc_objects.append(rc_obj)
-                print(f"  生成并编译替代资源文件: {cpp_file}")
-            except Exception as e2:
-                print(f"  生成替代资源文件失败: {e2}")
+        print(f"  编译资源文件: {os.path.basename(rc_file)}")
+        # 使用资源编译器处理
+        rc_obj = env.RES(rc_file)
+        rc_objects.append(rc_obj)
+        print(f"  ✅ 资源文件处理成功: {os.path.basename(rc_file)}")
     else:
-        print(f"警告: 资源文件不存在: {rc_file}")
+        print(f"❌ 错误: 资源文件不存在: {rc_file}")
+        sys.exit(1)
 
 # 调试：检查预编译库变量的类型和值
 print(f"调试 - lexilla_lib 类型: {type(lexilla_lib)}")
@@ -490,6 +508,46 @@ if isinstance(lexilla_lib, str) and isinstance(scintilla_lib, str):
     # 强制使用自定义链接器命令生成器
     # 确保链接器命令正确生成，避免自动添加-l前缀
     print("✅ 强制使用自定义链接器命令生成器")
+    
+    # 创建链接器响应文件
+    rsp_file_path = os.path.join(bin_dir, 'linker.rsp')
+    print(f"🔧 创建链接器响应文件: {rsp_file_path}")
+    
+    # 使用导入的系统库列表
+    print(f"🔧 调试: 系统库列表包含 {len(libs)} 个库")
+    
+    with open(rsp_file_path, 'w', encoding='utf-8') as f:
+        # 添加所有对象文件
+        for obj in all_objects:
+            obj_path = str(obj)
+            # 添加对象文件（.o或.obj）和资源文件（.res）
+            if obj_path.endswith('.o') or obj_path.endswith('.obj') or obj_path.endswith('.res'):
+                f.write(f'"{obj_path}"\n')
+                print(f"  添加文件: {os.path.basename(obj_path)}")
+        
+        # 显式添加所有.res文件（确保资源文件被包含）
+        print("🔧 显式添加所有.res文件到响应文件...")
+        for rc_file in rc_files:
+            if os.path.exists(rc_file):
+                # 计算对应的.res文件路径
+                res_file = os.path.splitext(rc_file)[0] + '.res'
+                if os.path.exists(res_file):
+                    f.write(f'"{res_file}"\n')
+                    print(f"  添加资源文件: {os.path.basename(res_file)}")
+                else:
+                    print(f"  ⚠️ 资源文件不存在: {res_file}")
+        
+        # 添加预编译库文件
+        f.write(f'"{lexilla_lib}"\n')
+        f.write(f'"{scintilla_lib}"\n')
+        
+        # 添加系统库
+        for lib in libs:
+            if isinstance(lib, str):
+                f.write(f'{lib}\n')
+                print(f"  添加系统库: {lib}")
+    
+    print(f"✅ 响应文件已创建，包含 {len(all_objects)} 个对象文件和 {len(libs)} 个系统库")
 
 # 构建程序
 program = env.Program(target=os.path.join(bin_dir, target_name), source=all_objects)

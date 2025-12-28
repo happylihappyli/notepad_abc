@@ -1,15 +1,15 @@
-﻿{
+{
     "categories": [
         {
-            "description": "Uncategorized的文件",
+            "description": "未分类的文件",
             "id": "default",
-            "name": "All",
+            "name": "全部",
             "order": 0
         },
         {
-            "description": "Programming相关的文件",
+            "description": "编程相关的文件",
             "id": "programming",
-            "name": "Programming",
+            "name": "编程",
             "order": 1
         },
         {

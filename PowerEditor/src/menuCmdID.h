@@ -1,4 +1,4 @@
-﻿// This file is part of Notepad++ project
+// This file is part of Notepad++ project
 // Copyright (C)2025 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -629,6 +629,7 @@
     #define    IDM_TOOL_SHA512_GENERATE                 (IDM_TOOL + 10)
     #define    IDM_TOOL_SHA512_GENERATEFROMFILE         (IDM_TOOL + 11)
     #define    IDM_TOOL_SHA512_GENERATEINTOCLIPBOARD    (IDM_TOOL + 12)
+    #define    IDM_TOOL_TOMATO_TIMER                    (IDM_TOOL + 13)
 
 #define    IDM_EXECUTE  (IDM + 9000)
 

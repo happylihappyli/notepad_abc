@@ -24,7 +24,10 @@
 
 void IconList::init(HINSTANCE hInst, int iconSize) 
 {
-	InitCommonControls();
+	INITCOMMONCONTROLSEX icex{};
+	icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	icex.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&icex);
 	_hInst = hInst;
 	_iconSize = iconSize;
 	const int nbMore = 45;

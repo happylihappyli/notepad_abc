@@ -1,4 +1,4 @@
-﻿// This file is part of Notepad++ project
+// This file is part of Notepad++ project
 // Copyright (C)2021 adzm / Adam D. Walling
 
 // This program is free software: you can redistribute it and/or modify
@@ -191,14 +191,14 @@ namespace NppDarkMode
 
 	// black (default)
 	static const Colors darkColors{
-		HEXRGB(0x202020),   // background
-		HEXRGB(0x383838),   // softerBackground
+		HEXRGB(0x000000),   // background - 纯黑色背景
+		HEXRGB(0x000000),   // softerBackground - 纯黑色背景 (文件列表背景)
 		HEXRGB(0x454545),   // hotBackground
-		HEXRGB(0x202020),   // pureBackground
+		HEXRGB(0x000000),   // pureBackground - 纯黑色背景
 		HEXRGB(0xB00000),   // errorBackground
-		HEXRGB(0xE0E0E0),   // textColor
-		HEXRGB(0xC0C0C0),   // darkerTextColor
-		HEXRGB(0x808080),   // disabledTextColor
+		HEXRGB(0xFFFFFF),   // textColor - 纯白色文字
+		HEXRGB(0xFFFFFF),   // darkerTextColor - 纯白色文字
+		HEXRGB(0xC0C0C0),   // disabledTextColor
 		HEXRGB(0xFFFF00),   // linkTextColor
 		HEXRGB(0x646464),   // edgeColor
 		HEXRGB(0x9B9B9B),   // hotEdgeColor

@@ -3353,11 +3353,20 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		{
 			bool hide = (lParam == TRUE);
 			bool isHidden = ::GetMenu(hwnd) == NULL;
+			
+			wchar_t buf[256];
+			swprintf(buf, L"[NPPM_HIDEMENU] hide=%s, isHidden=%s\n", hide ? L"true" : L"false", isHidden ? L"true" : L"false");
+			OutputDebugStringW(buf);
+
 			if (hide == isHidden)
 				return isHidden;
 
 			NppGUI & nppGUI = nppParam.getNppGUI();
 			nppGUI._menuBarShow = !hide;
+			
+			swprintf(buf, L"[NPPM_HIDEMENU] 设置 _menuBarShow = %s\n", nppGUI._menuBarShow ? L"true" : L"false");
+			OutputDebugStringW(buf);
+
 			if (nppGUI._menuBarShow)
 				::SetMenu(hwnd, _mainMenuHandle);
 			else

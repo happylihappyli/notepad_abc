@@ -88,6 +88,8 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		throw std::runtime_error("Notepad_plus_Window::init : RegisterClass() function failed");
 	}
 
+	OutputDebugStringW(L"[窗口创建] RegisterClass 成功\n");
+
 	NppParameters& nppParams = NppParameters::getInstance();
 	NppGUI & nppGUI = nppParams.getNppGUI();
 
@@ -97,6 +99,8 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	nppGUI._isCmdlineNosessionActivated = cmdLineParams->_isNoSession;
 
 	_hIconAbsent = ::LoadIcon(hInst, MAKEINTRESOURCE(IDI_ICONABSENT));
+
+	OutputDebugStringW(L"[窗口创建] 准备调用 CreateWindowEx\n");
 
 	_hSelf = ::CreateWindowEx(
 		WS_EX_ACCEPTFILES | (_notepad_plus_plus_core._nativeLangSpeaker.isRTL() ? WS_EX_LAYOUTRTL : 0),
@@ -111,21 +115,35 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
         // the CREATESTRUCT.lpCreateParams afterward.
 
 	if (NULL == _hSelf)
+	{
+		OutputDebugStringW(L"[窗口创建] CreateWindowEx 失败!\n");
 		throw std::runtime_error("Notepad_plus_Window::init : CreateWindowEx() function return null");
+	}
+
+	wchar_t buf[256];
+	swprintf(buf, L"[窗口创建] CreateWindowEx 成功，窗口句柄: 0x%p\n", _hSelf);
+	OutputDebugStringW(buf);
 
 
 	PaintLocker paintLocker{_hSelf};
+
+	OutputDebugStringW(L"[窗口创建] PaintLocker 创建完成\n");
 
 	_notepad_plus_plus_core.staticCheckMenuAndTB();
 
 	gNppHWND = _hSelf;
 
+	swprintf(buf, L"[窗口创建] gNppHWND 设置为: 0x%p\n", _hSelf);
+	OutputDebugStringW(buf);
+
 	if (cmdLineParams->isPointValid())
 	{
+		OutputDebugStringW(L"[窗口创建] 使用命令行指定的位置\n");
 		::MoveWindow(_hSelf, cmdLineParams->_point.x, cmdLineParams->_point.y, nppGUI._appPos.right, nppGUI._appPos.bottom, TRUE);
 	}
 	else
 	{
+		OutputDebugStringW(L"[窗口创建] 使用配置文件中的位置\n");
 		WINDOWPLACEMENT posInfo{};
 		posInfo.length = sizeof(WINDOWPLACEMENT);
 		posInfo.flags = 0;
@@ -143,6 +161,12 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 		posInfo.rcNormalPosition.bottom = nppGUI._appPos.top + nppGUI._appPos.bottom;
 		posInfo.rcNormalPosition.right  = nppGUI._appPos.left + nppGUI._appPos.right;
 
+		swprintf(buf, L"[窗口创建] 窗口位置: left=%d, top=%d, right=%d, bottom=%d, showCmd=%d\n",
+			posInfo.rcNormalPosition.left, posInfo.rcNormalPosition.top,
+			posInfo.rcNormalPosition.right, posInfo.rcNormalPosition.bottom,
+			posInfo.showCmd);
+		OutputDebugStringW(buf);
+
 		//SetWindowPlacement will take care of situations, where saved position was in no longer available monitor
 		::SetWindowPlacement(_hSelf,&posInfo);
 		
@@ -153,8 +177,19 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	if ((nppGUI._tabStatus & TAB_MULTILINE) != 0)
 		::SendMessage(_hSelf, NPPM_INTERNAL_MULTILINETABBAR, 0, 0);
 
+	wchar_t menuBuf[256];
+	swprintf(menuBuf, L"[菜单显示] _menuBarShow = %s\n", nppGUI._menuBarShow ? L"true" : L"false");
+	OutputDebugStringW(menuBuf);
+
 	if (!nppGUI._menuBarShow)
+	{
+		OutputDebugStringW(L"[菜单显示] 隐藏菜单栏\n");
 		::SetMenu(_hSelf, NULL);
+	}
+	else
+	{
+		OutputDebugStringW(L"[菜单显示] 显示菜单栏\n");
+	}
 
 	if (cmdLineParams->_isNoTab || (nppGUI._tabStatus & TAB_HIDE))
 	{
@@ -180,13 +215,22 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 
 	if (false) // 强制禁用隐藏窗口逻辑
 	{
+		OutputDebugStringW(L"[窗口创建] 隐藏窗口 (SW_HIDE)\n");
 		::ShowWindow(_hSelf, SW_HIDE);
 	}
 	else if (true) // 强制显示窗口
 	{
+		OutputDebugStringW(L"[窗口创建] 显示窗口 (SW_SHOW)\n");
 		::ShowWindow(_hSelf, SW_SHOW); // 总是显示窗口
 		if (nppGUI._isMaximized)
+		{
+			OutputDebugStringW(L"[窗口创建] 最大化窗口 (SW_MAXIMIZE)\n");
 			::ShowWindow(_hSelf, SW_MAXIMIZE); // 如果配置了最大化，则最大化
+		}
+		
+		BOOL isVisible = ::IsWindowVisible(_hSelf);
+		swprintf(buf, L"[窗口创建] ShowWindow 后窗口可见性: %s\n", isVisible ? L"可见" : L"不可见");
+		OutputDebugStringW(buf);
 	}
 	else
 	{

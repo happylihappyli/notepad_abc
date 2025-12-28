@@ -3792,6 +3792,15 @@ void Notepad_plus::command(int id)
 		}
 		break;
 
+		case IDM_TOOL_TOMATO_TIMER:
+		{
+			bool isFirstTime = !_tomatoTimerDlg.isCreated();
+			_tomatoTimerDlg.doDialog(_nativeLangSpeaker.isRTL());
+			if (isFirstTime)
+				_nativeLangSpeaker.changeDlgLang(_tomatoTimerDlg.getHSelf(), "TomatoTimerDlg");
+		}
+		break;
+
 		case IDM_SHOW_CONSOLE:
 		{
 			// Show Debug Console

@@ -31,6 +31,7 @@
 #include "WinControls/TrayIcon/trayIconControler.h"
 #include "MISC/PluginsManager/PluginsManager.h"
 #include "WinControls/Preference/preferenceDlg.h"
+#include "WinControls/TomatoTimer/TomatoTimerDlg.h"
 #include "WinControls/WindowsDlg/WindowsDlg.h"
 #include "WinControls/shortcut/RunMacroDlg.h"
 #include "WinControls/DockingWnd/DockingManager.h"
@@ -328,6 +329,7 @@ private:
 	HashFromTextDlg _sha1FromTextDlg;
 	HashFromFilesDlg _sha512FromFilesDlg;
 	HashFromTextDlg _sha512FromTextDlg;
+	TomatoTimerDlg _tomatoTimerDlg;
     GoToLineDlg _goToLineDlg;
 	ColumnEditorDlg _colEditorDlg;
 	WordStyleDlg _configStyleDlg;

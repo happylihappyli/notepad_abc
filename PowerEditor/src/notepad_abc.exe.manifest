@@ -44,7 +44,7 @@
         <gdiScaling>false</gdiScaling>
     </asmv3:windowsSettings>
 </asmv3:application>
-<trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+<trustInfo xmlns="urn:schemas-microsoft-com:asm.v1">
     <security>
         <requestedPrivileges>
             <requestedExecutionLevel

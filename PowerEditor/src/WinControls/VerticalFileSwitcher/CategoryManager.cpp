@@ -1,4 +1,4 @@
-﻿// 分类管理器实现文件
+// 分类管理器实现文件
 
 #include "CategoryManager.h"
 #include <fstream>
@@ -554,11 +554,11 @@ void CategoryManager::createDefaultCategories() {
     m_categories.clear();
     
     // 创建Default Category，使用固定的Category ID
-    FileCategory defaultCategory(L"All", L"Uncategorized的文件", 0);
+    FileCategory defaultCategory(L"全部", L"未分类的文件", 0);
     defaultCategory.id = getDefaultCategoryId();
     m_categories.push_back(defaultCategory);
     
-    FileCategory programmingCategory(L"Programming", L"Programming相关的文件", 1);
+    FileCategory programmingCategory(L"编程", L"编程相关的文件", 1);
     programmingCategory.id = L"programming";
     m_categories.push_back(programmingCategory);
     

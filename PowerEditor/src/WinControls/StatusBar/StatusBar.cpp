@@ -262,7 +262,10 @@ static LRESULT CALLBACK StatusBarSubclass(HWND hWnd, UINT uMsg, WPARAM wParam, L
 void StatusBar::init(HINSTANCE hInst, HWND hPere, int nbParts)
 {
 	Window::init(hInst, hPere);
-	InitCommonControls();
+	INITCOMMONCONTROLSEX icex{};
+	icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	icex.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&icex);
 
 	// _hSelf = CreateStatusWindow(WS_CHILD | WS_CLIPSIBLINGS, NULL, _hParent, IDC_STATUSBAR);
 	_hSelf = ::CreateWindowEx(

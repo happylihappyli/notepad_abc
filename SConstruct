@@ -82,6 +82,7 @@ print("使用纯Clang构建环境，不依赖Visual Studio...")
 
 # 导入SCons标准函数
 import SCons.Environment
+from SCons.Script import ARGUMENTS, Export, SConscript, Environment
 
 # 强制使用Clang编译器
 print("配置使用Clang编译器...")
@@ -119,10 +120,21 @@ def configure_resource_builder(env):
     if rc_compiler:
         # 使用找到的资源编译器
         env['RC'] = rc_compiler
-        # 设置UTF-8代码页以正确处理中文等非ASCII字符
-        env['RCFLAGS'] = ['/C', '65001']
-        # 使用Windows风格的参数格式（/FO而不是-o）
-        env['RCCOM'] = '"$RC" $RCFLAGS /FO "$TARGET" "$SOURCES"'
+        # 简化参数格式，避免复杂的命令行参数
+        
+        # 检查是否是LLVM资源编译器
+        if 'llvm-rc' in rc_compiler:
+            # LLVM的llvm-rc.exe实际上接受Windows风格的参数格式
+            env['RCFLAGS'] = ['/C', '65001']
+            env['RCCOM'] = '"$RC" $RCFLAGS /fo "$TARGET" "$SOURCES"'
+        elif 'windres' in rc_compiler:
+            # GNU风格的windres使用不同的参数格式
+            env['RCFLAGS'] = ['--codepage=65001']
+            env['RCCOM'] = '"$RC" "$SOURCES" -o "$TARGET" $RCFLAGS'
+        else:
+            # 使用Windows风格的参数格式（/FO而不是-o）
+            env['RCFLAGS'] = ['/C', '65001']
+            env['RCCOM'] = '"$RC" $RCFLAGS /FO "$TARGET" "$SOURCES"'
     else:
         # 使用默认的资源编译器设置
         env['RC'] = 'rc'
@@ -240,11 +252,8 @@ if not direct_check_clang():
 else:
     print("✅ Clang编译器检查通过")
 
-# 创建构建环境
-env = SCons.Environment.Environment(tools=[], ENV=os.environ.copy())
-
-# 设置构建目录
-env.SConscriptChdir(0)  # 不在SConscript中更改目录
+# 创建构建环境（使用默认工具链，稍后会覆盖编译器设置）
+env = Environment(ENV=os.environ.copy())
 
 # 添加Clang路径到PATH环境变量
 clang_path = r"C:\Program Files\LLVM\bin"
@@ -421,7 +430,7 @@ env['CC'] = None
 env['CXX'] = None
 env['LINK'] = None
 env['AR'] = None
-env['RC'] = None
+# 不清除env['RC']，保留资源编译器配置
 
 # 清除所有MSVC特有的编译选项
 env['CCFLAGS'] = []
@@ -474,9 +483,6 @@ env = configure_resource_builder(env)
 
 # 设置目标架构
 env['TARGET_ARCH'] = 'x86_64'
-
-# 配置资源文件构建器
-env = configure_resource_builder(env)
 
 print(f"✅ 当前编译器类型: {get_compiler_type(env)}")
 print(f"✅ CXX编译器: {env['CXX']}")
@@ -555,7 +561,7 @@ def configure_build_options(env, build_type='Release'):
         # '_DLL',  # 移除_DLL定义，使用静态运行时库 (MT) 以匹配预编译库
         '_WIN32_WINNT=_WIN32_WINNT_WIN7',
         'NTDDI_VERSION=NTDDI_WIN7',
-        '_WIN32_IE=0x0600',  # 启用Windows公共控件功能（IE 6.0版本）
+        '_WIN32_IE=0x0800',  # 启用Windows公共控件功能（IE 8.0版本，支持更新的COMCTL32功能）
         'OEMRESOURCE',
         'NOMINMAX',
         '_USE_64BIT_TIME_T',
@@ -783,12 +789,14 @@ def configure_build_options(env, build_type='Release'):
     return env
 
 # 配置链接选项 - 基于CMakeLists.txt
-def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None):
+def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None, lexilla_lib=None, scintilla_lib=None):
     """配置链接选项 - 强制使用Clang编译器
     Args:
         env: SCons环境对象
         subsystem: 子系统类型，'WINDOWS' 或 'CONSOLE'
         extra_lib_paths: 额外的库路径列表，从SConscript传递过来
+        lexilla_lib: Lexilla库文件路径
+        scintilla_lib: Scintilla库文件路径
     """
     
     compiler_type = get_compiler_type(env)
@@ -1057,16 +1065,24 @@ def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None):
             env['LINK'] = '"' + clang_link_path + '"'
             print(f"✅ 链接器已设置为Clang的lld-link.exe: {env.get('LINK', '未设置')}")
             
-            # 构建Clang链接器命令模板
+            # 构建Clang链接器命令模板 - 使用响应文件解决命令行长度限制
             linkcom_template = '"' + clang_link_path + '" $LINKFLAGS'
             
-            # 添加链接器选项，禁用Visual Studio运行时库的自动链接
-            linkcom_template += ' /NODEFAULTLIB'  # 禁用所有默认库
+            # 添加链接器选项 - 不禁用默认库，因为我们需要C运行时库
+            # 只禁用不需要的动态运行时库
             linkcom_template += ' /NODEFAULTLIB:msvcrt.lib'   # 禁用msvcrt.lib (动态)
             linkcom_template += ' /NODEFAULTLIB:msvcprt.lib'  # 禁用msvcprt.lib (动态)
             linkcom_template += ' /NODEFAULTLIB:comsuppw.lib'  # 禁用comsuppw.lib
-            # linkcom_template += ' /NODEFAULTLIB:libcmt.lib'  # 允许链接libcmt.lib (静态)
-            # linkcom_template += ' /NODEFAULTLIB:libcpmt.lib' # 允许链接libcpmt.lib (静态)
+            
+            # 添加manifest依赖，强制使用COMCTL32.dll版本6
+            # 这将确保应用程序使用COMCTL32.dll版本6而不是版本5
+            linkcom_template += ' /MANIFESTDEPENDENCY:"type=\'win32\' name=\'Microsoft.Windows.Common-Controls\' version=\'6.0.0.0\' processorArchitecture=\'*\' publicKeyToken=\'6595b64144ccf1df\' language=\'*\'"'
+            print("✅ 已添加manifest依赖，强制使用COMCTL32.dll版本6")
+            
+            # 注意：manifest已经在Notepad_plus.rc资源文件中定义（IDR_RT_MANIFEST）
+            # 不需要在这里通过/MANIFEST选项添加，否则会导致重复资源错误
+            # 资源文件中的manifest会被正确嵌入到可执行文件中
+            print("ℹ️ manifest已包含在资源文件中，无需通过链接器选项添加")
             
             # 添加库路径 - 包括预编译库目录
             libpaths = env.get('LIBPATH', [])
@@ -1087,30 +1103,36 @@ def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None):
             # 添加输出文件
             linkcom_template += ' /OUT:$TARGET'
             
-            # 添加源文件（.obj文件）
-            linkcom_template += ' $SOURCES'
+            # 使用固定的响应文件路径解决命令行长度限制问题
+            rsp_file_path = os.path.join(bin_dir, 'linker.rsp')
+            linkcom_template += f' @"{rsp_file_path}"'
             
-            # 添加我们明确指定的系统库
-            for lib in libs:
-                if isinstance(lib, str):
-                    linkcom_template += f' {lib}'
-                else:
-                    linkcom_template += f' ${{lib[0].path}}'
+            # 创建响应文件生成函数
+            def create_response_file(target, source, env):
+                """创建链接器响应文件"""
+                with open(rsp_file_path, 'w', encoding='utf-8') as f:
+                    # 添加所有源文件（.obj文件）
+                    for src in source:
+                        f.write(f'"{src.path}"\n')
+                    
+                    # 添加我们明确指定的系统库
+                    for lib in libs:
+                        if isinstance(lib, str):
+                            f.write(f'{lib}\n')
+                    
+                    # 添加预编译库文件
+                    if isinstance(lexilla_lib, str) and isinstance(scintilla_lib, str):
+                        f.write(f'"{lexilla_lib}"\n')
+                        f.write(f'"{scintilla_lib}"\n')
+                
+                print(f"✅ 已创建响应文件: {rsp_file_path}")
             
-            # 添加预编译库文件
-            if isinstance(lexilla_lib, str) and isinstance(scintilla_lib, str):
-                linkcom_template += f' {lexilla_lib} {scintilla_lib}'
-            
-            # 注意：系统库和运行时库已在libs列表中添加，此处不再重复添加
-            # 避免出现重复的库文件参数
-            
-            # 使用Clang的运行时库而不是Visual Studio的
-            # 注意：Clang在Windows上通常使用Windows SDK的运行时库
-            # 我们只需要确保不使用Visual Studio特定的库
+            # 添加链接前的操作来创建响应文件
+            env.AddPreAction('$PROGPREFIX$PROGSUFFIX', create_response_file)
             
             # 设置链接器命令模板
             env['LINKCOM'] = linkcom_template
-            print(f"✅ 已设置Clang链接器命令模板: {linkcom_template}")
+            print(f"✅ 已设置Clang链接器命令模板（使用响应文件: {rsp_file_path}）")
         else:
             # 如果找不到lld-link.exe，使用Visual Studio的link.exe作为备选
             print("⚠️ 警告: 未找到lld-link.exe，使用Visual Studio链接器（link.exe）")
@@ -1174,20 +1196,14 @@ def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None):
     # 避免使用env.Append，防止链接器使用默认命令生成器
     print("🔧 调试: 跳过env.Append调用，使用自定义链接器命令模板")
     
-    # 完全禁用默认的链接器命令生成器
-    # 设置一个空的链接器命令生成器，确保SCons不会自动添加任何库
-    env['_LIBFLAGS'] = ''  # 清空库标志
-    env['_LIBDIRFLAGS'] = ''  # 清空库目录标志
-    
-    # 设置一个空的默认链接器命令，确保SCons不会自动生成任何命令
-    env['_LINKCOM'] = ''
+    # 注意：不要清空LIBS和LIBPATH变量，因为自定义链接器命令模板需要它们
+    # 只禁用SCons的默认链接器命令生成器
     
     # 强制使用我们自定义的链接器命令模板
     # 确保SCons不会使用任何默认的链接器逻辑
     env['LINKCOMSTR'] = env['LINKCOM']  # 将命令模板设置为命令字符串
     
-    # 完全禁用SCons的默认链接器行为
-    # 设置空的链接器命令生成器，确保不会自动添加任何库
+    # 禁用SCons的默认链接器命令生成器，但保留LIBS和LIBPATH变量
     env['_LINK'] = ''
     env['_SHLINK'] = ''
     env['_LIB'] = ''
@@ -1199,11 +1215,8 @@ def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None):
     env['LIB'] = ''
     env['SHLIB'] = ''
     
-    # 完全清空所有可能包含Visual Studio库的环境变量
-    env['LIBS'] = []  # 清空LIBS变量，确保不会自动添加任何库
-    env['LIBPATH'] = []  # 清空LIBPATH变量
-    
-    # 设置环境变量，强制链接器不使用Visual Studio路径
+    # 清空环境变量中的LIB和INCLUDE，避免链接器自动查找Visual Studio路径
+    # 但保留env['LIBS']和env['LIBPATH']，因为自定义链接器命令模板需要它们
     env['ENV']['LIB'] = ''  # 清空LIB环境变量
     env['ENV']['INCLUDE'] = ''  # 清空INCLUDE环境变量
     
@@ -1213,14 +1226,14 @@ def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None):
     env['_CPPDEFFLAGS'] = ''
     env['_CPPINCFLAGS'] = ''
     
-    print("🔧 调试: 已完全禁用SCons默认链接器行为，清空所有库相关变量")
+    print("🔧 调试: 已禁用SCons默认链接器行为，但保留LIBS和LIBPATH变量")
     
     print(f"🔧 链接器配置完成: {build_type}, {subsystem}")
     print(f"🔧 链接器标志: {linkflags}")
     print(f"🔧 系统库: {libs}")
     print(f"🔧 库目录: {lib_dirs}")
     
-    return env
+    return env, libs
 
 # 使用预编译的依赖库函数
 def use_prebuilt_dependencies(env, build_type):
@@ -1271,10 +1284,17 @@ elif 'release' in ARGUMENTS:
 # 使用预编译的依赖库
 lexilla_lib, scintilla_lib = use_prebuilt_dependencies(env, build_type)
 
+# 配置链接器选项（设置LIBS等环境变量）
+lib_paths = [
+    project_root,  # 项目根目录
+    obj_dir,  # 当前构建目录
+]
+env, libs = configure_link_options(env, 'WINDOWS', extra_lib_paths=lib_paths, lexilla_lib=lexilla_lib, scintilla_lib=scintilla_lib)
+
 # 导出变量到SConscript
 Export('project_root', 'src_dir', 'scintilla_dir', 'lexilla_dir', 'bin_dir', 'obj_dir')
 Export('configure_build_options', 'configure_link_options', 'get_compiler_type')
-Export('env', 'lexilla_lib', 'scintilla_lib')
+Export('env', 'lexilla_lib', 'scintilla_lib', 'libs')
 
 # 构建主程序
 SConscript('SConscript', variant_dir=obj_dir, duplicate=0)

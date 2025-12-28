@@ -4812,9 +4812,21 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 				if (val)
 				{
 					if (!lstrcmp(val, L"hide"))
+					{
 						_nppGUI._menuBarShow = false;
+						OutputDebugStringW(L"[配置加载] MenuBar = hide, _menuBarShow = false\n");
+					}
 					else if (!lstrcmp(val, L"show"))
+					{
 						_nppGUI._menuBarShow = true;
+						OutputDebugStringW(L"[配置加载] MenuBar = show, _menuBarShow = true\n");
+					}
+					else
+					{
+						wchar_t buf[256];
+						swprintf(buf, L"[配置加载] MenuBar = %s (未知值), 保持默认\n", val);
+						OutputDebugStringW(buf);
+					}
 				}
 			}
 		}
@@ -6191,6 +6203,15 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			const wchar_t * hideMenuRightShortcuts = element->Attribute(L"hideMenuRightShortcuts");
 			if (hideMenuRightShortcuts)
 				_nppGUI._hideMenuRightShortcuts = lstrcmp(hideMenuRightShortcuts, L"yes") == 0;
+
+			const wchar_t * optHideMenuBar = element->Attribute(L"hideMenuBar");
+			if (optHideMenuBar)
+			{
+				_nppGUI._menuBarShow = (lstrcmp(optHideMenuBar, L"yes") == 0) ? false : true;
+				wchar_t buf[256];
+				swprintf(buf, L"[配置加载] hideMenuBar = %s, _menuBarShow = %s\n", optHideMenuBar, _nppGUI._menuBarShow ? L"true" : L"false");
+				OutputDebugStringW(buf);
+			}
 		}
 		else if (!lstrcmp(nm, L"commandLineInterpreter"))
 		{
