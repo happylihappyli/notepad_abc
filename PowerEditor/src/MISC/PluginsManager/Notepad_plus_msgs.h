@@ -188,6 +188,7 @@ enum Platform { PF_UNKNOWN, PF_X86, PF_X64, PF_IA64, PF_ARM64 };
 		#define STATUSBAR_EOF_FORMAT   3
 		#define STATUSBAR_UNICODE_TYPE 4
 		#define STATUSBAR_TYPING_MODE  5
+		#define STATUSBAR_TOMATO_TIMER  6
 	// BOOL NPPM_SETSTATUSBAR(int whichPart, wchar_t *str2set)
 	// Set string in the specified field of a statusbar.
 	// wParam[in]: whichPart for indicating the statusbar part you want to set. It can be only the above value (0 - 5)

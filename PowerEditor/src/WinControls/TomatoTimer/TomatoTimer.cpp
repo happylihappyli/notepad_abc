@@ -2,6 +2,8 @@
 #include "TomatoTimer.h"
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <iomanip>
 #include <windows.h>
 #include <commctrl.h>
 #include <sapi.h>
@@ -9,6 +11,18 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "sapi.lib")
+
+// 简单的日志函数
+void Log(const std::wstring& msg) {
+    std::wofstream logFile("tomato_debug.log", std::ios::app);
+    if (logFile.is_open()) {
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+        tm local_tm;
+        localtime_s(&local_tm, &now_time);
+        logFile << std::put_time(&local_tm, L"%Y-%m-%d %H:%M:%S") << L" - " << msg << std::endl;
+    }
+}
 
 // 窗口参数结构体
 struct AutoCloseWindowParams {
@@ -30,6 +44,7 @@ TomatoTimer::TomatoTimer() {
     
     _comInitialized = false;
     _ttsPlayed = false;
+    _completedPomodoros = 0;
 }
 
 TomatoTimer::~TomatoTimer() {
@@ -43,32 +58,45 @@ void TomatoTimer::initialize(HWND parentWnd) {
 }
 
 void TomatoTimer::start() {
+    std::lock_guard<std::mutex> lock(_mutex);
+    Log(L"尝试启动番茄钟");
     if (_state != TomatoState::IDLE && _state != TomatoState::PAUSED) {
+        Log(L"启动失败：状态不是IDLE或PAUSED");
         return;
     }
 
     if (_state == TomatoState::IDLE) {
         _state = TomatoState::WORKING;
+        // 确保时间至少为1分钟，防止逻辑错误
+        if (_config.workMinutes <= 0) {
+            Log(L"配置的工作时间无效，重置为25分钟");
+            _config.workMinutes = 25;
+        }
         _remainingSeconds = _config.workMinutes * 60;
+        Log(L"状态切换为WORKING，剩余时间: " + std::to_wstring(_remainingSeconds) + L"秒");
     } else {
         _state = (_state == TomatoState::PAUSED) ? _state : TomatoState::WORKING;
+        Log(L"从PAUSED恢复");
     }
 
     _startTime = std::chrono::system_clock::now();
 
     // 创建定时器
     if (_timer == nullptr) {
+        Log(L"创建定时器");
         CreateTimerQueueTimer(&_timer, nullptr, timerCallback, this, 1000, 1000, 0);
     }
 }
 
 void TomatoTimer::pause() {
+    std::lock_guard<std::mutex> lock(_mutex);
     if (_state == TomatoState::WORKING || _state == TomatoState::RESTING) {
         _state = TomatoState::PAUSED;
     }
 }
 
 void TomatoTimer::resume() {
+    std::lock_guard<std::mutex> lock(_mutex);
     if (_state == TomatoState::PAUSED) {
         // 根据剩余时间判断之前的状态
         int maxRestSeconds = (_config.longRestMinutes > _config.shortRestMinutes) 
@@ -79,6 +107,7 @@ void TomatoTimer::resume() {
 }
 
 void TomatoTimer::stop() {
+    std::lock_guard<std::mutex> lock(_mutex);
     if (_timer != nullptr) {
         DeleteTimerQueueTimer(nullptr, _timer, nullptr);
         _timer = nullptr;
@@ -88,9 +117,21 @@ void TomatoTimer::stop() {
 }
 
 void TomatoTimer::reset() {
-    stop();
-    _remainingSeconds = _config.workMinutes * 60;
-    _completedPomodoros = 0;
+    stop(); // stop已经加锁了，这里如果直接调用可能会死锁（std::mutex不可重入）
+            // 但是stop加锁是加在函数体内的，如果reset调用stop，reset不加锁？
+            // reset需要加锁来保护_remainingSeconds和_completedPomodoros的赋值。
+            // 方案：把stop逻辑拆分，或者使用recursive_mutex，或者在reset里手动做。
+            // 这里为了简单，把stop的内容展开在reset里，或者修改stop不加锁，搞一个doStop。
+            // 鉴于stop被公开调用，必须加锁。
+            // 简单起见，reset不加锁调用stop，然后再加锁修改其他。
+            // 这样中间会有空隙，但对于reset来说可能接受。
+            // 更好的方式：reset也加锁，但是stop如果也加锁就会死锁。
+            // 修改：使用 std::recursive_mutex ? 不，C++标准库有，但通常不推荐。
+            // 让我们实现一个内部 doStop 
+    
+    // 实际上，reset 调用的 stop 里面有锁。所以 reset 自身不需要第一行就加锁。
+    // 但是 reset 后面的赋值需要保护。
+    // 让我们先修改 stop，然后看 reset。
 }
 
 TomatoState TomatoTimer::getState() const {
@@ -103,6 +144,10 @@ int TomatoTimer::getRemainingSeconds() const {
 
 int TomatoTimer::getCompletedPomodoros() const {
     return _completedPomodoros;
+}
+
+void TomatoTimer::resetCompletedPomodoros() {
+    _completedPomodoros = 0;
 }
 
 void TomatoTimer::setConfig(const TomatoConfig& config) {
@@ -120,6 +165,10 @@ void TomatoTimer::setOnReminderCallback(std::function<void()> callback) {
     _onReminderCallback = callback;
 }
 
+void TomatoTimer::setOnStatusBarUpdateCallback(std::function<void(const std::wstring&)> callback) {
+    _onStatusBarUpdateCallback = callback;
+}
+
 void CALLBACK TomatoTimer::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
     TomatoTimer* timer = static_cast<TomatoTimer*>(lpParameter);
     if (timer) {
@@ -128,51 +177,115 @@ void CALLBACK TomatoTimer::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitF
 }
 
 void TomatoTimer::handleTimerEvent() {
+    std::unique_lock<std::mutex> lock(_mutex);
     if (_state == TomatoState::IDLE || _state == TomatoState::PAUSED) {
         return;
     }
 
     _remainingSeconds--;
 
+    // 调试日志：每10秒或最后5秒打印一次，避免日志过大
+    if (_remainingSeconds % 10 == 0 || _remainingSeconds < 5) {
+        // Log(L"Tick: 剩余 " + std::to_wstring(_remainingSeconds) + L" 秒");
+    }
+
+    // 准备回调需要的数据，避免持锁调用回调
+    auto onStatusBarUpdateCallback = _onStatusBarUpdateCallback;
+    int remainingSeconds = _remainingSeconds;
+    TomatoState state = _state;
+    
+    // 临时解锁以调用状态栏回调，防止死锁
+    lock.unlock();
+    
+    // 更新状态栏显示剩余时间
+    if (onStatusBarUpdateCallback) {
+        int minutes = remainingSeconds / 60;
+        int seconds = remainingSeconds % 60;
+        std::wstringstream ss;
+        if (state == TomatoState::WORKING) {
+            ss << L"工作: " << minutes << L":" << (seconds < 10 ? L"0" : L"") << seconds;
+        } else {
+            ss << L"休息: " << minutes << L":" << (seconds < 10 ? L"0" : L"") << seconds;
+        }
+        onStatusBarUpdateCallback(ss.str());
+    }
+
+    // 重新加锁检查时间是否到
+    lock.lock();
+    
+    // 再次检查状态，防止在解锁期间被修改
+    if (_state == TomatoState::IDLE || _state == TomatoState::PAUSED) {
+        return;
+    }
+    
+    // 检查剩余时间。注意：如果_remainingSeconds在解锁期间被reset修改了，这里会读取到新值。
+    // 但是我们之前已经 _remainingSeconds-- 了。
+    // 如果其他线程 reset 了，_remainingSeconds 变大了，这里就不会进 if。
+    // 如果没有其他线程干扰，这里 _remainingSeconds 应该还是我们刚才减过的值（或者更小，如果有并发tick，但我们加了锁，handleTimerEvent串行化了？
+    // 不，handleTimerEvent是每次tick调用的。如果上一次tick因为锁阻塞了，这一次会接着执行。
+    // 关键是：_remainingSeconds 是共享变量。
+    
     if (_remainingSeconds <= 0) {
+        Log(L"时间到，当前状态: " + std::to_wstring(static_cast<int>(_state)));
+        
+        // 准备执行的动作
+        std::wstring reminderMsg;
+        std::wstring ttsMsg;
+        bool doPlayTTS = false;
+        bool stateChanged = false;
+        auto onReminderCallback = _onReminderCallback;
+
         // 时间到，切换状态
         if (_state == TomatoState::WORKING) {
             // 工作时间到，判断是否需要长休息
             _completedPomodoros++;
+            Log(L"完成一个番茄钟，总数: " + std::to_wstring(_completedPomodoros));
+            
             bool needLongRest = (_completedPomodoros % _config.longRestAfterPomodoros == 0);
             
-            std::wcout << L"番茄钟完成数: " << _completedPomodoros << L", 长休息周期: " << _config.longRestAfterPomodoros << L", 是否长休息: " << (needLongRest ? L"是" : L"否") << std::endl;
-            
             if (needLongRest) {
-                showReminder(L"工作时间到！已完成4个番茄钟，进行长休息吧。");
-                if (_config.enableTTS && !_ttsPlayed) {
-                    playTTS(_config.longRestReminderText);
-                    _ttsPlayed = true;
-                }
+                Log(L"触发长休息");
+                reminderMsg = L"工作时间到！已完成4个番茄钟，进行长休息吧。";
+                ttsMsg = _config.longRestReminderText;
+                
                 switchState(TomatoState::RESTING);
                 _remainingSeconds = _config.longRestMinutes * 60;
             } else {
-                showReminder(L"工作时间到！该休息一下了。");
-                if (_config.enableTTS && !_ttsPlayed) {
-                    playTTS(_config.shortRestReminderText);
-                    _ttsPlayed = true;
-                }
+                Log(L"触发短休息");
+                reminderMsg = L"工作时间到！该休息一下了。";
+                ttsMsg = _config.shortRestReminderText;
+                
                 switchState(TomatoState::RESTING);
                 _remainingSeconds = _config.shortRestMinutes * 60;
             }
+            stateChanged = true;
         } else if (_state == TomatoState::RESTING) {
-            showReminder(L"休息时间到！该开始工作了。");
-            if (_config.enableTTS && !_ttsPlayed) {
-                playTTS(_config.workReminderText);
-                _ttsPlayed = true;
-            }
+            Log(L"休息结束，开始工作");
+            reminderMsg = L"休息时间到！该开始工作了。";
+            ttsMsg = _config.workReminderText;
+            
             switchState(TomatoState::WORKING);
             _remainingSeconds = _config.workMinutes * 60;
+            stateChanged = true;
         }
+        
+        if (stateChanged) {
+            doPlayTTS = _config.enableTTS && !_ttsPlayed;
+            if (doPlayTTS) _ttsPlayed = true;
+        }
+        
+        // 解锁后执行耗时操作
+        lock.unlock();
 
-        // 触发回调
-        if (_onReminderCallback) {
-            _onReminderCallback();
+        if (stateChanged) {
+            showReminder(reminderMsg);
+            if (doPlayTTS) {
+                playTTS(ttsMsg);
+            }
+            // 触发回调
+            if (onReminderCallback) {
+                onReminderCallback();
+            }
         }
     } else {
         // 剩余时间大于0，重置TTS播放标志

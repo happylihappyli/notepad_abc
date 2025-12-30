@@ -1723,6 +1723,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 				case STATUSBAR_EOF_FORMAT:
 				case STATUSBAR_UNICODE_TYPE:
 				case STATUSBAR_TYPING_MODE:
+				case STATUSBAR_TOMATO_TIMER:
 					_statusBar.setText(str2set, static_cast<int32_t>(wParam));
 					return TRUE;
 				default :
@@ -3865,6 +3866,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			_statusBar.setPartWidth(STATUSBAR_EOF_FORMAT, DPIManagerV2::scale(110, dpi));
 			_statusBar.setPartWidth(STATUSBAR_UNICODE_TYPE, DPIManagerV2::scale(120, dpi));
 			_statusBar.setPartWidth(STATUSBAR_TYPING_MODE, DPIManagerV2::scale(30, dpi));
+			_statusBar.setPartWidth(STATUSBAR_TOMATO_TIMER, DPIManagerV2::scale(150, dpi));
 
 			return TRUE;
 		}

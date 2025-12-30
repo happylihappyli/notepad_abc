@@ -8,6 +8,7 @@
 #include <string>
 #include <chrono>
 #include <functional>
+#include <mutex>
 
 // 番茄状态枚举
 enum class TomatoState {
@@ -61,6 +62,9 @@ public:
     // 获取已完成的番茄钟数量
     int getCompletedPomodoros() const;
 
+    // 重置已完成的番茄钟数量
+    void resetCompletedPomodoros();
+
     // 设置配置
     void setConfig(const TomatoConfig& config);
 
@@ -69,6 +73,9 @@ public:
 
     // 注册提醒回调函数
     void setOnReminderCallback(std::function<void()> callback);
+
+    // 注册状态栏更新回调函数
+    void setOnStatusBarUpdateCallback(std::function<void(const std::wstring&)> callback);
 
     // 测试TTS功能
     void testTTS();
@@ -105,4 +112,6 @@ private:
     std::function<void()> _onReminderCallback;
     bool _comInitialized = false;  // COM是否已初始化
     bool _ttsPlayed = false;  // TTS是否已播放
+    std::function<void(const std::wstring&)> _onStatusBarUpdateCallback;  // 状态栏更新回调
+    mutable std::mutex _mutex; // 互斥锁，保护共享数据
 };

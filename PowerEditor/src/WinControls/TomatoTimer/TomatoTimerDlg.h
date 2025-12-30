@@ -11,6 +11,9 @@ public:
 	void doDialog(bool isRTL = false);
 	void destroy() override;
 
+	// 设置状态栏更新回调
+	void setOnStatusBarUpdateCallback(std::function<void(const std::wstring&)> callback);
+
 protected:
 	intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 

@@ -16,10 +16,9 @@ void TomatoTimerDlg::doDialog(bool isRTL) {
 			this->updateUI();
 		});
 	}
-	else {
-		goToCenter();
-		display();
-	}
+	
+	goToCenter();
+	display();
 }
 
 void TomatoTimerDlg::destroy() {
@@ -65,6 +64,11 @@ intptr_t CALLBACK TomatoTimerDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 
 				case IDC_TEST_TTS:
 					_timer.testTTS();
+					return TRUE;
+
+				case IDC_RESET_POMODOROS:
+					_timer.resetCompletedPomodoros();
+					updateTimerState();
 					return TRUE;
 
 				default:
@@ -210,4 +214,8 @@ void TomatoTimerDlg::updateTimerState() {
 
 void TomatoTimerDlg::updateUI() {
 	updateTimerState();
+}
+
+void TomatoTimerDlg::setOnStatusBarUpdateCallback(std::function<void(const std::wstring&)> callback) {
+	_timer.setOnStatusBarUpdateCallback(callback);
 }

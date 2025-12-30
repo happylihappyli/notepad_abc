@@ -150,6 +150,10 @@
 #define IDI_VIEW_MONITORING_ICON_DM       295
 #define IDI_VIEW_MONITORING_DIS_ICON_DM   296
 #define IDI_VIEW_DOCLIST_ICON_DM          297
+#define IDI_TOMATO_TIMER_ICON             298
+#define IDI_TOMATO_TIMER_DISABLE_ICON     299
+#define IDI_TOMATO_TIMER_ICON_DM          300
+#define IDI_TOMATO_TIMER_DISABLE_ICON_DM  400
 
 //
 // TOOLBAR ICO - set 2
@@ -201,6 +205,8 @@
 #define IDI_VIEW_MONITORING_ICON2         345
 #define IDI_VIEW_MONITORING_DIS_ICON2     346
 #define IDI_VIEW_DOCLIST_ICON2            347
+#define IDI_TOMATO_TIMER_ICON2            348
+#define IDI_TOMATO_TIMER_DISABLE_ICON2    349
 
 //
 // TOOLBAR ICO - set 2, Dark Mode
@@ -252,8 +258,8 @@
 #define IDI_VIEW_MONITORING_ICON_DM2      395
 #define IDI_VIEW_MONITORING_DIS_ICON_DM2  396
 #define IDI_VIEW_DOCLIST_ICON_DM2         397
-
-
+#define IDI_TOMATO_TIMER_ICON_DM2         398
+#define IDI_TOMATO_TIMER_DISABLE_ICON_DM2 399
 
 #define IDI_SAVED_ICON           501
 #define IDI_UNSAVED_ICON         502
@@ -427,6 +433,7 @@
 #define IDR_PINTAB_HOVERONTAB_DM    1579
 #define IDR_PINTAB_PINNED_DM        1580
 #define IDR_PINTAB_PINNEDHOVERIN_DM 1581
+#define IDR_TOMATO_TIMER           1582
 
 #define ID_MACRO                           20000
 //                                     O     .

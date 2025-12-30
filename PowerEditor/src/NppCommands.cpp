@@ -3795,6 +3795,12 @@ void Notepad_plus::command(int id)
 		case IDM_TOOL_TOMATO_TIMER:
 		{
 			bool isFirstTime = !_tomatoTimerDlg.isCreated();
+			if (isFirstTime) {
+				// 注册状态栏更新回调
+				_tomatoTimerDlg.setOnStatusBarUpdateCallback([this](const std::wstring& text) {
+					_statusBar.setText(text.c_str(), STATUSBAR_TOMATO_TIMER);
+				});
+			}
 			_tomatoTimerDlg.doDialog(_nativeLangSpeaker.isRTL());
 			if (isFirstTime)
 				_nativeLangSpeaker.changeDlgLang(_tomatoTimerDlg.getHSelf(), "TomatoTimerDlg");
