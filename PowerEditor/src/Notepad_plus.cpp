@@ -4225,6 +4225,12 @@ void Notepad_plus::setTitle()
 		result += tbAdd;
 	}
 
+	if (!_tomatoTimerStatus.empty())
+	{
+		result += L" - ";
+		result += _tomatoTimerStatus;
+	}
+
 	::SendMessage(_pPublicInterface->getHSelf(), WM_SETTEXT, 0, reinterpret_cast<LPARAM>(result.c_str()));
 }
 

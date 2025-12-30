@@ -39,6 +39,7 @@
 #include "sha512.h"
 #include "SortLocale.h"
 #include "Common.h"
+#include "resource.h"
 
 using namespace std;
 
@@ -3796,9 +3797,11 @@ void Notepad_plus::command(int id)
 		{
 			bool isFirstTime = !_tomatoTimerDlg.isCreated();
 			if (isFirstTime) {
-				// 注册状态栏更新回调
+				// 注册状态栏与标题栏更新回调
 				_tomatoTimerDlg.setOnStatusBarUpdateCallback([this](const std::wstring& text) {
 					_statusBar.setText(text.c_str(), STATUSBAR_TOMATO_TIMER);
+					_tomatoTimerStatus = text;
+					::PostMessage(_pPublicInterface->getHSelf(), NPPM_INTERNAL_UPDATETITLEBAR, 0, 0);
 				});
 			}
 			_tomatoTimerDlg.doDialog(_nativeLangSpeaker.isRTL());

@@ -330,6 +330,7 @@ private:
 	HashFromFilesDlg _sha512FromFilesDlg;
 	HashFromTextDlg _sha512FromTextDlg;
 	TomatoTimerDlg _tomatoTimerDlg;
+	std::wstring _tomatoTimerStatus;
     GoToLineDlg _goToLineDlg;
 	ColumnEditorDlg _colEditorDlg;
 	WordStyleDlg _configStyleDlg;
