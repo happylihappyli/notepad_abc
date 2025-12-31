@@ -386,6 +386,7 @@
     #define    IDM_VIEW_SWITCHTO_FILEBROWSER      (IDM_VIEW + 107)
     #define    IDM_VIEW_SWITCHTO_FUNC_LIST        (IDM_VIEW + 108)
     #define    IDM_VIEW_SWITCHTO_DOCLIST          (IDM_VIEW + 109)
+    #define    IDM_VIEW_POWERSHELL_CONSOLE        (IDM_VIEW + 123)
     #define    IDM_VIEW_DOCLIST_CATEGORY_MENU     (IDM_VIEW + 120)  // Document Category菜单
     #define    IDM_VIEW_DOCLIST_EDIT_CATEGORY     (IDM_VIEW + 121)  // 编辑分类文件
     #define    IDM_VIEW_DOCLIST_REFRESH_CATEGORY  (IDM_VIEW + 122)  // 刷新分类

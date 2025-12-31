@@ -32,6 +32,7 @@
 #include "MISC/PluginsManager/PluginsManager.h"
 #include "WinControls/Preference/preferenceDlg.h"
 #include "WinControls/TomatoTimer/TomatoTimerDlg.h"
+#include "WinControls/PowerShellConsole/PowerShellConsolePanel.h"
 #include "WinControls/WindowsDlg/WindowsDlg.h"
 #include "WinControls/shortcut/RunMacroDlg.h"
 #include "WinControls/DockingWnd/DockingManager.h"
@@ -331,6 +332,7 @@ private:
 	HashFromTextDlg _sha512FromTextDlg;
 	TomatoTimerDlg _tomatoTimerDlg;
 	std::wstring _tomatoTimerStatus;
+	PowerShellConsolePanel* _pPowerShellConsole = nullptr;
     GoToLineDlg _goToLineDlg;
 	ColumnEditorDlg _colEditorDlg;
 	WordStyleDlg _configStyleDlg;
@@ -630,6 +632,7 @@ private:
 	void launchProjectPanel(int cmdID, ProjectPanel ** pProjPanel, int panelID);
 	void launchDocMap();
 	void launchFunctionList();
+	void launchPowerShellConsole();
 	void launchFileBrowser(const std::vector<std::wstring> & folders, const std::wstring& selectedItemPath, bool fromScratch = false);
 	void showAllQuotes() const;
 	static DWORD WINAPI threadTextPlayer(void *text2display);

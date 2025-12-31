@@ -3851,6 +3851,12 @@ void Notepad_plus::command(int id)
 			}
 		}
 		break;
+		
+		case IDM_VIEW_POWERSHELL_CONSOLE:
+		{
+			launchPowerShellConsole();
+		}
+		break;
 
 		case IDM_DEBUGINFO:
 		{

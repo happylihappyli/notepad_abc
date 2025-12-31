@@ -856,6 +856,7 @@ BEGIN
         MENUITEM "Folder as Workspace",   IDM_VIEW_FILEBROWSER
         MENUITEM "Document Map",          IDM_VIEW_DOC_MAP
         MENUITEM "Document List",         IDM_VIEW_DOCLIST
+        MENUITEM "PowerShell Console",    IDM_VIEW_POWERSHELL_CONSOLE
         POPUP "Document Category"
         BEGIN
             MENUITEM "显示分类菜单",        IDM_VIEW_DOCLIST_CATEGORY_MENU

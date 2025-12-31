@@ -7838,6 +7838,29 @@ void Notepad_plus::launchFunctionList()
 	_pFuncList->display(true); // 明确传入true参数以显示面板
 }
 
+void Notepad_plus::launchPowerShellConsole()
+{
+	if (!_pPowerShellConsole)
+	{
+		_pPowerShellConsole = new PowerShellConsolePanel();
+		_pPowerShellConsole->init(_pPublicInterface->getHinst(), _pPublicInterface->getHSelf());
+
+		tTbData	data{};
+		_pPowerShellConsole->create(&data, _nativeLangSpeaker.isRTL());
+
+		::SendMessage(_pPublicInterface->getHSelf(), NPPM_MODELESSDIALOG, MODELESSDIALOGREMOVE, reinterpret_cast<LPARAM>(_pPowerShellConsole->getHSelf()));
+		data.uMask = DWS_DF_CONT_BOTTOM | DWS_ICONTAB | DWS_USEOWNDARKMODE;
+		data.pszModuleName = NPP_INTERNAL_FUNCTION_STR;
+		data.dlgID = IDM_VIEW_POWERSHELL_CONSOLE;
+
+		static wchar_t title[32] = L"PowerShell Console";
+		data.pszName = title;
+
+		::SendMessage(_pPublicInterface->getHSelf(), NPPM_DMMREGASDCKDLG, 0, reinterpret_cast<LPARAM>(&data));
+	}
+	_pPowerShellConsole->display(true);
+}
+
 
 struct TextPlayerParams
 {

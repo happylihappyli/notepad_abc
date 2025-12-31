@@ -1,0 +1,14 @@
+// PowerShell 控制台面板资源
+#include <windows.h>
+#include "PowerShellConsolePanel_rc.h"
+
+#ifndef IDC_STATIC
+#define IDC_STATIC -1
+#endif
+
+IDD_POWERSHELL_PANEL DIALOGEX 0, 0, 320, 220
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "Consolas", 400, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_PS_OUTPUT,0,0,320,220,ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN | WS_VSCROLL
+END

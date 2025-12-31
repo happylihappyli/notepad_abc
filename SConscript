@@ -347,6 +347,7 @@ src_files = [
     os.path.join(src_dir, 'WinControls', 'WindowsDlg', 'WinRect.cpp'),  # 添加WinRect.cpp
     os.path.join(src_dir, 'WinControls', 'shortcut', 'shortcut.cpp'),
     os.path.join(src_dir, 'WinControls', 'shortcut', 'RunMacroDlg.cpp'),
+    os.path.join(src_dir, 'WinControls', 'PowerShellConsole', 'PowerShellConsolePanel.cpp'),
     
     # TomatoTimer模块
     os.path.join(src_dir, 'WinControls', 'TomatoTimer', 'TomatoTimer.cpp'),
@@ -430,9 +431,10 @@ rc_files = [
     os.path.join(src_dir, 'WinControls', 'ColourPicker', 'WordStyleDlg.rc'),
     os.path.join(src_dir, 'WinControls', 'ClipboardHistory', 'clipboardHistoryPanel.rc'),
     os.path.join(src_dir, 'WinControls', 'TomatoTimer', 'TomatoTimer.rc'),
+    os.path.join(src_dir, 'WinControls', 'PowerShellConsole', 'PowerShellConsolePanel.rc'),
     os.path.join(src_dir, 'MISC', 'RegExt', 'regExtDlg.rc'),
     os.path.join(src_dir, 'MISC', 'md5', 'md5Dlgs.rc'),
-]
+] 
 
 print("处理资源文件...")
 print(f"资源编译器: {env.get('RC', '未设置')}")
