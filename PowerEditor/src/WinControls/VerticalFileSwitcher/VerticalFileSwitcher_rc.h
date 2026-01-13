@@ -1,4 +1,4 @@
-﻿// This file is part of Notepad++ project
+// This file is part of Notepad++ project
 // Copyright (C)2021 Don HO <don.h@free.fr>
 
 // This program is free software: you can redistribute it and/or modify
@@ -72,3 +72,4 @@
 #define	IDC_ADD_CATEGORY 3054
 #define	IDC_DELETE_CATEGORY 3055
 #define	IDC_RENAME_CATEGORY 3056
+#define IDC_INPUT_EDIT      3057

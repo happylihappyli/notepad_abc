@@ -554,7 +554,7 @@ void CategoryManager::createDefaultCategories() {
     m_categories.clear();
     
     // 创建Default Category，使用固定的Category ID
-    FileCategory defaultCategory(L"全部", L"未分类的文件", 0);
+    FileCategory defaultCategory(L"未分类", L"未分类的文件", 0);
     defaultCategory.id = getDefaultCategoryId();
     m_categories.push_back(defaultCategory);
     

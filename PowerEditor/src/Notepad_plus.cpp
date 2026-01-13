@@ -454,6 +454,20 @@ LRESULT Notepad_plus::init(HWND hwnd)
 	_statusBar.setPartWidth(STATUSBAR_TOMATO_TIMER, DPIManagerV2::scale(150, dpi));
 	_statusBar.display(willBeShown);
 
+	// Tomato Timer Auto-start
+	if (_tomatoTimerDlg.getTimer().getConfig().autoStart)
+	{
+		// Register status bar update callback
+		_tomatoTimerDlg.setOnStatusBarUpdateCallback([this](const std::wstring& text) {
+			_statusBar.setText(text.c_str(), STATUSBAR_TOMATO_TIMER);
+			_tomatoTimerStatus = text;
+			::PostMessage(_pPublicInterface->getHSelf(), NPPM_INTERNAL_UPDATETITLEBAR, 0, 0);
+		});
+
+		// Start timer
+		_tomatoTimerDlg.getTimer().start();
+	}
+
 	_pMainWindow = &_mainDocTab;
 
 	_dockingManager.init(_pPublicInterface->getHinst(), hwnd, &_pMainWindow);
@@ -944,6 +958,14 @@ LRESULT Notepad_plus::init(HWND hwnd)
 			checkMenuItem(IDM_VIEW_DOCLIST, true);
 			_toolBar.setCheck(IDM_VIEW_DOCLIST, true);
 		}
+	}
+
+	// 初始化番茄闹钟
+	_tomatoTimerDlg.getTimer().initialize(hwnd);
+	_tomatoTimerDlg.getTimer().loadConfig();
+	if (_tomatoTimerDlg.getTimer().getConfig().autoStart)
+	{
+		_tomatoTimerDlg.getTimer().start();
 	}
 
 	//Load initial docs into doctab
@@ -4430,7 +4452,7 @@ size_t Notepad_plus::getSelectedBytes()
 int Notepad_plus::wordCount()
 {
     FindOption env;
-    env._str2Search = L"[^ 	\\\\.,;:!?()+\\r\\n\\-\\*/=\\]\\[{}&~\"'`|@$%<>\\^]+";
+    env._str2Search = L"[^ 	\\\\.,;:!?()+\\r\\n\\-\\*/=\\]\\[{}&~\"'`|@$%<>\\^\\u4e00-\\u9fa5]+|[\\u4e00-\\u9fa5]";
     env._searchType = FindRegex;
     return _findReplaceDlg.processAll(ProcessCountAll, &env, true);
 }

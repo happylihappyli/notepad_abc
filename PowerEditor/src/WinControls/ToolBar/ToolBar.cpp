@@ -419,6 +419,10 @@ void ToolBar::reset(bool create)
 		::SendMessage(_hSelf, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_DRAWDDARROWS | TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_DOUBLEBUFFER);
 		
 		change2CustomIconsIfAny();
+		
+		// Add "Tomato" string to pool for Tomato Timer button
+		wchar_t tomatoStrBuf[] = L" Tomato\0\0";
+		::SendMessage(_hSelf, TB_ADDSTRING, 0, (LPARAM)tomatoStrBuf);
 	}
 
 	if (!_hSelf)
@@ -491,6 +495,17 @@ void ToolBar::reset(bool create)
 	if (create)
 	{	//if the toolbar has been recreated, readd the buttons
 		_nbCurrentButtons = _nbTotalButtons;
+		
+		// Update Tomato Timer button style to show text
+		for (size_t i = 0; i < _nbTotalButtons; ++i)
+		{
+			if (_pTBB[i].idCommand == IDM_TOOL_TOMATO_TIMER)
+			{
+				_pTBB[i].iString = 0; // Index 0 because we just added it and it's likely the first/only one
+				_pTBB[i].fsStyle |= BTNS_SHOWTEXT | BTNS_AUTOSIZE;
+			}
+		}
+
 		WORD btnSize = static_cast<WORD>(_dpiManager.scale((_state == TB_LARGE || _state == TB_LARGE2) ? 32 : 16));
 		::SendMessage(_hSelf, TB_SETBUTTONSIZE , 0, MAKELONG(btnSize, btnSize));
 		::SendMessage(_hSelf, TB_ADDBUTTONS, _nbTotalButtons, reinterpret_cast<LPARAM>(_pTBB));

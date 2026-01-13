@@ -1,4 +1,4 @@
-{
+﻿{
     "categories": [
         {
             "description": "未分类的文件",
@@ -67,6 +67,22 @@
         {
             "categoryId": "study",
             "filePath": "E:\\BaiduSyncdisk\\bak\\计划-学习-看视频.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "E:\\BaiduSyncdisk\\Zig\\hello\\src\\test_dll.zig"
+        },
+        {
+            "categoryId": "work",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-公司.txt"
+        },
+        {
+            "categoryId": "life",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\内心内观.txt"
+        },
+        {
+            "categoryId": "work",
+            "filePath": "E:\\BaiduSyncdisk\\bak\\计划-ai.txt"
         }
     ]
 }

@@ -2991,8 +2991,11 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		{
 			const NppGUI & nppgui = nppParam.getNppGUI();
 			auto toTray = nppgui._isMinimizedToTray;
+			// 如果番茄时钟正在运行，点击关闭按钮时最小化到托盘
+			bool isTomatoActive = _tomatoTimerDlg.getTimer().getState() != TomatoState::IDLE;
+
 			if (((toTray == sta_minimize || toTray == sta_minimize_close || _pPublicInterface->isPrelaunch()) && (wParam == SC_MINIMIZE)) ||
-				((toTray == sta_close || toTray == sta_minimize_close) && wParam == SC_CLOSE)
+				((toTray == sta_close || toTray == sta_minimize_close || isTomatoActive) && wParam == SC_CLOSE)
 			)
 			{
 				if (!_pTrayIco)

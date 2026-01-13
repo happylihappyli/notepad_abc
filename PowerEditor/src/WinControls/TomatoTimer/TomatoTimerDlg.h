@@ -14,6 +14,8 @@ public:
 	// 设置状态栏更新回调
 	void setOnStatusBarUpdateCallback(std::function<void(const std::wstring&)> callback);
 
+	TomatoTimer& getTimer() { return _timer; }
+
 protected:
 	intptr_t CALLBACK run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam) override;
 

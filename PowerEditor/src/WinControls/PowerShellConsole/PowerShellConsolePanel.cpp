@@ -2,7 +2,10 @@
 #include "PowerShellConsolePanel.h"
 #include "resource.h"
 #include "menuCmdID.h"
+#include "NppDarkMode.h"
+#include "Notepad_plus_msgs.h"
 #include <windows.h>
+#include <uxtheme.h>
 #include <string>
 #include <vector>
 #include <regex>
@@ -45,6 +48,9 @@ void PowerShellConsolePanel::initEditControl() {
 	// 移除文本长度限制
 	::SendMessageW(_hEdit, EM_LIMITTEXT, 0, 0);
 	
+	// 强制禁用主题，确保 GDI 颜色设置生效
+	::SetWindowTheme(_hEdit, L"", L"");
+
 	_lastOutputEndPos = 0;
 }
 
@@ -128,6 +134,18 @@ LRESULT CALLBACK PowerShellConsolePanel::EditSubclassProc(HWND hWnd, UINT messag
 			}
 			return 0;
 		}
+	}
+	else if (message == WM_ERASEBKGND) {
+		// 强制处理背景擦除，确保始终为黑色（无论深浅色模式）
+		// if (NppDarkMode::isThemeDark()) { // 移除条件判断
+			HDC hdc = (HDC)wParam;
+			RECT rc;
+			::GetClientRect(hWnd, &rc);
+			HBRUSH hBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+			::FillRect(hdc, &rc, hBrush);
+			::DeleteObject(hBrush);
+			return 1; // 已处理
+		// }
 	}
 	else if (message == WM_PASTE) {
 		// 粘贴前移动到末尾
@@ -335,7 +353,57 @@ intptr_t CALLBACK PowerShellConsolePanel::run_dlgProc(UINT message, WPARAM wPara
 		case WM_INITDIALOG:
 		{
 			initEditControl();
+			// NppDarkMode::autoSubclassAndThemeChildControls(_hSelf);
+			
+			// Manually refresh dark mode to ensure colors are applied immediately
+			::SendMessage(_hSelf, NPPM_INTERNAL_REFRESHDARKMODE, 0, 0);
 			return TRUE;
+		}
+		case NPPM_INTERNAL_REFRESHDARKMODE:
+		{
+			// 始终强制使用深色模式外观
+			// if (NppDarkMode::isThemeDark())
+			// {
+				// 关键修改：禁用 Edit 控件的 Visual Styles 主题
+				// 这强制 Edit 控件使用 GDI 绘制，从而完全服从 WM_CTLCOLOREDIT 返回的画刷
+				::SetWindowTheme(_hEdit, nullptr, nullptr);
+				
+				// 强制重绘
+				::InvalidateRect(_hEdit, nullptr, TRUE);
+			// }
+			// else
+			// {
+			// 	::SetWindowTheme(_hEdit, nullptr, nullptr); // 或者是 L"Explorer"
+			// }
+			return TRUE;
+		}
+		case WM_CTLCOLORDLG:
+		case WM_CTLCOLOREDIT:
+		case WM_CTLCOLORSTATIC:
+		{
+			// 始终强制使用深色模式外观
+			// if (NppDarkMode::isThemeDark())
+			// {
+				HDC hdc = (HDC)wParam;
+				// 强制使用纯黑背景，确保对比度
+				COLORREF bg = RGB(0, 0, 0); 
+				COLORREF text = RGB(240, 240, 240);
+				
+				::SetTextColor(hdc, text);
+				::SetBkColor(hdc, bg);
+				::SetBkMode(hdc, OPAQUE);
+				
+				static HBRUSH hBrush = nullptr;
+				static COLORREF lastColor = CLR_INVALID;
+				
+				if (hBrush == nullptr || lastColor != bg) {
+					if (hBrush) ::DeleteObject(hBrush);
+					hBrush = ::CreateSolidBrush(bg);
+					lastColor = bg;
+				}
+				return (INT_PTR)hBrush;
+			// }
+			// break;
 		}
 		case WM_SIZE:
 		{

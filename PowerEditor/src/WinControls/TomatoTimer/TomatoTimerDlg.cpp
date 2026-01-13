@@ -62,6 +62,16 @@ intptr_t CALLBACK TomatoTimerDlg::run_dlgProc(UINT message, WPARAM wParam, LPARA
 					updateTimerState();
 					return TRUE;
 
+				case IDC_AUTO_START:
+				{
+					// 保存配置
+					TomatoConfig config = _timer.getConfig();
+					config.autoStart = (::IsDlgButtonChecked(_hSelf, IDC_AUTO_START) == BST_CHECKED);
+					_timer.setConfig(config);
+					_timer.saveConfig();
+					return TRUE;
+				}
+
 				case IDC_TEST_TTS:
 					_timer.testTTS();
 					return TRUE;
@@ -114,6 +124,9 @@ void TomatoTimerDlg::initDialog() {
 	// 设置TTS复选框
 	::CheckDlgButton(_hSelf, IDC_ENABLE_TTS, config.enableTTS ? BST_CHECKED : BST_UNCHECKED);
 
+	// 设置自动启动复选框
+	::CheckDlgButton(_hSelf, IDC_AUTO_START, config.autoStart ? BST_CHECKED : BST_UNCHECKED);
+
 	// 设置短休息提醒文本
 	::SetDlgItemText(_hSelf, IDC_SHORT_REST_REMINDER_TEXT, config.shortRestReminderText.c_str());
 
@@ -155,6 +168,9 @@ void TomatoTimerDlg::saveConfig() {
 
 	// 获取TTS状态
 	config.enableTTS = (::IsDlgButtonChecked(_hSelf, IDC_ENABLE_TTS) == BST_CHECKED);
+
+	// 获取自动启动状态
+	config.autoStart = (::IsDlgButtonChecked(_hSelf, IDC_AUTO_START) == BST_CHECKED);
 
 	// 获取短休息提醒文本
 	wchar_t shortRestReminderText[256];

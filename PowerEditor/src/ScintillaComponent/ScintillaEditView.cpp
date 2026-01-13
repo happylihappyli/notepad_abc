@@ -752,6 +752,7 @@ void ScintillaEditView::setHotspotStyle(const Style& styleToSet)
 
 void ScintillaEditView::setStyle(Style styleToSet)
 {
+	// 如果启用深色模式，且是默认样式，强制设置背景色为黑色，前景色为白色
 	GlobalOverride & go = NppParameters::getInstance().getGlobalOverrideStyle();
 
 	if (go.isEnable())
@@ -821,6 +822,17 @@ void ScintillaEditView::setStyle(Style styleToSet)
 			}
 		}
 	}
+
+	// 如果启用深色模式，且是默认样式，强制设置背景色为黑色，前景色为浅色
+	// 这将覆盖GlobalOverride的设置，确保深色模式下编辑器背景正确
+	if (NppDarkMode::isEnabled() && styleToSet._styleID == STYLE_DEFAULT)
+	{
+		styleToSet._colorStyle |= COLORSTYLE_BACKGROUND;
+		styleToSet._bgColor = RGB(0, 0, 0);
+		styleToSet._colorStyle |= COLORSTYLE_FOREGROUND;
+		styleToSet._fgColor = RGB(224, 224, 224);
+	}
+
 	setSpecialStyle(styleToSet);
 }
 
@@ -1730,8 +1742,16 @@ void ScintillaEditView::defineDocType(LangType typeDoc)
 	Style * pStyleDefault = stylers.findByID(STYLE_DEFAULT);
 	if (pStyleDefault)
 	{
-		pStyleDefault->_colorStyle = COLORSTYLE_ALL;	//override transparency
-		setStyle(*pStyleDefault);
+		Style styleToSet = *pStyleDefault;
+		styleToSet._colorStyle = COLORSTYLE_ALL;	//override transparency
+
+		if (NppDarkMode::isThemeDark())
+		{
+			styleToSet._bgColor = RGB(0, 0, 0);
+			styleToSet._fgColor = RGB(240, 240, 240);
+		}
+
+		setStyle(styleToSet);
 	}
 
 	execute(SCI_STYLECLEARALL);
@@ -3086,7 +3106,12 @@ void ScintillaEditView::performGlobalStyles()
 		pStyle = stylers.findByName(L"Current line background colour");
 		if (pStyle)
 		{
-			setElementColour(SC_ELEMENT_CARET_LINE_BACK, pStyle->_bgColor);
+			COLORREF bgColor = pStyle->_bgColor;
+			if (NppDarkMode::isEnabled())
+			{
+				bgColor = RGB(45, 45, 45);
+			}
+			setElementColour(SC_ELEMENT_CARET_LINE_BACK, bgColor);
 		}
 	}
 

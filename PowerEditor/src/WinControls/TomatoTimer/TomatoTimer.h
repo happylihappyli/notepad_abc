@@ -28,6 +28,7 @@ struct TomatoConfig {
     std::wstring longRestReminderText = L"完成了4个番茄钟，进行长休息吧";  // 长休息提醒文本
     std::wstring workReminderText = L"休息结束，开始工作吧";      // 工作提醒文本
     bool enableTTS = true;     // 是否启用TTS声音
+    bool autoStart = false;    // 是否自动启动
 };
 
 class TomatoTimer {
@@ -37,6 +38,11 @@ public:
 
     // 初始化番茄提醒
     void initialize(HWND parentWnd);
+
+    // 加载配置
+    void loadConfig();
+    // 保存配置
+    void saveConfig();
 
     // 启动番茄提醒
     void start();

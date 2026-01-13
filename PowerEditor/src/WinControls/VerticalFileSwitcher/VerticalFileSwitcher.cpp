@@ -1,4 +1,5 @@
 #include "VerticalFileSwitcher.h"
+#include "VerticalFileSwitcher_rc.h"
 #include "menuCmdID.h"
 #include "Parameters.h"
 #include "resource.h"
@@ -7,6 +8,7 @@
 #include "Notepad_plus_msgs.h"
 // 确保包含windows.h以支持窗口创建函数
 #include <windows.h>
+#include <uxtheme.h>
 // 包含异常处理相关头文件
 #include <stdexcept>
 #include <vector>
@@ -21,8 +23,9 @@ using namespace std;
 #define SEP_POS        3
 #define LVGROUPS_ID    4
 #define FONTSIZE_ID    5
+#define CLMNCATEGORY_ID 6
 
-COLORREF VerticalFileSwitcher::_bgColor = 0xFFFFFF;
+COLORREF VerticalFileSwitcher::_bgColor = 0x000000;
 
 int CALLBACK ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
@@ -363,15 +366,28 @@ LRESULT VerticalFileSwitcher::listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPA
 	{
 		case CDDS_PREPAINT:
 		{
-			if ((lplvcd->dwItemType == LVCDI_GROUP) && NppDarkMode::isThemeDark())
+			if (NppDarkMode::isThemeDark())
 			{
-				RECT rcHeader{};
-				ListView_GetGroupRect(lplvcd->nmcd.hdr.hwndFrom, lplvcd->nmcd.dwItemSpec, LVGGR_HEADER, &rcHeader);
+				// If it's the main control prepaint (not a group), fill the entire background
+				if (lplvcd->dwItemType == 0)
+				{
+					RECT rc;
+					::GetClientRect(lplvcd->nmcd.hdr.hwndFrom, &rc);
+					HBRUSH hBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+					::FillRect(lplvcd->nmcd.hdc, &rc, hBrush);
+					::DeleteObject(hBrush);
+				}
+				
+				if (lplvcd->dwItemType == LVCDI_GROUP)
+				{
+					RECT rcHeader{};
+					ListView_GetGroupRect(lplvcd->nmcd.hdr.hwndFrom, lplvcd->nmcd.dwItemSpec, LVGGR_HEADER, &rcHeader);
 
-				HBRUSH hBrush = ::CreateSolidBrush(VerticalFileSwitcher::_bgColor);
-				::FillRect(lplvcd->nmcd.hdc, &rcHeader, hBrush);
-				::DeleteObject(hBrush);
-				hBrush = nullptr;
+					HBRUSH hBrush = ::CreateSolidBrush(VerticalFileSwitcher::_bgColor);
+					::FillRect(lplvcd->nmcd.hdc, &rcHeader, hBrush);
+					::DeleteObject(hBrush);
+					hBrush = nullptr;
+				}
 			}
 			return CDRF_NOTIFYITEMDRAW;
 		}
@@ -380,7 +396,7 @@ LRESULT VerticalFileSwitcher::listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPA
 		{
 			const RECT& rcRow = lplvcd->nmcd.rc;
 
-			const bool isThemeDark = NppDarkMode::isThemeDark();
+			const bool isThemeDark = true; // 始终强制深色模式
 
 			const auto hHeader = ListView_GetHeader(lplvcd->nmcd.hdr.hwndFrom);
 			const auto colCount = Header_GetItemCount(hHeader);
@@ -418,7 +434,7 @@ LRESULT VerticalFileSwitcher::listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPA
 			const bool isHot = (lplvcd->nmcd.uItemState & CDIS_HOT) == CDIS_HOT;
 			const int colorID = reinterpret_cast<TaskLstFnStatus*>(lplvcd->nmcd.lItemlParam)->_docColor;
 
-			COLORREF bgColor{0xFFFFFF};
+			COLORREF bgColor{0x000000}; // Default to black
 			bool applyColor = false;
 
 			if (colorID != -1)
@@ -426,16 +442,26 @@ LRESULT VerticalFileSwitcher::listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPA
 				bgColor = NppParameters::getInstance().getIndividualTabColor(colorID, isThemeDark, false);
 				applyColor = true;
 			}
-			else if (isThemeDark)
+			else if (isThemeDark) // Always true
 			{
 				if (isSelected)
 				{
-					bgColor = NppDarkMode::getCtrlBackgroundColor();
+					// Use hardcoded dark selection color since NppDarkMode might return light color
+					// NppDarkMode::getCtrlBackgroundColor() usually returns 0x000000 or slightly lighter
+					// Let's use a visible selection color like dark grey
+					bgColor = RGB(60, 60, 60); 
 					applyColor = true;
 				}
 				else if (isHot)
 				{
-					bgColor = NppDarkMode::getHotBackgroundColor();
+					// Hot track color
+					bgColor = RGB(80, 80, 80);
+					applyColor = true;
+				}
+				else
+				{
+					// Default background color
+					bgColor = RGB(0, 0, 0);
 					applyColor = true;
 				}
 			}
@@ -444,23 +470,15 @@ LRESULT VerticalFileSwitcher::listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPA
 			{
 				if (isThemeDark)
 				{
-					lplvcd->clrText = NppDarkMode::getTextColor();
+					lplvcd->clrText = RGB(240, 240, 240); // Force white text
 				}
 
 				lplvcd->clrTextBk = bgColor;
 
 				HBRUSH hBrush = ::CreateSolidBrush(bgColor);
 
-				::FillRect(lplvcd->nmcd.hdc, &rcSubItem, hBrush);
-				if (colCount >= 2)
-				{
-					::FillRect(lplvcd->nmcd.hdc, &rcSubItem2, hBrush);
-				}
-
-				if (colCount == 3)
-				{
-					::FillRect(lplvcd->nmcd.hdc, &rcSubItem3, hBrush);
-				}
+				// Fill the entire row to avoid gaps (white lines) between columns or at edges
+				::FillRect(lplvcd->nmcd.hdc, &rcRow, hBrush);
 
 				::DeleteObject(hBrush);
 				hBrush = nullptr;
@@ -484,6 +502,66 @@ LRESULT VerticalFileSwitcher::listViewNotifyCustomDraw(HWND hWnd, UINT uMsg, WPA
 	return ::DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
+static LRESULT headerNotifyCustomDraw(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	LPNMCUSTOMDRAW nmcd = (LPNMCUSTOMDRAW)lParam;
+	// if (!NppDarkMode::isThemeDark())
+	// 	return CDRF_DODEFAULT;
+
+	switch (nmcd->dwDrawStage)
+	{
+		case CDDS_PREPAINT:
+			return CDRF_NOTIFYITEMDRAW;
+
+		case CDDS_ITEMPREPAINT:
+		{
+			HDC hdc = nmcd->hdc;
+			RECT rc = nmcd->rc;
+			int iItem = (int)nmcd->dwItemSpec;
+			
+			// Background - Pure Black
+			HBRUSH hBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+			::FillRect(hdc, &rc, hBrush);
+			::DeleteObject(hBrush);
+
+			// Text
+			wchar_t text[256] = {0};
+			HDITEM hdi;
+			memset(&hdi, 0, sizeof(HDITEM));
+			hdi.mask = HDI_TEXT | HDI_FORMAT;
+			hdi.pszText = text;
+			hdi.cchTextMax = 256;
+			Header_GetItem(nmcd->hdr.hwndFrom, iItem, &hdi);
+
+			::SetBkMode(hdc, TRANSPARENT);
+			::SetTextColor(hdc, RGB(255, 255, 255)); // Pure White
+			
+			UINT uFormat = DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX;
+			if (hdi.fmt & HDF_CENTER) uFormat |= DT_CENTER;
+			else if (hdi.fmt & HDF_RIGHT) uFormat |= DT_RIGHT;
+			else uFormat |= DT_LEFT;
+
+			// Add some padding
+			RECT rcText = rc;
+			rcText.left += 6;
+			rcText.right -= 6;
+			
+			::DrawText(hdc, text, -1, &rcText, uFormat);
+
+			// Optional: Draw a subtle separator line
+			HPEN hPen = ::CreatePen(PS_SOLID, 1, RGB(60, 60, 60));
+			HPEN hOldPen = (HPEN)::SelectObject(hdc, hPen);
+			::MoveToEx(hdc, rc.right - 1, rc.top + 2, NULL);
+			::LineTo(hdc, rc.right - 1, rc.bottom - 2);
+			::SelectObject(hdc, hOldPen);
+			::DeleteObject(hPen);
+
+			return CDRF_SKIPDEFAULT;
+		}
+	}
+	return CDRF_DODEFAULT;
+}
+
 LRESULT CALLBACK VerticalFileSwitcher::FileSwitcherNotifySubclass(
 	HWND hWnd,
 	UINT uMsg,
@@ -501,6 +579,27 @@ LRESULT CALLBACK VerticalFileSwitcher::FileSwitcherNotifySubclass(
 			break;
 		}
 
+		case WM_ERASEBKGND:
+		{
+			// Always fill with black if it's the ListView
+			// Check by ID and class name for robustness
+			wchar_t className[64];
+			if (::GetClassName(hWnd, className, 64))
+			{
+				if (::GetDlgCtrlID(hWnd) == IDC_LIST_DOCLIST || wcscmp(className, WC_LISTVIEW) == 0)
+				{
+					HDC hdc = (HDC)wParam;
+					RECT rc;
+					::GetClientRect(hWnd, &rc);
+					HBRUSH hBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+					::FillRect(hdc, &rc, hBrush);
+					::DeleteObject(hBrush);
+					return 1;
+				}
+			}
+			break;
+		}
+
 		case WM_NOTIFY:
 		{
 			auto nmhdr = reinterpret_cast<LPNMHDR>(lParam);
@@ -515,6 +614,10 @@ LRESULT CALLBACK VerticalFileSwitcher::FileSwitcherNotifySubclass(
 					if (wcscmp(className, WC_LISTVIEW) == 0)
 					{
 						return VerticalFileSwitcher::listViewNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
+					}
+					else if (wcscmp(className, WC_HEADER) == 0)
+					{
+						return headerNotifyCustomDraw(hWnd, uMsg, wParam, lParam);
 					}
 					break;
 				}
@@ -544,7 +647,7 @@ bool VerticalFileSwitcher::registerWindowClass(HINSTANCE hInst) {
 		hInst,
 		NULL,  // 不使用图标
 		::LoadCursor(NULL, IDC_ARROW),
-		(HBRUSH)::GetStockObject(WHITE_BRUSH),
+		(HBRUSH)::GetStockObject(BLACK_BRUSH),
 		NULL,
 		VERTICAL_FILE_SWITCHER_CLASS_NAME,
 		NULL
@@ -589,8 +692,16 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 
 			// 从窗口中Get List View Control
 			HWND hListView = ::GetDlgItem(_hSelf, IDC_LIST_DOCLIST);
+			
+			// 强制设置ListView颜色为深色模式
+			ListView_SetBkColor(hListView, RGB(0, 0, 0));
+			ListView_SetTextBkColor(hListView, RGB(0, 0, 0));
+			ListView_SetTextColor(hListView, RGB(240, 240, 240));
+			
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 获取ListView控件句柄: %p, _hSelf: %p", hListView, _hSelf);
 			
+			// NppDarkMode::autoSubclassAndThemeChildControls(_hSelf); // 移除自动主题，防止干扰
+
 			// Initialize Category Manager
 			debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 开始Initialize Category Manager，Configuration Files路径: ..\\bin\\categories.json");
 			_categoryManager.initialize(L"..\\bin\\categories.json");
@@ -629,7 +740,8 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				SetWindowLongPtr(hListView, GWLP_WNDPROC, (LONG_PTR)VerticalFileSwitcher::listViewStaticProc);
 				
 				// Set extended styles for list view
-				ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
+				// Removed LVS_EX_DOUBLEBUFFER to allow WM_ERASEBKGND to work properly for custom background
+				ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT);
 				
 				// Set Image List
 				ListView_SetImageList(hListView, _hImaLst, LVSIL_SMALL);
@@ -649,15 +761,66 @@ LRESULT CALLBACK VerticalFileSwitcher::run_dlgProc(UINT message, WPARAM wParam, 
 				debugLog(L"VerticalFileSwitcher::WM_INITDIALOG - 错误：无法获取IDC_LIST_DOCLIST控件句柄！");
 			}
 
-			NppDarkMode::autoSubclassAndThemeChildControls(_hSelf);
+			// NppDarkMode::autoSubclassAndThemeChildControls(_hSelf);
 			VerticalFileSwitcher::autoSubclassWindowNotify(_hSelf);
+			
+			// Subclass the ListView as well to catch Header notifications and handle background erase
+			if (hListView)
+			{
+				::SetWindowSubclass(hListView, VerticalFileSwitcher::FileSwitcherNotifySubclass, _fileSwitcherNotifySubclassID, 0);
+			}
+
+			// Manually trigger dark mode refresh to ensure colors are correct on startup
+			::SendMessage(_hSelf, NPPM_INTERNAL_REFRESHDARKMODE, 0, 0);
 
 			return TRUE; // 返回TRUE表示成功处理WM_INITDIALOG
 		}
 
 		case NPPM_INTERNAL_REFRESHDARKMODE:
 		{
-			NppDarkMode::autoThemeChildControls(_hSelf);
+			// NppDarkMode::autoThemeChildControls(_hSelf);
+			HWND hListView = ::GetDlgItem(_hSelf, IDC_LIST_DOCLIST);
+			if (NppDarkMode::isThemeDark())
+			{
+				// Use pure black
+				COLORREF bg = RGB(0, 0, 0);
+				COLORREF text = RGB(240, 240, 240);
+				
+				_fileListView.setBackgroundColor(bg);
+				_fileListView.setForegroundColor(text);
+				if (hListView)
+				{
+					// Theme the header to be dark
+					HWND hHeader = ListView_GetHeader(hListView);
+					// NppDarkMode::allowDarkModeForWindow(hHeader, true); // Don't use standard dark mode for header if we want custom black/white
+					SetWindowTheme(hHeader, nullptr, nullptr); // Disable theme to allow custom draw to fully control
+
+					// Disable theme to force SetBkColor to work for the empty area
+					::SetWindowTheme(hListView, L"", L"");
+					ListView_SetBkColor(hListView, bg);
+					ListView_SetTextBkColor(hListView, bg);
+					ListView_SetTextColor(hListView, text);
+					
+					// 强制重绘
+					::InvalidateRect(hListView, nullptr, TRUE);
+					::InvalidateRect(hHeader, nullptr, TRUE);
+				}
+			}
+			else
+			{
+				_fileListView.setBackgroundColor(RGB(255, 255, 255));
+				_fileListView.setForegroundColor(RGB(0, 0, 0));
+				if (hListView)
+				{
+					HWND hHeader = ListView_GetHeader(hListView);
+					SetWindowTheme(hHeader, nullptr, nullptr);
+
+					::SetWindowTheme(hListView, nullptr, nullptr);
+					ListView_SetBkColor(hListView, 0xFFFFFF);
+					ListView_SetTextBkColor(hListView, 0xFFFFFF);
+					ListView_SetTextColor(hListView, 0x000000);
+				}
+			}
 			return TRUE;
 		}
 
@@ -1062,26 +1225,58 @@ void VerticalFileSwitcher::createCategoryButtons()
 	_categoryButtons.clear();
 	
 	const auto& categories = _categoryManager.getCategories();
-	if (categories.empty())
-		return;
+	// if (categories.empty()) // Don't return early, we want the "All" button at least
+	// 	return;
 	
 	// 创建分类按钮栏（用于过滤查看文件）
 	int buttonX = 5;        // 左边距
 	int buttonY = 5;        // 顶部偏移
-	int buttonWidth = 80;   // 按钮宽度（减小）
-	int buttonHeight = 28;  // 按钮高度（减小）
+	int buttonWidth = 60;   // 按钮宽度（减小以容纳更多）
+	int buttonHeight = 26;  // 按钮高度
 	int buttonSpacing = 5;  // 按钮间距
 	
+	// 1. 创建 "全部" (All) 按钮
+	HWND hAllButton = ::CreateWindowEx(
+		0,
+		L"BUTTON",
+		L"全部",
+		WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+		buttonX, buttonY, buttonWidth, buttonHeight,
+		_hSelf,
+		(HMENU)(CATEGORY_BUTTON_START),
+		_hInst,
+		NULL
+	);
+
+	if (hAllButton)
+	{
+		_categoryButtons.push_back(hAllButton);
+		
+		// Set font
+		HFONT hFont = (HFONT)::SendMessage(_hSelf, WM_GETFONT, 0, 0);
+		if (hFont) ::SendMessage(hAllButton, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+		buttonX += buttonWidth + buttonSpacing;
+	}
+
+	// 2. 创建分类按钮
 	for (size_t i = 0; i < categories.size(); ++i)
 	{
+		// 如果分类名称是"全部"且ID是默认ID，显示为"未分类"
+		std::wstring displayName = categories[i].name;
+		if (categories[i].id == _categoryManager.getDefaultCategoryId() && displayName == L"全部")
+		{
+			displayName = L"未分类";
+		}
+
 		HWND hButton = ::CreateWindowEx(
 			0,
 			L"BUTTON",
-			categories[i].name.c_str(),
+			displayName.c_str(),
 			WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
 			buttonX, buttonY, buttonWidth, buttonHeight,
 			_hSelf,
-			(HMENU)(CATEGORY_BUTTON_START + i),
+			(HMENU)(CATEGORY_BUTTON_START + 1 + i),
 			_hInst,
 			NULL
 		);
@@ -1098,7 +1293,7 @@ void VerticalFileSwitcher::createCategoryButtons()
 				LOGFONT lf;
 				if (GetObject(hFont, sizeof(LOGFONT), &lf))
 				{
-					lf.lfHeight = -14;  // 字体大小14号（负值表示逻辑单位）
+					lf.lfHeight = -12;  // 字体大小12号（更小一点以适应）
 					lf.lfWeight = FW_NORMAL; // 正常字体（不加粗）
 					wcscpy_s(lf.lfFaceName, LF_FACESIZE, L"微软雅黑"); // 使用微软雅黑字体
 					
@@ -1126,7 +1321,7 @@ void VerticalFileSwitcher::createCategoryButtons()
 		}
 	}
 	
-	// 默认选中第一个按钮（"All"分类）
+	// 默认选中第一个按钮（"全部"按钮）
 	if (!_categoryButtons.empty())
 	{
 		_currentCategoryButton = _categoryButtons[0];
@@ -1137,41 +1332,42 @@ void VerticalFileSwitcher::createCategoryButtons()
 // 处理分类按钮点击事件（用于过滤查看文件）
 void VerticalFileSwitcher::onCategoryButtonClick(HWND hButton)
 {
-	// 查找按钮对应的分类索引
-	int categoryIndex = -1;
+	// 查找按钮对应的索引
+	int buttonIndex = -1;
 	for (size_t i = 0; i < _categoryButtons.size(); ++i)
 	{
 		if (_categoryButtons[i] == hButton)
 		{
-			categoryIndex = static_cast<int>(i);
+			buttonIndex = static_cast<int>(i);
 			break;
 		}
 	}
 	
-	if (categoryIndex < 0 || categoryIndex >= static_cast<int>(_categoryManager.getCategories().size()))
+	if (buttonIndex == -1)
 		return;
-	
-	const auto& categories = _categoryManager.getCategories();
-	const std::wstring& selectedCategory = categories[categoryIndex].name;
-	
-	debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 选择分类按钮: %s", selectedCategory.c_str());
-	
+
 	// 更新按钮状态
 	_currentCategoryButton = hButton;
 	updateCategoryButtonState(_currentCategoryButton);
 	
-	// 过滤文件列表
-	if (selectedCategory == L"All")
+	if (buttonIndex == 0)
 	{
-		// 选择"All"分类，清除过滤
-		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - Clear category过滤，显示All文件");
+		// 索引0是 "全部" 按钮
+		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 选择'全部'按钮，清除过滤");
 		_fileListView.clearCategoryFilter();
 	}
 	else
 	{
-		// 设置当前分类进行过滤
-		debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 设置当前分类进行过滤: %s", selectedCategory.c_str());
-		_fileListView.setCurrentCategory(selectedCategory);
+		// 索引 > 0 是具体分类
+		int categoryIndex = buttonIndex - 1;
+		const auto& categories = _categoryManager.getCategories();
+		
+		if (categoryIndex >= 0 && categoryIndex < static_cast<int>(categories.size()))
+		{
+			const std::wstring& selectedCategory = categories[categoryIndex].name;
+			debugLog(L"VerticalFileSwitcher::onCategoryButtonClick - 选择分类按钮: %s", selectedCategory.c_str());
+			_fileListView.setCurrentCategory(selectedCategory);
+		}
 	}
 }
 
@@ -1196,6 +1392,69 @@ void VerticalFileSwitcher::updateCategoryButtonState(HWND selectedButton)
 		// 重绘按钮
 		::InvalidateRect(hButton, NULL, TRUE);
 	}
+}
+
+struct InputDlgParams {
+	std::wstring title;
+	std::wstring prompt;
+	std::wstring input;
+};
+
+// 输入对话框窗口过程
+static INT_PTR CALLBACK InputDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	InputDlgParams* pParams = nullptr;
+	if (uMsg == WM_INITDIALOG)
+	{
+		pParams = reinterpret_cast<InputDlgParams*>(lParam);
+		::SetWindowLongPtr(hwndDlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pParams));
+	}
+	else
+	{
+		pParams = reinterpret_cast<InputDlgParams*>(::GetWindowLongPtr(hwndDlg, GWLP_USERDATA));
+	}
+
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			if (pParams)
+			{
+				::SetWindowText(hwndDlg, pParams->title.c_str());
+				// 设置Prompt (如果需要，但目前ID_STATIC通常为-1)
+				// ::SetDlgItemText(hwndDlg, IDC_STATIC, pParams->prompt.c_str());
+				
+				::SetDlgItemText(hwndDlg, IDC_INPUT_EDIT, pParams->input.c_str());
+				::SetFocus(::GetDlgItem(hwndDlg, IDC_INPUT_EDIT));
+			}
+			return FALSE; // Return FALSE because we set focus manually
+		}
+
+		case WM_COMMAND:
+		{
+			switch (LOWORD(wParam))
+			{
+				case IDOK:
+				{
+					wchar_t buffer[256];
+					::GetDlgItemText(hwndDlg, IDC_INPUT_EDIT, buffer, 256);
+					if (pParams)
+					{
+						pParams->input = buffer;
+					}
+					::EndDialog(hwndDlg, IDOK);
+					return TRUE;
+				}
+				case IDCANCEL:
+				{
+					::EndDialog(hwndDlg, IDCANCEL);
+					return TRUE;
+				}
+			}
+			break;
+		}
+	}
+	return FALSE;
 }
 
 // 设置对话框窗口过程
@@ -1421,9 +1680,40 @@ static INT_PTR CALLBACK SettingsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
 								
 								if (pCategory && wcscmp(pCategory->name.c_str(), L"All") != 0)
 								{
-									if (::MessageBoxW(hwndDlg, L"重命名功能暂未实现", L"提示", MB_OK | MB_ICONINFORMATION) == IDOK)
+									InputDlgParams params;
+									params.title = L"Rename Category";
+									params.input = pCategory->name;
+									
+									if (::DialogBoxParam(pThis->getHInst(), MAKEINTRESOURCE(IDD_DOCLIST_INPUT_DLG), hwndDlg, InputDlgProc, reinterpret_cast<LPARAM>(&params)) == IDOK)
 									{
-										debugLog(L"设置对话框：Rename Category功能被调用");
+										if (!params.input.empty() && params.input != pCategory->name)
+										{
+											std::wstring targetId = pCategory->id;
+											// 更新分类名称
+											if (pThis->getCategoryManager()->renameCategoryById(targetId, params.input))
+											{
+												// 刷新列表
+												::SendMessage(hCategoryList, LB_RESETCONTENT, 0, 0);
+												const auto& categories = pThis->getCategoryManager()->getCategories();
+												for (const auto& category : categories)
+												{
+													int index = static_cast<int>(::SendMessage(hCategoryList, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(category.name.c_str())));
+													::SendMessage(hCategoryList, LB_SETITEMDATA, index, reinterpret_cast<LPARAM>(&category));
+													
+													// 恢复选中
+													if (category.id == targetId)
+													{
+														::SendMessage(hCategoryList, LB_SETCURSEL, index, 0);
+													}
+												}
+												
+												debugLog(L"设置对话框：Rename Category success: %s", params.input.c_str());
+											}
+											else
+											{
+												MessageBoxW(hwndDlg, L"重命名失败，可能名称已存在！", L"错误", MB_OK | MB_ICONERROR);
+											}
+										}
 									}
 								}
 								else
@@ -1489,12 +1779,14 @@ void VerticalFileSwitcher::initPopupMenus()
     // 获取菜单项文本
     wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
     wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
+    wstring categoryStr = pNativeSpeaker->getAttrNameStr(L"Category", FS_ROOTNODE, FS_CLMNCATEGORY);
     wstring groupStr = pNativeSpeaker->getAttrNameStr(L"Group by View", FS_ROOTNODE, FS_LVGROUPS);
 
     // 注意：头部右键菜单不包含Document Category菜单
     
     ::InsertMenu(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
     ::InsertMenu(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
+    ::InsertMenu(_hGlobalMenu, CLMNCATEGORY_ID, MF_BYCOMMAND | MF_STRING, CLMNCATEGORY_ID, categoryStr.c_str());
     ::InsertMenu(_hGlobalMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     ::InsertMenu(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
     
@@ -1524,6 +1816,8 @@ void VerticalFileSwitcher::initPopupMenus()
     ::CheckMenuItem(_hGlobalMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
     bool isPathColumn = nppGUI._fileSwitcherWithoutPathColumn;
     ::CheckMenuItem(_hGlobalMenu, CLMNPATH_ID, MF_BYCOMMAND | (isPathColumn ? MF_UNCHECKED : MF_CHECKED));
+    bool isCategoryColumn = nppGUI._fileSwitcherWithoutCategoryColumn;
+    ::CheckMenuItem(_hGlobalMenu, CLMNCATEGORY_ID, MF_BYCOMMAND | (isCategoryColumn ? MF_UNCHECKED : MF_CHECKED));
     bool isListViewGroups = nppGUI._fileSwitcherDisableListViewGroups;
     ::CheckMenuItem(_hGlobalMenu, LVGROUPS_ID, MF_BYCOMMAND | (isListViewGroups ? MF_UNCHECKED : MF_CHECKED));
     
@@ -1561,6 +1855,7 @@ void VerticalFileSwitcher::initFileListContextMenu()
     // 获取菜单项文本
     wstring extStr = pNativeSpeaker->getAttrNameStr(L"Ext.", FS_ROOTNODE, FS_CLMNEXT);
     wstring pathStr = pNativeSpeaker->getAttrNameStr(L"Path", FS_ROOTNODE, FS_CLMNPATH);
+    wstring categoryStr = pNativeSpeaker->getAttrNameStr(L"Category", FS_ROOTNODE, FS_CLMNCATEGORY);
     wstring groupStr = pNativeSpeaker->getAttrNameStr(L"Group by View", FS_ROOTNODE, FS_LVGROUPS);
 
     debugLog(L"VerticalFileSwitcher::initFileListContextMenu - 开始创建Document Category子菜单");
@@ -1622,11 +1917,19 @@ void VerticalFileSwitcher::initFileListContextMenu()
         UINT menuId = CATEGORY_MENU_START + static_cast<UINT>(i);
         wstring displayName = categories[i].name;
         if (displayName == L"All") displayName = L"全部";
-        else if (displayName == L"Default Category") displayName = L"默认分类";
-        else if (displayName == L"Programming") displayName = L"编程";
-        else if (displayName == L"Work Files") displayName = L"工作文件";
-        else if (displayName == L"Configuration Files") displayName = L"配置文件";
-        debugLog(L"VerticalFileSwitcher::initFileListContextMenu - Add Category菜单项: %s (ID: %d)", displayName.c_str(), menuId);
+		else if (displayName == L"Default Category") displayName = L"默认分类";
+		else if (displayName == L"Programming") displayName = L"编程";
+		else if (displayName == L"Work Files") displayName = L"工作文件";
+		else if (displayName == L"Configuration Files") displayName = L"配置文件";
+		
+		// Add access keys for first 10 items
+		if (i < 9) {
+			displayName = L"&" + std::to_wstring(i+1) + L" " + displayName;
+		} else if (i == 9) {
+			displayName = L"&0 " + displayName;
+		}
+		
+		debugLog(L"VerticalFileSwitcher::initFileListContextMenu - Add Category菜单项: %s (ID: %d)", displayName.c_str(), menuId);
         
         BOOL result = ::InsertMenu(hDocumentCategoryMenu, menuId, MF_BYCOMMAND | MF_STRING, menuId, displayName.c_str());
         if (!result)
@@ -1649,6 +1952,7 @@ void VerticalFileSwitcher::initFileListContextMenu()
     
     ::InsertMenu(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | MF_STRING, CLMNEXT_ID, extStr.c_str());
     ::InsertMenu(_hFileListMenu, CLMNPATH_ID, MF_BYCOMMAND | MF_STRING, CLMNPATH_ID, pathStr.c_str());
+    ::InsertMenu(_hFileListMenu, CLMNCATEGORY_ID, MF_BYCOMMAND | MF_STRING, CLMNCATEGORY_ID, categoryStr.c_str());
     ::InsertMenu(_hFileListMenu, SEP_POS, MF_BYCOMMAND | MF_SEPARATOR, 0, nullptr);
     ::InsertMenu(_hFileListMenu, LVGROUPS_ID, MF_BYCOMMAND | MF_STRING, LVGROUPS_ID, groupStr.c_str());
     
@@ -1658,6 +1962,8 @@ void VerticalFileSwitcher::initFileListContextMenu()
     ::CheckMenuItem(_hFileListMenu, CLMNEXT_ID, MF_BYCOMMAND | (isExtColumn ? MF_UNCHECKED : MF_CHECKED));
     bool isPathColumn = nppGUI._fileSwitcherWithoutPathColumn;
     ::CheckMenuItem(_hFileListMenu, CLMNPATH_ID, MF_BYCOMMAND | (isPathColumn ? MF_UNCHECKED : MF_CHECKED));
+    bool isCategoryColumn = nppGUI._fileSwitcherWithoutCategoryColumn;
+    ::CheckMenuItem(_hFileListMenu, CLMNCATEGORY_ID, MF_BYCOMMAND | (isCategoryColumn ? MF_UNCHECKED : MF_CHECKED));
     bool isListViewGroups = nppGUI._fileSwitcherDisableListViewGroups;
     ::CheckMenuItem(_hFileListMenu, LVGROUPS_ID, MF_BYCOMMAND | (isListViewGroups ? MF_UNCHECKED : MF_CHECKED));
     
@@ -1798,6 +2104,16 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			reload();
 		}
 		break;
+		case CLMNCATEGORY_ID:
+		{
+			bool& isCategoryColumn = NppParameters::getInstance().getNppGUI()._fileSwitcherWithoutCategoryColumn;
+			isCategoryColumn = !isCategoryColumn;
+			// 同时更新全局菜单和文件列表菜单的检查状态
+			::CheckMenuItem(_hGlobalMenu, CLMNCATEGORY_ID, MF_BYCOMMAND | (isCategoryColumn ? MF_UNCHECKED : MF_CHECKED));
+			::CheckMenuItem(_hFileListMenu, CLMNCATEGORY_ID, MF_BYCOMMAND | (isCategoryColumn ? MF_UNCHECKED : MF_CHECKED));
+			reload();
+		}
+		break;
 		case LVGROUPS_ID:
 		{
 			bool& isListViewGroups = NppParameters::getInstance().getNppGUI()._fileSwitcherDisableListViewGroups;
@@ -1817,9 +2133,9 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 			// 处理设置命令
 			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 设置命令被触发");
 			
-			// 发送消息打开设置对话框 - 使用标准的IDM_SETTING_PREFERENCE
-			::SendMessage(_hParent, NPPM_MENUCOMMAND, 0, IDM_SETTING_PREFERENCE);
-			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已发送标准设置对话框打开消息");
+			// 打开VFS专用的设置对话框
+			this->showSettingsDialog();
+			debugLog(L"VerticalFileSwitcher::popupMenuCmd - 已打开设置对话框");
 		}
 		break;
 
@@ -1879,6 +2195,57 @@ void VerticalFileSwitcher::popupMenuCmd(int cmdID)
 		}
 		break;
 		
+		// 打开文件所在目录
+		case 1001:
+		{
+			int i = ListView_GetNextItem(_fileListView.getHSelf(), -1, LVNI_SELECTED);
+			if (i != -1)
+			{
+				std::wstring filePath = _fileListView.getFullFilePath(i);
+				if (!filePath.empty())
+				{
+					std::wstring args = L"/select, \"" + filePath + L"\"";
+					::ShellExecute(NULL, L"open", L"explorer.exe", args.c_str(), NULL, SW_SHOWNORMAL);
+				}
+			}
+		}
+		break;
+
+		// 复制文件路径
+		case 1002:
+		{
+			int i = ListView_GetNextItem(_fileListView.getHSelf(), -1, LVNI_SELECTED);
+			if (i != -1)
+			{
+				std::wstring filePath = _fileListView.getFullFilePath(i);
+				if (!filePath.empty())
+				{
+					if (::OpenClipboard(_hSelf))
+					{
+						::EmptyClipboard();
+						size_t size = (filePath.length() + 1) * sizeof(wchar_t);
+						HGLOBAL hGlobal = ::GlobalAlloc(GMEM_MOVEABLE, size);
+						if (hGlobal)
+						{
+							void* pData = ::GlobalLock(hGlobal);
+							if (pData)
+							{
+								memcpy(pData, filePath.c_str(), size);
+								::GlobalUnlock(hGlobal);
+								::SetClipboardData(CF_UNICODETEXT, hGlobal);
+							}
+							else
+							{
+								::GlobalFree(hGlobal);
+							}
+						}
+						::CloseClipboard();
+					}
+				}
+			}
+		}
+		break;
+
 		// 关闭当前文件菜单处理
 		case IDM_DOCLIST_CLOSE_CURRENT:
 		{

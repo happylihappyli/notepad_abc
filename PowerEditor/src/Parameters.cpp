@@ -6141,6 +6141,10 @@ void NppParameters::feedGUIParameters(TiXmlNode *node)
 			if (element->Attribute(L"fileSwitcherPathWidth", &i))
 				_nppGUI._fileSwitcherPathWidth = i;
 
+			const wchar_t * optNameCategory = element->Attribute(L"fileSwitcherWithoutCategoryColumn");
+			if (optNameCategory)
+				_nppGUI._fileSwitcherWithoutCategoryColumn = (lstrcmp(optNameCategory, L"yes") == 0);
+
 			if (element->Attribute(L"fileSwitcherCategoryWidth", &i))
 				_nppGUI._fileSwitcherCategoryWidth = i;
 
@@ -7742,6 +7746,8 @@ void NppParameters::createXmlTreeFromGUIParams()
 		GUIConfigElement->SetAttribute(L"fileSwitcherExtWidth", _nppGUI._fileSwitcherExtWidth);
 		GUIConfigElement->SetAttribute(L"fileSwitcherWithoutPathColumn", _nppGUI._fileSwitcherWithoutPathColumn ? L"yes" : L"no");
 		GUIConfigElement->SetAttribute(L"fileSwitcherPathWidth", _nppGUI._fileSwitcherPathWidth);
+		GUIConfigElement->SetAttribute(L"fileSwitcherWithoutCategoryColumn", _nppGUI._fileSwitcherWithoutCategoryColumn ? L"yes" : L"no");
+		GUIConfigElement->SetAttribute(L"fileSwitcherCategoryWidth", _nppGUI._fileSwitcherCategoryWidth);
 		GUIConfigElement->SetAttribute(L"fileSwitcherFontSize", _nppGUI._fileSwitcherFontSize);
 		setYesNoBoolAttribute(L"fileSwitcherNoGroups", _nppGUI._fileSwitcherDisableListViewGroups);
 		GUIConfigElement->SetAttribute(L"backSlashIsEscapeCharacterForSql", _nppGUI._backSlashIsEscapeCharacterForSql ? L"yes" : L"no");

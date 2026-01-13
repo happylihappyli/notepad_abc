@@ -983,6 +983,7 @@ struct NppGUI final
 	int _fileSwitcherExtWidth = 50;
 	bool _fileSwitcherWithoutPathColumn = true;
 	int _fileSwitcherPathWidth = 50;
+	bool _fileSwitcherWithoutCategoryColumn = false; // 默认显示分类列
 	int _fileSwitcherCategoryWidth = 100;  // 分类列宽度
 	bool _fileSwitcherDisableListViewGroups = false;
 	int _fileSwitcherFontSize = 8; // VerticalFileSwitcher字体大小配置

@@ -76,8 +76,14 @@ void VerticalFileSwitcherListView::initList()
 	ListView_EnableGroupView(_hSelf, isListViewGroups ? TRUE : FALSE);
 	
 	// Set extended styles for list view
-	ListView_SetExtendedListViewStyle(_hSelf, LVS_EX_FULLROWSELECT | LVS_EX_BORDERSELECT | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
+	// Removed LVS_EX_DOUBLEBUFFER to allow WM_ERASEBKGND to work properly for custom background
+	ListView_SetExtendedListViewStyle(_hSelf, LVS_EX_FULLROWSELECT | LVS_EX_BORDERSELECT | LVS_EX_INFOTIP);
 	ListView_SetItemCountEx(_hSelf, 50, LVSICF_NOSCROLL);
+
+	// 强制设置背景色为黑色，防止初始化时出现白色闪烁或残留
+	ListView_SetBkColor(_hSelf, RGB(0, 0, 0));
+	ListView_SetTextBkColor(_hSelf, RGB(0, 0, 0));
+	ListView_SetTextColor(_hSelf, RGB(240, 240, 240));
 	
 	// Insert group information
 	LVGROUP group{};
@@ -97,8 +103,8 @@ void VerticalFileSwitcherListView::initList()
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
 	// Force display only filename and category columns, hide extension column
-	bool isExtColumn = false;  // 隐藏扩展名列
-	bool isCategoryColumn = true; // Always display category column
+	bool isExtColumn = !nppParams.getNppGUI()._fileSwitcherWithoutExtColumn;
+	bool isCategoryColumn = !nppParams.getNppGUI()._fileSwitcherWithoutCategoryColumn;
 
 	RECT rc{};
 	::GetClientRect(_hParent, &rc);
@@ -283,7 +289,8 @@ void VerticalFileSwitcherListView::reload()
 	ListView_EnableGroupView(_hSelf, isListViewGroups ? TRUE : FALSE);
 	
 	// Set extended styles for list view
-	ListView_SetExtendedListViewStyle(_hSelf, LVS_EX_FULLROWSELECT | LVS_EX_BORDERSELECT | LVS_EX_INFOTIP | LVS_EX_DOUBLEBUFFER);
+	// Removed LVS_EX_DOUBLEBUFFER to allow WM_ERASEBKGND to work properly for custom background
+	ListView_SetExtendedListViewStyle(_hSelf, LVS_EX_FULLROWSELECT | LVS_EX_BORDERSELECT | LVS_EX_INFOTIP);
 	ListView_SetItemCountEx(_hSelf, 50, LVSICF_NOSCROLL);
 	
 	// Insert group information
@@ -304,8 +311,8 @@ void VerticalFileSwitcherListView::reload()
 	ListView_InsertGroup(_hSelf, -1, &group2);
 
 	// Force display only filename and category columns, hide extension column
-	bool isExtColumn = false;  // 隐藏扩展名列
-	bool isCategoryColumn = true; // Always display category column
+	bool isExtColumn = !nppParams.getNppGUI()._fileSwitcherWithoutExtColumn;
+	bool isCategoryColumn = !nppParams.getNppGUI()._fileSwitcherWithoutCategoryColumn;
 
 	RECT rc{};
 	::GetClientRect(_hParent, &rc);

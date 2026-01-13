@@ -8,9 +8,11 @@
 #include <commctrl.h>
 #include <sapi.h>
 #include <thread>
+#include <shlwapi.h>
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "sapi.lib")
+#pragma comment(lib, "shlwapi.lib")
 
 // 简单的日志函数
 void Log(const std::wstring& msg) {
@@ -22,6 +24,50 @@ void Log(const std::wstring& msg) {
         localtime_s(&local_tm, &now_time);
         logFile << std::put_time(&local_tm, L"%Y-%m-%d %H:%M:%S") << L" - " << msg << std::endl;
     }
+}
+
+std::wstring GetConfigFilePath() {
+    wchar_t path[MAX_PATH];
+    GetModuleFileName(NULL, path, MAX_PATH);
+    PathRemoveFileSpec(path);
+    PathAppend(path, L"tomato.ini");
+    return path;
+}
+
+void TomatoTimer::loadConfig() {
+    std::wstring path = GetConfigFilePath();
+    
+    _config.workMinutes = GetPrivateProfileInt(L"Settings", L"WorkMinutes", 25, path.c_str());
+    _config.shortRestMinutes = GetPrivateProfileInt(L"Settings", L"ShortRestMinutes", 5, path.c_str());
+    _config.longRestMinutes = GetPrivateProfileInt(L"Settings", L"LongRestMinutes", 15, path.c_str());
+    _config.longRestAfterPomodoros = GetPrivateProfileInt(L"Settings", L"LongRestAfterPomodoros", 4, path.c_str());
+    _config.enableTTS = GetPrivateProfileInt(L"Settings", L"EnableTTS", 1, path.c_str()) != 0;
+    _config.autoStart = GetPrivateProfileInt(L"Settings", L"AutoStart", 0, path.c_str()) != 0;
+
+    wchar_t buffer[256];
+    GetPrivateProfileString(L"Settings", L"ShortRestReminderText", L"休息时间到了，请休息一下", buffer, 256, path.c_str());
+    _config.shortRestReminderText = buffer;
+    
+    GetPrivateProfileString(L"Settings", L"LongRestReminderText", L"完成了4个番茄钟，进行长休息吧", buffer, 256, path.c_str());
+    _config.longRestReminderText = buffer;
+    
+    GetPrivateProfileString(L"Settings", L"WorkReminderText", L"休息结束，开始工作吧", buffer, 256, path.c_str());
+    _config.workReminderText = buffer;
+}
+
+void TomatoTimer::saveConfig() {
+    std::wstring path = GetConfigFilePath();
+    
+    WritePrivateProfileString(L"Settings", L"WorkMinutes", std::to_wstring(_config.workMinutes).c_str(), path.c_str());
+    WritePrivateProfileString(L"Settings", L"ShortRestMinutes", std::to_wstring(_config.shortRestMinutes).c_str(), path.c_str());
+    WritePrivateProfileString(L"Settings", L"LongRestMinutes", std::to_wstring(_config.longRestMinutes).c_str(), path.c_str());
+    WritePrivateProfileString(L"Settings", L"LongRestAfterPomodoros", std::to_wstring(_config.longRestAfterPomodoros).c_str(), path.c_str());
+    WritePrivateProfileString(L"Settings", L"EnableTTS", std::to_wstring(_config.enableTTS ? 1 : 0).c_str(), path.c_str());
+    WritePrivateProfileString(L"Settings", L"AutoStart", std::to_wstring(_config.autoStart ? 1 : 0).c_str(), path.c_str());
+    
+    WritePrivateProfileString(L"Settings", L"ShortRestReminderText", _config.shortRestReminderText.c_str(), path.c_str());
+    WritePrivateProfileString(L"Settings", L"LongRestReminderText", _config.longRestReminderText.c_str(), path.c_str());
+    WritePrivateProfileString(L"Settings", L"WorkReminderText", _config.workReminderText.c_str(), path.c_str());
 }
 
 // 窗口参数结构体
@@ -45,6 +91,8 @@ TomatoTimer::TomatoTimer() {
     _comInitialized = false;
     _ttsPlayed = false;
     _completedPomodoros = 0;
+
+    loadConfig();
 }
 
 TomatoTimer::~TomatoTimer() {
@@ -151,10 +199,12 @@ void TomatoTimer::resetCompletedPomodoros() {
 }
 
 void TomatoTimer::setConfig(const TomatoConfig& config) {
+    std::lock_guard<std::mutex> lock(_mutex);
     _config = config;
     if (_state == TomatoState::IDLE) {
         _remainingSeconds = _config.workMinutes * 60;
     }
+    saveConfig();
 }
 
 TomatoConfig TomatoTimer::getConfig() const {

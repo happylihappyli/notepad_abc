@@ -44,6 +44,7 @@ public:
 	
 	// 添加一个方法来获取Notepad++ Main Window Handle
 	HWND getNppMainWnd() const { return _hParent; }
+    HINSTANCE getHInst() const { return _hInst; }
 
 	void create(tTbData* data, bool isRTL = false);
 	void create(tTbData* data, std::array<int, 3> iconIDs, bool isRTL = false);
