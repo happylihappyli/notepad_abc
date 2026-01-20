@@ -378,6 +378,8 @@ void ToolBar::setToBmpIcons()
 
 void ToolBar::reset(bool create)
 {
+	int tomatoStrIdx = -1;
+
 	if (create && _hSelf)
 	{
 		//Store current button state information
@@ -403,7 +405,7 @@ void ToolBar::reset(bool create)
 			WS_EX_PALETTEWINDOW,
 			TOOLBARCLASSNAME,
 			L"",
-			WS_TOOLBARSTYLE | dwExtraStyle,
+			WS_TOOLBARSTYLE | dwExtraStyle | TBSTYLE_LIST,
 			0, 0,
 			0, 0,
 			_hParent,
@@ -416,13 +418,13 @@ void ToolBar::reset(bool create)
 		// Send the TB_BUTTONSTRUCTSIZE message, which is required for 
 		// backward compatibility.
 		::SendMessage(_hSelf, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-		::SendMessage(_hSelf, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_DRAWDDARROWS | TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_DOUBLEBUFFER);
+		::SendMessage(_hSelf, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_DRAWDDARROWS | TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_DOUBLEBUFFER | TBSTYLE_EX_MIXEDBUTTONS);
 		
 		change2CustomIconsIfAny();
 		
 		// Add "Tomato" string to pool for Tomato Timer button
-		wchar_t tomatoStrBuf[] = L" Tomato\0\0";
-		::SendMessage(_hSelf, TB_ADDSTRING, 0, (LPARAM)tomatoStrBuf);
+		wchar_t tomatoStrBuf[] = L" \u756a\u8304\0\0";
+		tomatoStrIdx = (int)::SendMessage(_hSelf, TB_ADDSTRING, 0, (LPARAM)tomatoStrBuf);
 	}
 
 	if (!_hSelf)
@@ -501,7 +503,7 @@ void ToolBar::reset(bool create)
 		{
 			if (_pTBB[i].idCommand == IDM_TOOL_TOMATO_TIMER)
 			{
-				_pTBB[i].iString = 0; // Index 0 because we just added it and it's likely the first/only one
+				_pTBB[i].iString = (INT_PTR)tomatoStrIdx;
 				_pTBB[i].fsStyle |= BTNS_SHOWTEXT | BTNS_AUTOSIZE;
 			}
 		}

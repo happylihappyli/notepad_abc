@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "e:/GitHub3/cpp/notepad_abc/PowerEditor/src/WinControls/VerticalFileSwitcher",
-      "program": "e:/GitHub3/cpp/notepad_abc/PowerEditor/src/WinControls/VerticalFileSwitcher/build/Debug/outDebug",
+      "cwd": "e:/GitHub3/cpp/notepad_abc/PowerEditor/src",
+      "program": "e:/GitHub3/cpp/notepad_abc/PowerEditor/src/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
