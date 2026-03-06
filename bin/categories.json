@@ -83,6 +83,10 @@
         {
             "categoryId": "work",
             "filePath": "E:\\BaiduSyncdisk\\bak\\计划-ai.txt"
+        },
+        {
+            "categoryId": "programming",
+            "filePath": "C:\\Users\\admin\\Documents\\开发计划.txt"
         }
     ]
 }

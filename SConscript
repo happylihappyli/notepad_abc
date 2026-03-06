@@ -10,6 +10,7 @@ import time
 import subprocess
 import glob
 from datetime import datetime
+import SCons.Node
 
 # 确保Python输出为UTF-8编码
 def ensure_utf8_print(text):
@@ -511,6 +512,9 @@ if isinstance(lexilla_lib, str) and isinstance(scintilla_lib, str):
     # 确保链接器命令正确生成，避免自动添加-l前缀
     print("✅ 强制使用自定义链接器命令生成器")
     
+# 如果使用Clang编译器，始终创建链接器响应文件
+compiler_type = get_compiler_type(env)
+if compiler_type == 'clang':
     # 创建链接器响应文件
     rsp_file_path = os.path.join(bin_dir, 'linker.rsp')
     print(f"🔧 创建链接器响应文件: {rsp_file_path}")
@@ -521,11 +525,16 @@ if isinstance(lexilla_lib, str) and isinstance(scintilla_lib, str):
     with open(rsp_file_path, 'w', encoding='utf-8') as f:
         # 添加所有对象文件
         for obj in all_objects:
-            obj_path = str(obj)
-            # 添加对象文件（.o或.obj）和资源文件（.res）
-            if obj_path.endswith('.o') or obj_path.endswith('.obj') or obj_path.endswith('.res'):
-                f.write(f'"{obj_path}"\n')
-                print(f"  添加文件: {os.path.basename(obj_path)}")
+            # 处理可能是列表的情况（SCons env.Object返回NodeList）
+            obj_list = obj if isinstance(obj, (list, SCons.Node.NodeList)) else [obj]
+            
+            for item in obj_list:
+                obj_path = str(item)
+                # 添加对象文件（.o或.obj）和资源文件（.res）
+                if obj_path.endswith('.o') or obj_path.endswith('.obj') or obj_path.endswith('.res'):
+                    f.write(f'"{obj_path}"\n')
+                    # 仅在调试模式下打印，避免输出过多
+                    # print(f"  添加文件: {os.path.basename(obj_path)}")
         
         # 显式添加所有.res文件（确保资源文件被包含）
         print("🔧 显式添加所有.res文件到响应文件...")
@@ -540,8 +549,12 @@ if isinstance(lexilla_lib, str) and isinstance(scintilla_lib, str):
                     print(f"  ⚠️ 资源文件不存在: {res_file}")
         
         # 添加预编译库文件
-        f.write(f'"{lexilla_lib}"\n')
-        f.write(f'"{scintilla_lib}"\n')
+        # 处理可能为字符串或SCons Node对象的情况
+        lexilla_lib_path = str(lexilla_lib[0]) if isinstance(lexilla_lib, (list, SCons.Node.NodeList)) else lexilla_lib
+        scintilla_lib_path = str(scintilla_lib[0]) if isinstance(scintilla_lib, (list, SCons.Node.NodeList)) else scintilla_lib
+        
+        f.write(f'"{lexilla_lib_path}"\n')
+        f.write(f'"{scintilla_lib_path}"\n')
         
         # 添加系统库
         for lib in libs:
@@ -553,6 +566,11 @@ if isinstance(lexilla_lib, str) and isinstance(scintilla_lib, str):
 
 # 构建程序
 program = env.Program(target=os.path.join(bin_dir, target_name), source=all_objects)
+
+# 显式声明程序依赖于Lexilla和Scintilla库
+# 这将确保在链接程序之前，SCons会先构建这些库
+env.Depends(program, lexilla_lib)
+env.Depends(program, scintilla_lib)
 
 # 添加后构建操作 - 复制配置文件
 config_files = [

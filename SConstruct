@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import subprocess
+import glob
 from datetime import datetime
 
 # 强制Python使用UTF-8编码
@@ -456,8 +457,9 @@ env['CXXFLAGSUFFIX'] = ''
 
 # 设置编译命令模板 - 使用Clang兼容的模板，避免MSVC选项
 # 移除SCons自动添加的MSVC选项（如/TP、/nologo等）
-env['CCCOM'] = '$CXX $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS -c $SOURCES -o $TARGET'
-env['CXXCOM'] = '$CXX $CXXFLAGS $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS -c $SOURCES -o $TARGET'
+# 确保包含 _CPPINCFLAGS 变量，以便正确展开 CPPPATH 中的包含路径
+env['CCCOM'] = '$CXX $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c $SOURCES -o $TARGET'
+env['CXXCOM'] = '$CXX $CXXFLAGS $CCFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -c $SOURCES -o $TARGET'
 
 # 禁用SCons自动添加的MSVC选项
 env['CPPDEFPREFIX'] = '-D'
@@ -1051,8 +1053,11 @@ def configure_link_options(env, subsystem='WINDOWS', extra_lib_paths=None, lexil
         '/OPT:REF',          # 删除未引用的函数和数据
         '/OPT:ICF',          # 执行相同COMDAT折叠
         # '/exclude-symbols:BoostRegExSearch',  # 排除BoostRegExSearch符号以避免冲突（在SConscript中处理）
-        # '/ENTRY:wWinMain' # 指定入口点（使用wWinMain而不是wWinMainCRTStartup） 
+        '/ENTRY:wWinMainCRTStartup' # 显式指定Unicode入口点
     ])
+    
+    # 显式设置LINKFLAGS，以便在command template中正确展开
+    env['LINKFLAGS'] = linkflags
     
     # 对于Clang编译器，优先使用Clang的链接器（lld-link.exe）
     if compiler_type == 'clang':
@@ -1261,11 +1266,56 @@ def use_prebuilt_dependencies(env, build_type):
         print(f"   - {lexilla_built_path}")
         print(f"   - {scintilla_built_path}")
         
-        # 如果找不到Clang兼容库，构建空的库对象
-        # 避免使用Visual Studio的.lib文件，防止链接器冲突
-        print("⚠️ 警告: 使用空的库对象，可能需要重新构建依赖库")
-        lexilla_lib = env.StaticLibrary('Lexilla', [])
-        scintilla_lib = env.StaticLibrary('Scintilla', [])
+        # 如果找不到Clang兼容库，尝试构建它们
+        print("⚠️ 警告: 未找到预编译库，尝试从源码构建...")
+        
+        # 创建库构建专用环境
+        lib_env = env.Clone()
+        
+        # 添加编译选项 (C++20, MSVC兼容性)
+        lib_env.Append(CXXFLAGS=[
+            '-std=c++20', 
+            '-fms-extensions', 
+            '-fms-compatibility',
+            '-Wno-deprecated-declarations',
+            '-Wno-unknown-pragmas'
+        ])
+        
+        # 根据构建类型添加优化选项
+        if build_type == 'Release':
+            lib_env.Append(CXXFLAGS=['-O2', '-flto', '-DNDEBUG'])
+        else:
+            lib_env.Append(CXXFLAGS=['-g', '-O0', '-DDEBUG'])
+            
+        lib_env.Append(CPPDEFINES=['SCI_NAMESPACE', 'STATIC_BUILD', '_CRT_SECURE_NO_WARNINGS'])
+        lib_env.Append(CPPPATH=[
+            os.path.join(lexilla_dir, 'include'),
+            os.path.join(lexilla_dir, 'lexlib'),
+            os.path.join(scintilla_dir, 'include'),
+            os.path.join(scintilla_dir, 'src'),
+            os.path.join(scintilla_dir, 'win32'),
+            os.path.join(scintilla_dir, 'call')
+        ])
+        
+        # 构建Lexilla
+        lexilla_src = glob.glob(os.path.join(lexilla_dir, 'src', '*.cxx')) + \
+                      glob.glob(os.path.join(lexilla_dir, 'lexlib', '*.cxx')) + \
+                      glob.glob(os.path.join(lexilla_dir, 'lexers', '*.cxx'))
+        
+        print(f"🔧 构建Lexilla库 ({len(lexilla_src)} 源文件)...")
+        lexilla_lib = lib_env.StaticLibrary(target=os.path.join(lexilla_dir, 'bin', 'liblexilla'), source=lexilla_src)
+        
+        # 构建Scintilla
+        scintilla_src = glob.glob(os.path.join(scintilla_dir, 'src', '*.cxx')) + \
+                        glob.glob(os.path.join(scintilla_dir, 'win32', '*.cxx')) + \
+                        glob.glob(os.path.join(scintilla_dir, 'call', '*.cxx'))
+        
+        # 过滤掉ScintillaDLL.cxx（因为它包含DllMain）
+        scintilla_src = [f for f in scintilla_src if 'ScintillaDLL.cxx' not in f]
+        
+        print(f"🔧 构建Scintilla库 ({len(scintilla_src)} 源文件)...")
+        scintilla_lib = lib_env.StaticLibrary(target=os.path.join(scintilla_dir, 'bin', 'libscintilla'), source=scintilla_src)
+        
         return lexilla_lib, scintilla_lib
 
 # 获取构建类型（从环境变量或命令行参数）

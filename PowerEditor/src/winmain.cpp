@@ -419,7 +419,7 @@ static bool IsWindowsVersionOrGreater(WORD wMajorVersion, WORD wMinorVersion, WO
         }
     }
 
-int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ PWSTR pCmdLine, _In_ int /*nShowCmd*/)
+extern "C" int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ PWSTR pCmdLine, _In_ int /*nShowCmd*/)
 {
 	// 控制台窗口默认不显示，可以通过Help菜单中的"Show Debug Console"来显示
 	// 如果需要默认显示，可以Cancel下面的注释
